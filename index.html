@@ -1098,6 +1098,7 @@ const PROVISIONS_DATA = [
     { date: "Feb 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
     { date: "Feb 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
     { date: "Feb 2026", desc: "Community Hospice", amount: 12, cat: "Charity" },
+    { date: "Mar 2026", desc: "Demelza", amount: 5000, cat: "Charity" },
     { date: "Mar 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
     { date: "Mar 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
     { date: "Mar 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
@@ -1140,17 +1141,19 @@ const PROVISIONS_DATA = [
     { date: "Mar 2026", desc: "Utility Room", amount: 186, cat: "Home & Family" },
     { date: "Mar 2026", desc: "Utility Room", amount: 219.90, cat: "Home & Family" },
     { date: "Mar 2026", desc: "Utility Room", amount: 168.82, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 1278, cat: "Home & Family" },
     { date: "Apr 2026", desc: "Utility Room", amount: 6889, cat: "Home & Family" },
     { date: "Apr 2026", desc: "Utility Room", amount: 1980, cat: "Home & Family" },
-    // DJB - Electrics & Lounge Door
-    { date: "Jan 2026", desc: "DJB - Electrics & Lounge Door", amount: 1344, cat: "Home & Family" },
-    { date: "Apr 2026", desc: "DJB - Electrics & Lounge Door", amount: 840, cat: "Home & Family" },
-    // Other
+    // DJB - Electrical and Maintenance Work
+    { date: "Jan 2026", desc: "DJB - Electrical and Maintenance Work", amount: 1344, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "DJB - Electrical and Maintenance Work", amount: 216, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "DJB - Electrical and Maintenance Work", amount: 600, cat: "Home & Family" },
+    { date: "Apr 2026", desc: "DJB - Electrical and Maintenance Work", amount: 840, cat: "Home & Family" },
+    // Master Bedroom
     { date: "Jan 2026", desc: "Master Bedroom", amount: 172, cat: "Home & Family" },
-    { date: "Jan 2026", desc: "John Lewis", amount: 169, cat: "Home & Family" },
-    { date: "Mar 2026", desc: "DJB - Glass Replacement", amount: 216, cat: "Home & Family" },
-    { date: "Mar 2026", desc: "DJB - Electrical Report", amount: 600, cat: "Home & Family" },
-    { date: "Mar 2026", desc: "Utility Room", amount: 1278, cat: "Home & Family" },
+    { date: "Jan 2026", desc: "Master Bedroom", amount: 169, cat: "Home & Family" },
+    { date: "Jan 2026", desc: "Master Bedroom", amount: -134, cat: "Home & Family" },
+    // Other
     { date: "Apr 2026", desc: "No1Roofing", amount: 45, cat: "Home & Family" },
   ]},
   { name: "Range Rover", opening: 18500, drawdowns: [
@@ -2630,7 +2633,7 @@ function CandidatesTab({ candidates }) {
       )}
 
       <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
-        Transactions from Jan 2026 requiring provision confirmation.
+        No unreconciled provision transactions — all Feb–Apr 2026 transactions have been attributed. New candidates will appear here after the next Snoop upload.
       </p>
       {MONTH_KEYS.map(function(mk) {
         var items = byMonth[mk];
@@ -2725,7 +2728,7 @@ function Dashboard() {
       .filter(function(t) {
         if (!PROVISION_DISPLAY_CATS.includes(resolveCategory(t))) return false;
         if (t.amount >= 0) return false;
-        if (t.date < "2026-01-01") return false;
+        if (t.date < "2026-05-01") return false;  // Only show May-26 onwards once reconciled
         return !isAllocated(getMonthKey(t.date), t.amount);
       })
       .sort(function(a,b){ return a.date.localeCompare(b.date); })

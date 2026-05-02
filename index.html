@@ -1061,7 +1061,7 @@ const PROVISIONS_DATA = [
     { label: "Gardener",                      amount: 1250 },
     { label: "Amex Card Fee",                 amount: 195 },
   ]},
-  { name: "Cash Provision", opening: 198200, drawdowns: [
+  { name: "Cash Provision", opening: 200000, drawdowns: [
     { date: "Feb 2026", desc: "ADHD Health Clinic (Health)", amount: 995, cat: "One Off Costs" },
     { date: "Mar 2026", desc: "Private Psychiatry Expert (Health)", amount: 805, cat: "One Off Costs" },
     { date: "Mar 2026", desc: "The Royal Parks - GaGa bench", amount: 10000, cat: "One Off Costs" },
@@ -1110,7 +1110,7 @@ const PROVISIONS_DATA = [
   { name: "Flats", opening: 8293, drawdowns: [
     { date: "Jan 2026", desc: "Flat - Bearsted", amount: 4791.77, cat: "Flats" },
   ]},
-  { name: "Holidays", opening: 21622, drawdowns: [
+  { name: "Holidays", opening: 29308, drawdowns: [
     // Hardcoded monthly sub-totals — reconciled from Snoop data May 2026
     // Provision window starts Oct-25 (dashboard built from Oct-25 data)
     // Opening balance of 21,622 reflects position at start of Oct-25
@@ -1150,10 +1150,10 @@ const PROVISIONS_DATA = [
     { date: "Jan 2026", desc: "John Lewis", amount: 169, cat: "Home & Family" },
     { date: "Mar 2026", desc: "DJB - Glass Replacement", amount: 216, cat: "Home & Family" },
     { date: "Mar 2026", desc: "DJB - Electrical Report", amount: 600, cat: "Home & Family" },
-    { date: "Mar 2026", desc: "Washing Machine & Tumble Dryer", amount: 1278, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 1278, cat: "Home & Family" },
     { date: "Apr 2026", desc: "No1Roofing", amount: 45, cat: "Home & Family" },
   ]},
-  { name: "Range Rover", opening: 16752, drawdowns: [
+  { name: "Range Rover", opening: 18500, drawdowns: [
     { date: "Jan 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Feb 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Mar 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
@@ -1722,16 +1722,24 @@ function ProvisionsTab() {
   var expandedNote = openNotes[0];
   var setExpandedNote = openNotes[1];
 
+  var ALL_PROV_MONTHS = [
+    { mk: "2026-04", prefix: "Apr 2026", label: "Apr-26" },
+    { mk: "2026-03", prefix: "Mar 2026", label: "Mar-26" },
+    { mk: "2026-02", prefix: "Feb 2026", label: "Feb-26" },
+    { mk: "2026-01", prefix: "Jan 2026", label: "Jan-26" },
+    { mk: "2025-12", prefix: "Dec 2025", label: "Dec-25" },
+    { mk: "2025-11", prefix: "Nov 2025", label: "Nov-25" },
+    { mk: "2025-10", prefix: "Oct 2025", label: "Oct-25" },
+  ];
   var cols = [
     { label: "Provision" }, { label: "Remaining", right: true },
-    { label: "Apr-26", right: true }, { label: "Mar-26", right: true }, { label: "Feb-26", right: true },
+    ...ALL_PROV_MONTHS.map(function(m){ return { label: m.label, right: true }; }),
     { label: "Type" }, { label: "Opening", right: true },
   ];
 
-  // FIX: drawdowns ONLY
-  function getDrawn(p, mk) {
-    var prefix = mk === "2026-04" ? "Apr" : mk === "2026-03" ? "Mar" : "Feb";
-    return (p.drawdowns || []).filter(function(d){ return d.date.startsWith(prefix); })
+  // drawdowns ONLY — prefix is full month string e.g. "Apr 2026"
+  function getDrawn(p, prefix) {
+    return (p.drawdowns || []).filter(function(d){ return d.date === prefix; })
       .reduce(function(s,d){ return s + d.amount; }, 0);
   }
 
@@ -1756,9 +1764,9 @@ function ProvisionsTab() {
               <tr key={p.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
                 <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{p.name}</td>
                 <td style={{ textAlign: "right", padding: "10px 12px", color: colN(rem) }}>{fmtN(rem)}</td>
-                {MONTH_KEYS.map(function(mk) {
-                  var v = getDrawn(p, mk);
-                  return <td key={mk} style={{ textAlign: "right", padding: "10px 12px", color: v ? STYLE.amber : STYLE.textMuted }}>{v ? fmtN(-v) : "-"}</td>;
+                {ALL_PROV_MONTHS.map(function(m) {
+                  var v = getDrawn(p, m.prefix);
+                  return <td key={m.mk} style={{ textAlign: "right", padding: "10px 12px", color: v ? STYLE.amber : STYLE.textMuted }}>{v ? fmtN(-v) : "-"}</td>;
                 })}
                 <td style={{ padding: "10px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{p.isIncome ? "Income" : "Provision"}</td>
                 <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.textMuted }}>{fmtN(p.opening)}</td>
@@ -1768,9 +1776,9 @@ function ProvisionsTab() {
           <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
             <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Net Remaining</td>
             <td style={{ textAlign: "right", padding: "10px 12px", color: colN(-totalRem), fontWeight: "bold" }}>{fmtN(totalRem)}</td>
-            {MONTH_KEYS.map(function(mk) {
-              var mTotal = PROVISIONS_DATA.reduce(function(s,p){ return s + getDrawn(p,mk); }, 0);
-              return <td key={mk} style={{ textAlign: "right", padding: "10px 12px", color: mTotal ? STYLE.amber : STYLE.textMuted, fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "-"}</td>;
+            {ALL_PROV_MONTHS.map(function(m) {
+              var mTotal = PROVISIONS_DATA.reduce(function(s,p){ return s + getDrawn(p,m.prefix); }, 0);
+              return <td key={m.mk} style={{ textAlign: "right", padding: "10px 12px", color: mTotal ? STYLE.amber : STYLE.textMuted, fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "-"}</td>;
             })}
             <td style={{ padding: "10px 12px" }}></td>
             <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "bold" }}>{fmtN(PROVISIONS_DATA.reduce(function(s,p){ return s+p.opening; },0))}</td>

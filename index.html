@@ -4,13 +4,74 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spence Family Finance Dashboard</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<style>* { margin: 0; padding: 0; box-sizing: border-box; } body { background: #0f1117; }</style>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0f1117; }
+#login-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100vh; background: #0f1117; font-family: Georgia, serif;
+}
+#login-screen h1 { color: #e8d5b7; font-size: 28px; margin-bottom: 8px; }
+#login-screen p { color: #6b7a99; font-size: 14px; margin-bottom: 32px; }
+#login-screen .denied { color: #e05c5c; font-size: 13px; margin-top: 16px; display: none; }
+</style>
+<script>
+  const ALLOWED = ['jimborspence@gmail.com', 'jemmaspence@gmail.com'];
+  const CLIENT_ID = "346814932767-q5id8b6kkbeb72aobrn726ek535h108p.apps.googleusercontent.com";
+
+  function handleCredentialResponse(response) {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    if (ALLOWED.includes(payload.email)) {
+      sessionStorage.setItem('auth', '1');
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('root').style.display = 'block';
+      if (window.__mountDashboard) window.__mountDashboard();
+    } else {
+      document.getElementById('denied').style.display = 'block';
+    }
+  }
+
+  function initGoogle() {
+    if (sessionStorage.getItem('auth')) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('root').style.display = 'block';
+      if (window.__mountDashboard) window.__mountDashboard();
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: CLIENT_ID,
+      callback: handleCredentialResponse,
+      ux_mode: 'popup',
+      auto_select: false,
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('google-btn'),
+      { theme: 'outline', size: 'large', text: 'signin_with' }
+    );
+  }
+  // Wait for Google Identity Services to load (it's async)
+  function waitForGoogle() {
+    if (typeof google !== 'undefined') {
+      initGoogle();
+    } else {
+      setTimeout(waitForGoogle, 100);
+    }
+  }
+  waitForGoogle();
+</script>
 </head>
 <body>
-<div id="root"></div>
+<div id="login-screen">
+  <h1>Spence Family Finance</h1>
+  <p>Sign in with your Google account to access the dashboard</p>
+  <div id="google-btn"></div>
+  <div id="denied" class="denied">Access denied — your account is not authorised.</div>
+</div>
+<div id="root" style="display:none"></div>
 <script type="text/babel">
 const { useState, useMemo } = React;
 
@@ -998,14 +1059,13 @@ const INTEREST_DATA = [
 const CASH_DATA = {
   currentAccounts: [
     { name: "Barclays", value: 126.85, owner: "James" },
-    { name: "Monzo (1)", value: 2494, owner: "James" },
-    { name: "Monzo (2)", value: 73.00, owner: "James" },
+    { name: "Monzo", value: 1618, owner: "James" },
     { name: "Chase Bank", value: 100.00, owner: "James" },
   ],
   creditCards: [
-    { name: "American Express", value: -18302, owner: "Joint" },
+    { name: "American Express", value: -18895, owner: "Joint" },
     { name: "M&S Bank", value: 0, owner: "Joint" },
-    { name: "Virgin Money", value: -1669, owner: "Joint" },
+    { name: "Virgin Money", value: -1690, owner: "Joint" },
     { name: "Barclaycard", value: 68.46, owner: "Joint" },
   ],
   savings: [
@@ -2778,7 +2838,10 @@ function Dashboard() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<Dashboard />);
+window.__mountDashboard = function() {
+  ReactDOM.createRoot(document.getElementById("root")).render(<Dashboard />);
+};
+if (sessionStorage.getItem('auth')) window.__mountDashboard();
 </script>
 </body>
 </html>

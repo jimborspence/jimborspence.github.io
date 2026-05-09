@@ -1,0 +1,2896 @@
+import React, { useState, useMemo, useEffect } from "react";
+
+// ============================================================
+// GOOGLE OAUTH CONFIG
+// ============================================================
+const GOOGLE_CLIENT_ID = "346814932767-q5id8b6kkbeb72aobrn726ek535h108p.apps.googleusercontent.com";
+const ALLOWED_EMAILS = ["jimborspence@gmail.com", "jemmaspence@gmail.com"];
+
+function useGoogleAuth() {
+  const [authState, setAuthState] = useState("loading"); // loading | signedOut | authorised | unauthorised
+  const [userEmail, setUserEmail] = useState(null);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        auto_select: true,
+      });
+      // Try silent sign-in first
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          setAuthState("signedOut");
+        }
+      });
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  function handleCredentialResponse(response) {
+    try {
+      const payload = JSON.parse(atob(response.credential.split(".")[1]));
+      const email = payload.email;
+      setUserEmail(email);
+      if (ALLOWED_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase())) {
+        setAuthState("authorised");
+      } else {
+        setAuthState("unauthorised");
+      }
+    } catch {
+      setAuthState("signedOut");
+    }
+  }
+
+  function signIn() {
+    window.google.accounts.id.prompt();
+  }
+
+  function signOut() {
+    window.google.accounts.id.disableAutoSelect();
+    setAuthState("signedOut");
+    setUserEmail(null);
+  }
+
+  return { authState, userEmail, signIn, signOut };
+}
+
+function LoadingScreen() {
+  return (
+    <div style={{ minHeight: "100vh", background: "#0f1117", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: "#b8a96a", fontSize: "13px", letterSpacing: "3px", textTransform: "uppercase" }}>Loading…</div>
+    </div>
+  );
+}
+
+function SignInScreen({ onSignIn }) {
+  return (
+    <div style={{ minHeight: "100vh", background: "#0f1117", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: "360px", padding: "48px 40px", background: "#1a1f2e", border: "1px solid #2a2f3e", borderRadius: "8px" }}>
+        <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#b8a96a", textTransform: "uppercase", marginBottom: "8px" }}>Household Finance</div>
+        <div style={{ fontSize: "24px", color: "#e8e0cc", fontWeight: "300", letterSpacing: "1px", marginBottom: "8px", fontFamily: "'Georgia', serif" }}>Spence Family</div>
+        <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "36px" }}>James & Jemma</div>
+        <div style={{ width: "40px", height: "1px", background: "#b8a96a", margin: "0 auto 36px" }} />
+        <p style={{ color: "#9ca3af", fontSize: "13px", marginBottom: "28px", lineHeight: "1.6" }}>
+          Sign in with your Google account to access the dashboard.
+        </p>
+        <button
+          onClick={onSignIn}
+          style={{
+            display: "flex", alignItems: "center", gap: "12px",
+            background: "#fff", color: "#3c4043", border: "none",
+            borderRadius: "4px", padding: "10px 20px", cursor: "pointer",
+            fontSize: "14px", fontWeight: "500", margin: "0 auto",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.3)"
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            <path fill="none" d="M0 0h48v48H0z"/>
+          </svg>
+          Sign in with Google
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function UnauthorisedScreen({ userEmail, onSignOut }) {
+  return (
+    <div style={{ minHeight: "100vh", background: "#0f1117", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: "360px", padding: "48px 40px", background: "#1a1f2e", border: "1px solid #2a2f3e", borderRadius: "8px" }}>
+        <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#b8a96a", textTransform: "uppercase", marginBottom: "24px" }}>Spence Family Dashboard</div>
+        <div style={{ color: "#ef4444", fontSize: "14px", marginBottom: "12px" }}>Access Denied</div>
+        <p style={{ color: "#6b7280", fontSize: "13px", marginBottom: "28px", lineHeight: "1.6" }}>
+          {userEmail} is not authorised to view this dashboard.
+        </p>
+        <button onClick={onSignOut} style={{ background: "none", border: "1px solid #374151", color: "#9ca3af", borderRadius: "4px", padding: "8px 20px", cursor: "pointer", fontSize: "13px" }}>
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// RAW TRANSACTION DATA
+// ============================================================
+const RAW_TRANSACTIONS = [
+  {date:"2026-04-25",merchant:"TFL",amount:-10.6,category:"Transport"},
+  {date:"2026-04-24",merchant:"Amazon",amount:-18.45,category:"Health & Beauty"},
+  {date:"2026-04-24",merchant:"New Balance",amount:-15.0,category:"Shopping"},
+  {date:"2026-04-24",merchant:"Costa Coffee",amount:-2.7,category:"Eating Out"},
+  {date:"2026-04-24",merchant:"Amazon",amount:-20.0,category:"Health & Beauty"},
+  {date:"2026-04-24",merchant:"Boots",amount:-2.2,category:"Health & Beauty"},
+  {date:"2026-04-24",merchant:"Sainsbury\'s",amount:-133.23,category:"Groceries"},
+  {date:"2026-04-24",merchant:"Charing Cross Station",amount:-1.0,category:"Groceries"},
+  {date:"2026-04-23",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-04-23",merchant:"Forest",amount:-5.0,category:"Transport"},
+  {date:"2026-04-23",merchant:"Forest",amount:-0.6,category:"Transport"},
+  {date:"2026-04-24",merchant:"James Spence & Jemma Spence",amount:10000.0,category:"Internal Transfers"},
+  {date:"2026-04-24",merchant:"James Spence",amount:-10000.0,category:"Interest"},
+  {date:"2026-04-24",merchant:"Trafigura Limited (Trafigura Limited)",amount:8735.86,category:"Salary"},
+  {date:"2026-04-23",merchant:"Interest",amount:9.21,category:"Interest"},
+  {date:"2026-04-23",merchant:"Forest",amount:-3.97,category:"General"},
+  {date:"2026-04-23",merchant:"Lime*Pass",amount:-3.99,category:"Transport"},
+  {date:"2026-04-23",merchant:"discovery+",amount:-30.99,category:"Household Bills"},
+  {date:"2026-04-23",merchant:"Make Mine",amount:-7.95,category:"Groceries"},
+  {date:"2026-04-22",merchant:"Interest",amount:9.21,category:"Interest"},
+  {date:"2026-04-22",merchant:"Musical Instrument Hir",amount:-24.0,category:"School Costs"},
+  {date:"2026-04-22",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-04-22",merchant:"Musical Instrument Hir Holwell",amount:-52.0,category:"School Costs"},
+  {date:"2026-04-22",merchant:"No1roofing.Com Lewisham",amount:-45.0,category:"Home & Family"},
+  {date:"2026-04-22",merchant:"Pets Corner",amount:-9.87,category:"Coco"},
+  {date:"2026-04-22",merchant:"Amazon",amount:-33.95,category:"Health & Beauty"},
+  {date:"2026-04-22",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-04-21",merchant:"Interest",amount:9.22,category:"Interest"},
+  {date:"2026-04-21",merchant:"Sent DJB PROPERTY MAINTENANCE LTD.",amount:-840.0,category:"Home & Family"},
+  {date:"2026-04-21",merchant:"Gracie inv 1037 (Miss Kim Reilly)",amount:-243.0,category:"School Costs"},
+  {date:"2026-04-21",merchant:"TTINV-1410 (Tag Tuition Ltd)",amount:-805.0,category:"School Costs"},
+  {date:"2026-04-21",merchant:"Blackheath Prep",amount:-7534.4,category:"School Fees"},
+  {date:"2026-04-21",merchant:"Blackheath Prep",amount:-5644.0,category:"School Fees"},
+  {date:"2026-04-21",merchant:"Blackheath Prep Ptfa",amount:-14.0,category:"General"},
+  {date:"2026-04-21",merchant:"Amazon",amount:-5.99,category:"Clothing & Shoes"},
+  {date:"2026-04-21",merchant:"Charing Cross Station",amount:-4.35,category:"Groceries"},
+  {date:"2026-04-21",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-04-21",merchant:"Sainsbury\'s",amount:-5.9,category:"Groceries"},
+  {date:"2026-04-21",merchant:"Sainsbury\'s",amount:-176.08,category:"Groceries"},
+  {date:"2026-04-21",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-04-21",merchant:"Sainsbury\'s",amount:5.45,category:"Groceries"},
+  {date:"2026-04-21",merchant:"Lime*Pass",amount:-3.99,category:"Transport"},
+  {date:"2026-04-21",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-04-20",merchant:"Interest",amount:9.21,category:"Interest"},
+  {date:"2026-04-20",merchant:"SP Parking",amount:-10.43,category:"Holidays"},
+  {date:"2026-04-20",merchant:"Costa Coffee",amount:-6.9,category:"Eating Out"},
+  {date:"2026-04-20",merchant:"Amazon",amount:-9.99,category:"General"},
+  {date:"2026-04-20",merchant:"Uber",amount:-91.98,category:"Holidays"},
+  {date:"2026-04-20",merchant:"Marks & Spencer",amount:-16.69,category:"Groceries"},
+  {date:"2026-04-20",merchant:"Amazon",amount:-5.95,category:"Clothing & Shoes"},
+  {date:"2026-04-20",merchant:"Https://Permits.Paysma",amount:-13.5,category:"Transport"},
+  {date:"2026-04-20",merchant:"Spotify",amount:35.77,category:"Subscriptions"},
+  {date:"2026-04-19",merchant:"Interest",amount:27.62,category:"Interest"},
+  {date:"2026-04-19",merchant:"Pizzeria Picasso",amount:-19.21,category:"Holidays"},
+  {date:"2026-04-19",merchant:"7 24 Supermarket - Iii",amount:-41.55,category:"Holidays"},
+  {date:"2026-04-19",merchant:"The Bakery Banus",amount:-3.45,category:"Holidays"},
+  {date:"2026-04-19",merchant:"The Bakery Banus",amount:-6.42,category:"Holidays"},
+  {date:"2026-04-19",merchant:"7 24 Supermarket - Iii",amount:-6.37,category:"Holidays"},
+  {date:"2026-04-19",merchant:"Boost Juice Bars",amount:-17.5,category:"Eating Out"},
+  {date:"2026-04-19",merchant:"Flying Tiger",amount:-2.0,category:"Shopping"},
+  {date:"2026-04-19",merchant:"Marks & Spencer",amount:-9.27,category:"Groceries"},
+  {date:"2026-04-19",merchant:"Lego",amount:-6.99,category:"Shopping"},
+  {date:"2026-04-19",merchant:"McDonalds",amount:-4.29,category:"Eating Out"},
+  {date:"2026-04-19",merchant:"WH Smith",amount:-8.0,category:"General"},
+  {date:"2026-04-19",merchant:"Google One",amount:-189.99,category:"Subscriptions"},
+  {date:"2026-04-19",merchant:"Tortilla",amount:-7.5,category:"Eating Out"},
+  {date:"2026-04-18",merchant:"Restaurante Diblu",amount:-8.73,category:"Holidays"},
+  {date:"2026-04-18",merchant:"Breathe",amount:-43.43,category:"Holidays"},
+  {date:"2026-04-18",merchant:"S.O.S Coffee",amount:-4.4,category:"Eating Out"},
+  {date:"2026-04-18",merchant:"Amazon",amount:-10.99,category:"Health & Beauty"},
+  {date:"2026-04-18",merchant:"S.O.S Coffee",amount:-48.3,category:"Eating Out"},
+  {date:"2026-04-18",merchant:"Amazon",amount:-18.48,category:"Health & Beauty"},
+  {date:"2026-04-17",merchant:"Pret a Manger",amount:-10.49,category:"Holidays"},
+  {date:"2026-04-17",merchant:"WH Smith",amount:-22.34,category:"Holidays"},
+  {date:"2026-04-17",merchant:"Airalo",amount:-7.0,category:"Holidays"},
+  {date:"2026-04-17",merchant:"Uber",amount:-94.34,category:"Holidays"},
+  {date:"2026-04-17",merchant:"Blackheath Standard Pha",amount:-30.8,category:"Health & Beauty"},
+  {date:"2026-04-17",merchant:"Marks & Spencer",amount:-12.39,category:"Groceries"},
+  {date:"2026-04-16",merchant:"Interest",amount:9.2,category:"Interest"},
+  {date:"2026-04-16",merchant:"Monzo",amount:-32.5,category:"Holidays"},
+  {date:"2026-04-16",merchant:"James Spence",amount:-13000.0,category:"Internal Transfers"},
+  {date:"2026-04-16",merchant:"James Spence",amount:13000.0,category:"Internal Transfers"},
+  {date:"2026-04-16",merchant:"Lynx",amount:-1.49,category:"Health & Beauty"},
+  {date:"2026-04-16",merchant:"Lynx",amount:-1.49,category:"Health & Beauty"},
+  {date:"2026-04-16",merchant:"Sainsbury\'s",amount:-204.45,category:"Groceries"},
+  {date:"2026-04-16",merchant:"Sainsbury\'s",amount:-9.9,category:"Groceries"},
+  {date:"2026-04-16",merchant:"Amazon",amount:-8.19,category:"Health & Beauty"},
+  {date:"2026-04-16",merchant:"Amazon",amount:-56.21,category:"Health & Beauty"},
+  {date:"2026-04-16",merchant:"Costa Coffee",amount:-4.5,category:"Eating Out"},
+  {date:"2026-04-16",merchant:"Amazon",amount:-6.99,category:"Health & Beauty"},
+  {date:"2026-04-16",merchant:"Pets at Home",amount:-32.24,category:"Coco"},
+  {date:"2026-04-16",merchant:"Dart Charge",amount:-3.5,category:"Transport"},
+  {date:"2026-04-15",merchant:"Interest",amount:9.21,category:"Interest"},
+  {date:"2026-04-15",merchant:"Sent ladn-o ltd",amount:-65.0,category:"Health & Beauty"},
+  {date:"2026-04-15",merchant:"Royal Borough Of Greenwich",amount:-354.38,category:"Household Bills"},
+  {date:"2026-04-15",merchant:"Thames Water",amount:-102.0,category:"Household Bills"},
+  {date:"2026-04-15",merchant:"Aviva Life Insurance",amount:-27.26,category:"Household Bills"},
+  {date:"2026-04-15",merchant:"INVESTEC INTEREST (Jemma Spence)",amount:502.42,category:"Interest"},
+  {date:"2026-04-15",merchant:"James Spence",amount:520.09,category:"Interest"},
+  {date:"2026-04-15",merchant:"Outback Steakhouse",amount:-8.85,category:"Holidays"},
+  {date:"2026-04-15",merchant:"Barehams Kennels Grays",amount:-209.0,category:"Holidays"},
+  {date:"2026-04-15",merchant:"eduFOCUS",amount:-12.0,category:"School Costs"},
+  {date:"2026-04-15",merchant:"Amazon",amount:-11.04,category:"Health & Beauty"},
+  {date:"2026-04-15",merchant:"Marks & Spencer",amount:-38.74,category:"Groceries"},
+  {date:"2026-04-15",merchant:"Contactlens",amount:-30.99,category:"Shopping"},
+  {date:"2026-04-15",merchant:"Marks & Spencer",amount:-16.65,category:"Groceries"},
+  {date:"2026-04-15",merchant:"Maple Parking Crawley",amount:-20.0,category:"Transport"},
+  {date:"2026-04-15",merchant:"Rontec Roadside",amount:-7.05,category:"Transport"},
+  {date:"2026-04-15",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-04-14",merchant:"Interest",amount:9.2,category:"Interest"},
+  {date:"2026-04-14",merchant:"Snow Cone",amount:-9.45,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Walgreens",amount:-25.34,category:"Groceries"},
+  {date:"2026-04-14",merchant:"Carrabba\'s Italian Grill",amount:-70.75,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Madame Tussauds",amount:-115.02,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Cmt Orlando",amount:-44.4,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Uber",amount:-10.6,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Starbucks Coffee",amount:-7.79,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Starbucks Coffee",amount:-34.57,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Hyatt Regency",amount:-105.52,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Chick-fil-A",amount:-10.08,category:"Holidays"},
+  {date:"2026-04-14",merchant:"McDonalds",amount:-6.32,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Smarte Carte",amount:-5.2,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Booking.com",amount:-208.07,category:"Travel"},
+  {date:"2026-04-14",merchant:"Airalo",amount:-7.0,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Airalo",amount:-7.0,category:"Holidays"},
+  {date:"2026-04-14",merchant:"Google Nest",amount:-8.0,category:"Subscriptions"},
+  {date:"2026-04-14",merchant:"Museum OF Illusions Orlando",amount:-40.84,category:"Entertainment"},
+  {date:"2026-04-14",merchant:"Hyatt Orlando Int Airp Orlando",amount:-62.48,category:"General"},
+  {date:"2026-04-14",merchant:"Sainsbury\'s",amount:-4.0,category:"Groceries"},
+  {date:"2026-04-13",merchant:"Burger King",amount:-9.95,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Outback Steakhouse",amount:-2.89,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Interest",amount:9.2,category:"Interest"},
+  {date:"2026-04-13",merchant:"Cibo Express",amount:-3.48,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Outback Steakhouse",amount:-2.96,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Magic OF Disney E",amount:-6.31,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Disney",amount:-82.87,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Walt Disney World",amount:-9.33,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Uber",amount:-59.4,category:"Transport"},
+  {date:"2026-04-13",merchant:"Walt Disney World",amount:-113.53,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Virgin Media",amount:-45.0,category:"Household Bills"},
+  {date:"2026-04-13",merchant:"Nspcc",amount:-100.0,category:"Charity"},
+  {date:"2026-04-13",merchant:"Canteen Vending",amount:-3.74,category:"Holidays"},
+  {date:"2026-04-13",merchant:"Amazon",amount:-7.49,category:"Health & Beauty"},
+  {date:"2026-04-13",merchant:"Amazon",amount:-4.99,category:"Health & Beauty"},
+  {date:"2026-04-13",merchant:"Spotify",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-04-12",merchant:"Interest",amount:27.6,category:"Interest"},
+  {date:"2026-04-12",merchant:"Walt Disney World",amount:-5.46,category:"Holidays"},
+  {date:"2026-04-12",merchant:"Walt Disney World",amount:-4.36,category:"Holidays"},
+  {date:"2026-04-12",merchant:"Walt Disney World",amount:-4.75,category:"Holidays"},
+  {date:"2026-04-12",merchant:"Walt Disney World",amount:-116.95,category:"Holidays"},
+  {date:"2026-04-12",merchant:"Canteen Vending",amount:-3.72,category:"Holidays"},
+  {date:"2026-04-12",merchant:"Terralina Crafted Italian",amount:-144.45,category:"Holidays"},
+  {date:"2026-04-12",merchant:"Twinkl",amount:-7.99,category:"School Costs"},
+  {date:"2026-04-11",merchant:"Walt Disney World",amount:-1.58,category:"Holidays"},
+  {date:"2026-04-11",merchant:"Walt Disney World",amount:-4.96,category:"Holidays"},
+  {date:"2026-04-11",merchant:"Walt Disney World",amount:-2.6,category:"Holidays"},
+  {date:"2026-04-11",merchant:"Walt Disney World",amount:-116.94,category:"Holidays"},
+  {date:"2026-04-10",merchant:"Walt Disney World",amount:-12.07,category:"Holidays"},
+  {date:"2026-04-10",merchant:"Walt Disney World",amount:-116.95,category:"Holidays"},
+  {date:"2026-04-10",merchant:"Canteen Vending",amount:-3.74,category:"Holidays"},
+  {date:"2026-04-10",merchant:"Walt Disney World",amount:-108.23,category:"Holidays"},
+  {date:"2026-04-10",merchant:"NS&I",amount:25.0,category:"Finances"},
+  {date:"2026-04-09",merchant:"Walt Disney World",amount:-11.37,category:"Holidays"},
+  {date:"2026-04-09",merchant:"Walt Disney World",amount:-4.2,category:"Holidays"},
+  {date:"2026-04-09",merchant:"Interest",amount:9.2,category:"Interest"},
+  {date:"2026-04-09",merchant:"UNIQLO",amount:-39.72,category:"Clothing & Shoes"},
+  {date:"2026-04-09",merchant:"Fit2run",amount:-123.19,category:"Clothing & Shoes"},
+  {date:"2026-04-09",merchant:"Starbucks Coffee",amount:-15.01,category:"Holidays"},
+  {date:"2026-04-09",merchant:"Walt Disney World",amount:-117.8,category:"Holidays"},
+  {date:"2026-04-09",merchant:"Walt Disney World",amount:-79.63,category:"Holidays"},
+  {date:"2026-04-09",merchant:"Terralina Crafted Italian",amount:-122.04,category:"Holidays"},
+  {date:"2026-04-09",merchant:"Zara",amount:-47.77,category:"Clothing & Shoes"},
+  {date:"2026-04-08",merchant:"Interest",amount:9.2,category:"Interest"},
+  {date:"2026-04-08",merchant:"Walt Disney World",amount:-31.87,category:"Holidays"},
+  {date:"2026-04-08",merchant:"American Express",amount:-11358.82,category:"Internal Transfers"},
+  {date:"2026-04-08",merchant:"Walt Disney World",amount:-30.33,category:"Holidays"},
+  {date:"2026-04-08",merchant:"Walt Disney World",amount:-5.11,category:"Holidays"},
+  {date:"2026-04-08",merchant:"Walt Disney World",amount:-41.71,category:"Holidays"},
+  {date:"2026-04-08",merchant:"DD Doordash Carrabbas",amount:-85.22,category:"Holidays"},
+  {date:"2026-04-07",merchant:"Interest",amount:9.2,category:"Interest"},
+  {date:"2026-04-07",merchant:"Disney - Connections Cafe",amount:-9.47,category:"Holidays"},
+  {date:"2026-04-07",merchant:"Walt Disney World",amount:-8.06,category:"Holidays"},
+  {date:"2026-04-07",merchant:"National Lottery",amount:-8.0,category:"Subscriptions"},
+  {date:"2026-04-07",merchant:"Walt Disney World",amount:-34.85,category:"Holidays"},
+  {date:"2026-04-07",merchant:"Walt Disney World",amount:-10.43,category:"Holidays"},
+  {date:"2026-04-07",merchant:"Virgin Atlantic",amount:-136.0,category:"Holidays"},
+  {date:"2026-04-06",merchant:"Interest",amount:45.96,category:"Interest"},
+  {date:"2026-04-06",merchant:"Walt Disney World",amount:-11.49,category:"Holidays"},
+  {date:"2026-04-06",merchant:"Disney",amount:-96.16,category:"Holidays"},
+  {date:"2026-04-06",merchant:"Walt Disney World",amount:-14.7,category:"Holidays"},
+  {date:"2026-04-06",merchant:"Walt Disney World",amount:-22.82,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Airalo",amount:-10.5,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Airalo",amount:-10.5,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Starbucks Coffee",amount:-5.22,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Global Exchange",amount:-386.65,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Trussell.Org.Uk Salisbury",amount:-5100.0,category:"Charity"},
+  {date:"2026-04-05",merchant:"Pret a Manger",amount:-37.85,category:"Holidays"},
+  {date:"2026-04-05",merchant:"WH Smith",amount:-34.42,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Spotify",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-04-05",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-04-05",merchant:"WH Smith",amount:-4.4,category:"Holidays"},
+  {date:"2026-04-05",merchant:"Trg Holdings Limited",amount:-45.08,category:"Holidays"},
+  {date:"2026-04-04",merchant:"Jemma (Joanne Bridgeman)",amount:-10.0,category:"Charity"},
+  {date:"2026-04-04",merchant:"44874 Blackheath",amount:-15.4,category:"General"},
+  {date:"2026-04-04",merchant:"Marks & Spencer",amount:-23.57,category:"Groceries"},
+  {date:"2026-04-04",merchant:"S.O.S Coffee",amount:-8.8,category:"Eating Out"},
+  {date:"2026-04-04",merchant:"Wi-Fi Onboard Vir Zug",amount:-20.99,category:"Holidays"},
+  {date:"2026-04-04",merchant:"Wi-Fi Onboard Vir Zug",amount:-20.99,category:"Holidays"},
+  {date:"2026-04-04",merchant:"Payment Received - Thank You",amount:11358.82,category:"Internal Transfers"},
+  {date:"2026-04-04",merchant:"S.O.S Coffee",amount:-42.2,category:"Eating Out"},
+  {date:"2026-04-03",merchant:"Walt Disney World",amount:-113.13,category:"Holidays"},
+  {date:"2026-04-03",merchant:"Zara",amount:-59.98,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"Maple Manor Parking Crawley",amount:-186.47,category:"Holidays"},
+  {date:"2026-04-03",merchant:"Marks & Spencer",amount:-30.32,category:"Groceries"},
+  {date:"2026-04-03",merchant:"Apple",amount:-8.99,category:"Subscriptions"},
+  {date:"2026-04-03",merchant:"Boots",amount:-42.17,category:"Health & Beauty"},
+  {date:"2026-04-03",merchant:"Zara",amount:29.99,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"The Entertainer",amount:-6.0,category:"Entertainment"},
+  {date:"2026-04-03",merchant:"JD Sports",amount:-55.0,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"Amazon",amount:-12.97,category:"Health & Beauty"},
+  {date:"2026-04-03",merchant:"Carluccios",amount:-52.83,category:"Eating Out"},
+  {date:"2026-04-03",merchant:"Amazon",amount:9.99,category:"Health & Beauty"},
+  {date:"2026-04-03",merchant:"Zara",amount:-17.98,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"Zara",amount:29.99,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"Octopus Energy",amount:-631.51,category:"Household Bills"},
+  {date:"2026-04-03",merchant:"Amazon",amount:-9.99,category:"Health & Beauty"},
+  {date:"2026-04-03",merchant:"Zara",amount:-250.12,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"Lower Rose Gallery - BR Kent",amount:-154.99,category:"Clothing & Shoes"},
+  {date:"2026-04-03",merchant:"Amazon",amount:34.75,category:"Health & Beauty"},
+  {date:"2026-04-03",merchant:"Lovisa",amount:-8.0,category:"Shopping"},
+  {date:"2026-04-03",merchant:"Amazon",amount:-34.75,category:"Health & Beauty"},
+  {date:"2026-04-03",merchant:"WH Smith",amount:-12.99,category:"General"},
+  {date:"2026-04-03",merchant:"Zara",amount:19.99,category:"Clothing & Shoes"},
+  {date:"2026-04-02",merchant:"Walt Disney World",amount:-119.6,category:"Holidays"},
+  {date:"2026-04-02",merchant:"Walt Disney World",amount:-80.83,category:"Holidays"},
+  {date:"2026-04-02",merchant:"Assets fee",amount:-1.15,category:"Finances"},
+  {date:"2026-04-02",merchant:"Assets fee",amount:-24.0,category:"Finances"},
+  {date:"2026-04-02",merchant:"Amazon",amount:-34.44,category:"Health & Beauty"},
+  {date:"2026-04-02",merchant:"Amazon",amount:-11.99,category:"Health & Beauty"},
+  {date:"2026-04-02",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-04-02",merchant:"London Borough Lewisha",amount:-2.08,category:"Transport"},
+  {date:"2026-04-02",merchant:"Charing Cross Station",amount:-1.85,category:"Groceries"},
+  {date:"2026-04-02",merchant:"PF Pharma Ltd",amount:-8.55,category:"Health & Beauty"},
+  {date:"2026-04-02",merchant:"Woods OF London Ltd Woo",amount:-6889.0,category:"Home & Family"},
+  {date:"2026-04-02",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-04-02",merchant:"Amazon Prime",amount:-8.99,category:"Subscriptions"},
+  {date:"2026-04-02",merchant:"Marks & Spencer",amount:-15.75,category:"Groceries"},
+  {date:"2026-04-01",merchant:"Interest",amount:9.19,category:"Interest"},
+  {date:"2026-04-01",merchant:"Pet Plan",amount:-29.4,category:"Coco"},
+  {date:"2026-04-01",merchant:"Verisure Alarms",amount:-53.26,category:"Household Bills"},
+  {date:"2026-04-01",merchant:"G&Bhospice Lottery",amount:-4.34,category:"Charity"},
+  {date:"2026-04-01",merchant:"Royal Borough Of Greenwich",amount:-354.38,category:"Household Bills"},
+  {date:"2026-04-01",merchant:"Aviva Life Insurance",amount:-28.28,category:"Household Bills"},
+  {date:"2026-04-01",merchant:"Battersea Dogs & Cats",amount:-10.0,category:"Charity"},
+  {date:"2026-04-01",merchant:"National Lottery",amount:80.0,category:"Subscriptions"},
+  {date:"2026-04-01",merchant:"Weight Watchers",amount:-5.65,category:"Health & Beauty"},
+  {date:"2026-04-01",merchant:"The Royal Parks",amount:-2.45,category:"Transport"},
+  {date:"2026-04-01",merchant:"Sainsbury\'s",amount:-2.4,category:"Groceries"},
+  {date:"2026-04-01",merchant:"Home Bargains",amount:-16.14,category:"General"},
+  {date:"2026-04-01",merchant:"Amazon",amount:-7.99,category:"General"},
+  {date:"2026-04-01",merchant:"Zara",amount:-58.92,category:"Clothing & Shoes"},
+  {date:"2026-04-01",merchant:"Weight Watchers",amount:-5.65,category:"Health & Beauty"},
+  {date:"2026-04-01",merchant:"AO",amount:-40.0,category:"Home & Family"},
+  {date:"2026-04-01",merchant:"Amazon",amount:34.44,category:"Health & Beauty"},
+  {date:"2026-04-01",merchant:"Marks & Spencer",amount:-19.0,category:"Groceries"},
+  {date:"2026-04-01",merchant:"Interest earned",amount:0.07,category:"Interest"},
+  {date:"2026-03-31",merchant:"Interest",amount:9.19,category:"Income"},
+  {date:"2026-03-31",merchant:"Monzo",amount:-41.0,category:"Holidays"},
+  {date:"2026-03-31",merchant:"Jemma",amount:-50.0,category:"General"},
+  {date:"2026-03-31",merchant:"Lex Autolease",amount:-1437.16,category:"Range Rover"},
+  {date:"2026-03-31",merchant:"EE",amount:-75.34,category:"Household Bills"},
+  {date:"2026-03-31",merchant:"Montpeliers",amount:-11.9,category:"Eating Out"},
+  {date:"2026-03-31",merchant:"Sainsbury\'s",amount:-92.48,category:"Groceries"},
+  {date:"2026-03-31",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-31",merchant:"Pets Corner",amount:-7.96,category:"Coco"},
+  {date:"2026-03-31",merchant:"Next",amount:-77.5,category:"Clothing & Shoes"},
+  {date:"2026-03-31",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-31",merchant:"Marks & Spencer",amount:-25.3,category:"Groceries"},
+  {date:"2026-03-31",merchant:"Charing Cross Station",amount:-2.9,category:"Groceries"},
+  {date:"2026-03-31",merchant:"AO",amount:-1278.0,category:"Home & Family"},
+  {date:"2026-03-30",merchant:"Interest",amount:9.19,category:"Income"},
+  {date:"2026-03-30",merchant:"Charing Cross Station",amount:-0.5,category:"Groceries"},
+  {date:"2026-03-30",merchant:"Charing Cross Station",amount:-5.8,category:"Groceries"},
+  {date:"2026-03-30",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-30",merchant:"Amazon",amount:-44.99,category:"Health & Beauty"},
+  {date:"2026-03-30",merchant:"Wasabi",amount:-18.4,category:"Eating Out"},
+  {date:"2026-03-30",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-30",merchant:"Card Factory",amount:-10.27,category:"General"},
+  {date:"2026-03-30",merchant:"Sainsbury\'s",amount:-3.5,category:"Groceries"},
+  {date:"2026-03-30",merchant:"Zara",amount:-161.03,category:"Clothing & Shoes"},
+  {date:"2026-03-30",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-30",merchant:"Next",amount:-20.0,category:"Clothing & Shoes"},
+  {date:"2026-03-30",merchant:"Amazon",amount:-16.1,category:"General"},
+  {date:"2026-03-30",merchant:"Marks & Spencer",amount:-26.2,category:"Groceries"},
+  {date:"2026-03-30",merchant:"Amazon",amount:-4.28,category:"General"},
+  {date:"2026-03-30",merchant:"HM",amount:-3.98,category:"General"},
+  {date:"2026-03-29",merchant:"Interest",amount:27.56,category:"Income"},
+  {date:"2026-03-29",merchant:"Sent Dustin Burton",amount:-60.0,category:"General"},
+  {date:"2026-03-29",merchant:"Perks",amount:-7.0,category:"Finances"},
+  {date:"2026-03-29",merchant:"TK Maxx",amount:-40.23,category:"General"},
+  {date:"2026-03-29",merchant:"Zara",amount:-72.92,category:"Clothing & Shoes"},
+  {date:"2026-03-29",merchant:"Marks & Spencer",amount:-8.56,category:"Groceries"},
+  {date:"2026-03-29",merchant:"Amazon",amount:-9.99,category:"Health & Beauty"},
+  {date:"2026-03-29",merchant:"Hobbycraft",amount:-26.7,category:"General"},
+  {date:"2026-03-29",merchant:"Boots",amount:-38.87,category:"Health & Beauty"},
+  {date:"2026-03-29",merchant:"Amazon",amount:10.27,category:"General"},
+  {date:"2026-03-29",merchant:"VF Northern Europe Serv",amount:-65.84,category:"Clothing & Shoes"},
+  {date:"2026-03-29",merchant:"Starbucks Coffee",amount:-4.8,category:"Eating Out"},
+  {date:"2026-03-29",merchant:"Amazon",amount:-10.27,category:"General"},
+  {date:"2026-03-29",merchant:"Next",amount:-20.0,category:"Clothing & Shoes"},
+  {date:"2026-03-29",merchant:"Amazon",amount:-5.99,category:"General"},
+  {date:"2026-03-29",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-03-28",merchant:"Travelassist",amount:-135.45,category:"Travel"},
+  {date:"2026-03-28",merchant:"Marks & Spencer",amount:-22.97,category:"Groceries"},
+  {date:"2026-03-28",merchant:"Barehams Kennels Grays",amount:-72.5,category:"Holidays"},
+  {date:"2026-03-28",merchant:"S.O.S Coffee",amount:-41.0,category:"Eating Out"},
+  {date:"2026-03-28",merchant:"Apple",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-03-28",merchant:"Fantastic Services",amount:-443.0,category:"Home & Family"},
+  {date:"2026-03-28",merchant:"S.O.S Coffee",amount:-8.8,category:"Eating Out"},
+  {date:"2026-03-28",merchant:"MR Central Heating",amount:-168.82,category:"Home & Family"},
+  {date:"2026-03-28",merchant:"Screwfix",amount:-19.19,category:"General"},
+  {date:"2026-03-28",merchant:"Sun YA Chinese Restaur",amount:-41.5,category:"Eating Out"},
+  {date:"2026-03-28",merchant:"Apple",amount:-0.99,category:"Subscriptions"},
+  {date:"2026-03-28",merchant:"Vinted",amount:-6.14,category:"General"},
+  {date:"2026-03-27",merchant:"Travelassist",amount:-135.21,category:"Holidays"},
+  {date:"2026-03-27",merchant:"Travelassist",amount:-135.17,category:"Holidays"},
+  {date:"2026-03-27",merchant:"Sent Clive Taylor",amount:-3240.0,category:"Home & Family"},
+  {date:"2026-03-27",merchant:"Living Things Ltd",amount:-195.0,category:"Entertainment"},
+  {date:"2026-03-27",merchant:"Marks & Spencer",amount:-25.35,category:"Groceries"},
+  {date:"2026-03-27",merchant:"Apple",amount:-19.99,category:"Subscriptions"},
+  {date:"2026-03-27",merchant:"eduFOCUS",amount:-94.88,category:"School Costs"},
+  {date:"2026-03-27",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-27",merchant:"Amazon",amount:-5.2,category:"Health & Beauty"},
+  {date:"2026-03-27",merchant:"Sainsbury\'s",amount:-1.85,category:"Groceries"},
+  {date:"2026-03-26",merchant:"Interest",amount:9.18,category:"Income"},
+  {date:"2026-03-26",merchant:"ATM",amount:-50.0,category:"Cash"},
+  {date:"2026-03-26",merchant:"Charing Cross Station",amount:-3.9,category:"General"},
+  {date:"2026-03-26",merchant:"Amazon",amount:-12.95,category:"General"},
+  {date:"2026-03-26",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-26",merchant:"Sky",amount:-100.99,category:"Household Bills"},
+  {date:"2026-03-26",merchant:"Sainsbury\'s",amount:-107.3,category:"Groceries"},
+  {date:"2026-03-26",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-26",merchant:"Amazon",amount:-33.0,category:"Health & Beauty"},
+  {date:"2026-03-26",merchant:"Beechcroft Pharmacy",amount:-5.99,category:"Health & Beauty"},
+  {date:"2026-03-26",merchant:"Peloton",amount:-45.0,category:"Subscriptions"},
+  {date:"2026-03-26",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-03-25",merchant:"Interest",amount:9.19,category:"Income"},
+  {date:"2026-03-25",merchant:"Sent isabel milner",amount:-90.0,category:"Health & Beauty"},
+  {date:"2026-03-25",merchant:"James Spence & Jemma Spence",amount:4000.0,category:"Internal Transfers"},
+  {date:"2026-03-25",merchant:"James Spence",amount:-4000.0,category:"Internal Transfers"},
+  {date:"2026-03-25",merchant:"Virgin Money",amount:-5000.0,category:"Internal Transfers"},
+  {date:"2026-03-25",merchant:"Trafigura Limited (Trafigura Limited)",amount:8729.56,category:"Salary"},
+  {date:"2026-03-25",merchant:"Pets at Home",amount:-31.84,category:"Coco"},
+  {date:"2026-03-25",merchant:"eduFOCUS",amount:-39.6,category:"School Costs"},
+  {date:"2026-03-25",merchant:"Blackheath Standard Pha",amount:-9.9,category:"Health & Beauty"},
+  {date:"2026-03-25",merchant:"TFL",amount:-10.5,category:"Transport"},
+  {date:"2026-03-25",merchant:"Payment Received",amount:5000.0,category:"Internal Transfers"},
+  {date:"2026-03-25",merchant:"Itsu",amount:-35.88,category:"Eating Out"},
+  {date:"2026-03-25",merchant:"Smyths Toys Superstores",amount:-14.98,category:"Presents"},
+  {date:"2026-03-25",merchant:"TFL",amount:-10.5,category:"Transport"},
+  {date:"2026-03-25",merchant:"Destinology",amount:7190.0,category:"Holidays"},
+  {date:"2026-03-24",merchant:"Interest",amount:9.18,category:"Income"},
+  {date:"2026-03-24",merchant:"Jemma (Nikki Chawner)",amount:-140.0,category:"Health & Beauty"},
+  {date:"2026-03-24",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-24",merchant:"Primark",amount:-52.95,category:"Clothing & Shoes"},
+  {date:"2026-03-24",merchant:"Pets at Home",amount:-84.49,category:"Coco"},
+  {date:"2026-03-24",merchant:"Amazon",amount:36.17,category:"Health & Beauty"},
+  {date:"2026-03-24",merchant:"Amazon",amount:-36.17,category:"Health & Beauty"},
+  {date:"2026-03-24",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-24",merchant:"London Borough Lewisha",amount:-1.61,category:"Transport"},
+  {date:"2026-03-24",merchant:"Revolut",amount:-186.0,category:"Home & Family"},
+  {date:"2026-03-24",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-23",merchant:"Interest",amount:9.18,category:"Income"},
+  {date:"2026-03-23",merchant:"discovery+",amount:-30.99,category:"Household Bills"},
+  {date:"2026-03-23",merchant:"Victorian Plumbing",amount:-219.9,category:"Home & Family"},
+  {date:"2026-03-23",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-23",merchant:"Scholastic Limi Warwick",amount:-15.98,category:"General"},
+  {date:"2026-03-23",merchant:"Sainsbury\'s",amount:-145.62,category:"Groceries"},
+  {date:"2026-03-23",merchant:"Sainsbury\'s",amount:-6.4,category:"Groceries"},
+  {date:"2026-03-23",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-22",merchant:"Interest",amount:27.54,category:"Income"},
+  {date:"2026-03-22",merchant:"Musical Instrument Hir",amount:-24.0,category:"School Costs"},
+  {date:"2026-03-22",merchant:"Marks & Spencer",amount:-7.28,category:"Groceries"},
+  {date:"2026-03-22",merchant:"Starbucks Coffee",amount:-4.8,category:"Eating Out"},
+  {date:"2026-03-22",merchant:"Musical Instrument Hir Holwell",amount:-27.0,category:"School Costs"},
+  {date:"2026-03-22",merchant:"Amazon",amount:-19.39,category:"Health & Beauty"},
+  {date:"2026-03-22",merchant:"Rontec Roadside",amount:-1.69,category:"Transport"},
+  {date:"2026-03-21",merchant:"Browns Bluewater",amount:-106.37,category:"General"},
+  {date:"2026-03-21",merchant:"Superdry",amount:-155.08,category:"Clothing & Shoes"},
+  {date:"2026-03-21",merchant:"The Entertainer",amount:-5.0,category:"Entertainment"},
+  {date:"2026-03-21",merchant:"Primark",amount:-35.8,category:"Clothing & Shoes"},
+  {date:"2026-03-21",merchant:"Sweaty Betty",amount:-233.0,category:"Clothing & Shoes"},
+  {date:"2026-03-21",merchant:"Zara",amount:-86.92,category:"Clothing & Shoes"},
+  {date:"2026-03-21",merchant:"Marks & Spencer",amount:-0.8,category:"Groceries"},
+  {date:"2026-03-21",merchant:"Marks & Spencer",amount:-36.21,category:"Groceries"},
+  {date:"2026-03-21",merchant:"Sos Coffee",amount:-8.8,category:"Eating Out"},
+  {date:"2026-03-21",merchant:"Sos Coffee",amount:-37.7,category:"Eating Out"},
+  {date:"2026-03-21",merchant:"TFL",amount:-7.4,category:"Transport"},
+  {date:"2026-03-21",merchant:"Claire\'s Accessories",amount:-8.0,category:"Shopping"},
+  {date:"2026-03-20",merchant:"Sainsbury\'s",amount:-2.6,category:"Groceries"},
+  {date:"2026-03-20",merchant:"Marks & Spencer",amount:-16.76,category:"Groceries"},
+  {date:"2026-03-20",merchant:"Marks & Spencer",amount:-15.45,category:"Groceries"},
+  {date:"2026-03-20",merchant:"Zara",amount:-108.93,category:"Clothing & Shoes"},
+  {date:"2026-03-20",merchant:"Caffe Nero",amount:-10.55,category:"Eating Out"},
+  {date:"2026-03-20",merchant:"Sainsbury\'s",amount:-3.55,category:"Groceries"},
+  {date:"2026-03-20",merchant:"The Works Bluewater",amount:-26.5,category:"General"},
+  {date:"2026-03-20",merchant:"Woods OF London Ltd",amount:-2000.0,category:"Home & Family"},
+  {date:"2026-03-20",merchant:"Make Mine",amount:-11.7,category:"Groceries"},
+  {date:"2026-03-20",merchant:"eduFOCUS",amount:-9.9,category:"School Costs"},
+  {date:"2026-03-20",merchant:"30759 - Spence (Mtech Education Services",amount:-176.0,category:"School Costs"},
+  {date:"2026-03-20",merchant:"Spotify",amount:35.77,category:"Subscriptions"},
+  {date:"2026-03-20",merchant:"Superdry",amount:-80.08,category:"Clothing & Shoes"},
+  {date:"2026-03-20",merchant:"H&M",amount:-49.95,category:"Shopping"},
+  {date:"2026-03-20",merchant:"Netflix",amount:18.99,category:"Entertainment"},
+  {date:"2026-03-19",merchant:"Interest",amount:9.18,category:"Interest"},
+  {date:"2026-03-19",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-19",merchant:"Sainsbury\'s",amount:-18.71,category:"Groceries"},
+  {date:"2026-03-19",merchant:"Marks & Spencer",amount:-14.45,category:"Groceries"},
+  {date:"2026-03-18",merchant:"Interest",amount:9.18,category:"Interest"},
+  {date:"2026-03-18",merchant:"Sent ladn-o ltd",amount:-65.0,category:"Health & Beauty"},
+  {date:"2026-03-18",merchant:"Barehamskennels.Co.Uk Orsett",amount:-38.0,category:"Coco"},
+  {date:"2026-03-18",merchant:"Blackheath Standard Pha",amount:-9.9,category:"Health & Beauty"},
+  {date:"2026-03-18",merchant:"44874 Blackheath",amount:-6.3,category:"General"},
+  {date:"2026-03-17",merchant:"Interest",amount:9.17,category:"Interest"},
+  {date:"2026-03-17",merchant:"Jemma Monzo",amount:-20000.0,category:"Internal Transfers"},
+  {date:"2026-03-17",merchant:"Monzo",amount:20000.0,category:"Internal Transfers"},
+  {date:"2026-03-17",merchant:"Poundland",amount:-11.0,category:"General"},
+  {date:"2026-03-17",merchant:"Netflix",amount:-18.99,category:"Entertainment"},
+  {date:"2026-03-17",merchant:"Amazon",amount:-5.99,category:"General"},
+  {date:"2026-03-17",merchant:"Amazon",amount:-16.99,category:"Groceries"},
+  {date:"2026-03-17",merchant:"Marks & Spencer",amount:-19.88,category:"Groceries"},
+  {date:"2026-03-17",merchant:"Pets at Home",amount:-42.97,category:"Coco"},
+  {date:"2026-03-17",merchant:"TK Maxx",amount:-10.98,category:"General"},
+  {date:"2026-03-17",merchant:"9 Lambarde Square",amount:-75.0,category:"Health & Beauty"},
+  {date:"2026-03-17",merchant:"A J Rogers Sons",amount:-970.46,category:"Home & Family"},
+  {date:"2026-03-17",merchant:"Sainsbury\'s",amount:-145.74,category:"Groceries"},
+  {date:"2026-03-17",merchant:"Blackheath Pet Supplie",amount:-12.4,category:"Coco"},
+  {date:"2026-03-17",merchant:"Starbucks Coffee",amount:-4.8,category:"Eating Out"},
+  {date:"2026-03-17",merchant:"A J Rogers Sons",amount:-726.26,category:"Home & Family"},
+  {date:"2026-03-17",merchant:"Amazon",amount:-23.7,category:"Health & Beauty"},
+  {date:"2026-03-17",merchant:"London Borough Lewisha",amount:-1.61,category:"Transport"},
+  {date:"2026-03-16",merchant:"Interest",amount:9.18,category:"Interest"},
+  {date:"2026-03-16",merchant:"Royal Borough Of Greenwich",amount:-335.0,category:"Household Bills"},
+  {date:"2026-03-16",merchant:"Thames Water",amount:-102.0,category:"Household Bills"},
+  {date:"2026-03-16",merchant:"Aviva Life Insurance",amount:-27.26,category:"Household Bills"},
+  {date:"2026-03-16",merchant:"Sainsbury\'s",amount:-4.4,category:"Groceries"},
+  {date:"2026-03-16",merchant:"Marks & Spencer",amount:-22.21,category:"Groceries"},
+  {date:"2026-03-16",merchant:"eduFOCUS",amount:-19.8,category:"School Costs"},
+  {date:"2026-03-16",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-16",merchant:"Basicmart",amount:-8.99,category:"General"},
+  {date:"2026-03-16",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-15",merchant:"Interest",amount:27.52,category:"Interest"},
+  {date:"2026-03-15",merchant:"James TO Jem",amount:-19000.0,category:"Internal Transfers"},
+  {date:"2026-03-15",merchant:"James TO Jem",amount:-1000.0,category:"Internal Transfers"},
+  {date:"2026-03-15",merchant:"Monzo",amount:20000.0,category:"Internal Transfers"},
+  {date:"2026-03-15",merchant:"INVESTEC INTEREST (Jemma Spence)",amount:454.94,category:"Interest"},
+  {date:"2026-03-15",merchant:"James Spence",amount:470.94,category:"Interest"},
+  {date:"2026-03-15",merchant:"44874 Blackheath",amount:-18.5,category:"Eating Out"},
+  {date:"2026-03-15",merchant:"Amazon",amount:-9.26,category:"Health & Beauty"},
+  {date:"2026-03-15",merchant:"The George",amount:-115.17,category:"Eating Out"},
+  {date:"2026-03-15",merchant:"Pets Corner",amount:-7.96,category:"Coco"},
+  {date:"2026-03-14",merchant:"S.O.S Coffee",amount:-27.9,category:"Eating Out"},
+  {date:"2026-03-14",merchant:"Amazon",amount:-11.73,category:"Health & Beauty"},
+  {date:"2026-03-14",merchant:"Marks & Spencer",amount:-36.6,category:"Groceries"},
+  {date:"2026-03-14",merchant:"Starbucks Coffee",amount:-4.8,category:"Eating Out"},
+  {date:"2026-03-14",merchant:"Sainsbury\'s",amount:-4.0,category:"Groceries"},
+  {date:"2026-03-14",merchant:"Google Nest",amount:-8.0,category:"Subscriptions"},
+  {date:"2026-03-14",merchant:"Marks & Spencer",amount:-22.62,category:"Groceries"},
+  {date:"2026-03-14",merchant:"S.O.S Coffee",amount:-18.6,category:"Eating Out"},
+  {date:"2026-03-14",merchant:"Shell",amount:-87.88,category:"Transport"},
+  {date:"2026-03-14",merchant:"Amazon",amount:-17.97,category:"Health & Beauty"},
+  {date:"2026-03-13",merchant:"Virgin Money",amount:-5000.0,category:"Internal Transfers"},
+  {date:"2026-03-13",merchant:"SP The Hive",amount:-139.0,category:"Entertainment"},
+  {date:"2026-03-13",merchant:"Sainsbury\'s",amount:-71.16,category:"Groceries"},
+  {date:"2026-03-13",merchant:"Moonpig",amount:-6.68,category:"Presents"},
+  {date:"2026-03-13",merchant:"Spotify",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-03-13",merchant:"Payment Received",amount:5000.0,category:"Internal Transfers"},
+  {date:"2026-03-12",merchant:"Interest",amount:9.17,category:"Interest"},
+  {date:"2026-03-12",merchant:"James Spence",amount:45000.0,category:"Interest"},
+  {date:"2026-03-12",merchant:"James Spence",amount:5000.0,category:"Interest"},
+  {date:"2026-03-12",merchant:"James Spence",amount:-5000.0,category:"Interest"},
+  {date:"2026-03-12",merchant:"James Spence",amount:5000.0,category:"Interest"},
+  {date:"2026-03-12",merchant:"C003480 (The Royal Parks Limited)",amount:-10000.0,category:"One Off Costs"},
+  {date:"2026-03-12",merchant:"Monzo",amount:10000.0,category:"Internal Transfers"},
+  {date:"2026-03-12",merchant:"Virgin Media",amount:-41.0,category:"Household Bills"},
+  {date:"2026-03-12",merchant:"eduFOCUS",amount:-14.9,category:"School Costs"},
+  {date:"2026-03-12",merchant:"Twinkl",amount:-7.99,category:"School Costs"},
+  {date:"2026-03-12",merchant:"Marks & Spencer",amount:-13.89,category:"Groceries"},
+  {date:"2026-03-12",merchant:"Virgin Atlantic",amount:-176.0,category:"Holidays"},
+  {date:"2026-03-12",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-12",merchant:"Sainsbury\'s",amount:-2.75,category:"Groceries"},
+  {date:"2026-03-12",merchant:"Amazon",amount:-10.99,category:"General"},
+  {date:"2026-03-12",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-12",merchant:"Make Mine",amount:-10.55,category:"Groceries"},
+  {date:"2026-03-12",merchant:"0313 - Charlton? Greenwich Charl",amount:-12.0,category:"General"},
+  {date:"2026-03-12",merchant:"Everyday Cashback",amount:15.0,category:"Finances"},
+  {date:"2026-03-11",merchant:"Interest",amount:9.17,category:"Interest"},
+  {date:"2026-03-11",merchant:"Nspcc",amount:-100.0,category:"Charity"},
+  {date:"2026-03-11",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-11",merchant:"Sainsbury\'s",amount:-2.25,category:"Groceries"},
+  {date:"2026-03-11",merchant:"HCA Healthcare",amount:-244.0,category:"Health & Beauty"},
+  {date:"2026-03-11",merchant:"Amazon",amount:-6.99,category:"General"},
+  {date:"2026-03-11",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-10",merchant:"Interest",amount:9.17,category:"Interest"},
+  {date:"2026-03-10",merchant:"James Spence & Jemma Spence",amount:20000.0,category:"Internal Transfers"},
+  {date:"2026-03-10",merchant:"James Spence",amount:-20000.0,category:"Internal Transfers"},
+  {date:"2026-03-10",merchant:"Monzo",amount:20000.0,category:"Internal Transfers"},
+  {date:"2026-03-10",merchant:"Jemma (Healthy Mind Counselling Psycholo",amount:-100.0,category:"Health & Beauty"},
+  {date:"2026-03-10",merchant:"Marks & Spencer",amount:-8.5,category:"Groceries"},
+  {date:"2026-03-10",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-10",merchant:"Sainsbury\'s",amount:12.7,category:"Groceries"},
+  {date:"2026-03-10",merchant:"Sainsbury\'s",amount:-3.2,category:"Groceries"},
+  {date:"2026-03-10",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-10",merchant:"Sainsbury\'s",amount:-162.09,category:"Groceries"},
+  {date:"2026-03-10",merchant:"Virgin Holidays",amount:-10249.52,category:"Holidays"},
+  {date:"2026-03-10",merchant:"Demelza.Org.Uk Sittingbourne",amount:-5000.0,category:"Charity"},
+  {date:"2026-03-10",merchant:"London Borough Lewisha",amount:-1.61,category:"Transport"},
+  {date:"2026-03-09",merchant:"Interest",amount:9.17,category:"Interest"},
+  {date:"2026-03-09",merchant:"American Express",amount:-11736.74,category:"Internal Transfers"},
+  {date:"2026-03-09",merchant:"Marks & Spencer",amount:-18.21,category:"Groceries"},
+  {date:"2026-03-09",merchant:"Pets at Home",amount:-28.48,category:"Coco"},
+  {date:"2026-03-09",merchant:"London Borough Lewisha",amount:-6.42,category:"Transport"},
+  {date:"2026-03-09",merchant:"Sainsbury\'s",amount:-4.35,category:"Groceries"},
+  {date:"2026-03-09",merchant:"Pets Corner",amount:-7.96,category:"Coco"},
+  {date:"2026-03-09",merchant:"TFL",amount:-7.4,category:"Transport"},
+  {date:"2026-03-09",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-09",merchant:"eduFOCUS",amount:-19.8,category:"School Costs"},
+  {date:"2026-03-09",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-03-08",merchant:"Interest",amount:27.49,category:"Interest"},
+  {date:"2026-03-08",merchant:"Marks & Spencer",amount:-14.75,category:"Groceries"},
+  {date:"2026-03-08",merchant:"Zara",amount:-14.99,category:"Clothing & Shoes"},
+  {date:"2026-03-08",merchant:"Marks & Spencer",amount:-19.15,category:"Groceries"},
+  {date:"2026-03-08",merchant:"The Entertainer",amount:-2.5,category:"Entertainment"},
+  {date:"2026-03-08",merchant:"WH Smith",amount:-4.75,category:"General"},
+  {date:"2026-03-08",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-08",merchant:"Barehams Kennels Grays",amount:-13.75,category:"Coco"},
+  {date:"2026-03-08",merchant:"Boots",amount:-9.9,category:"Health & Beauty"},
+  {date:"2026-03-08",merchant:"Boots",amount:-15.21,category:"Health & Beauty"},
+  {date:"2026-03-08",merchant:"The Entertainer",amount:-10.0,category:"Entertainment"},
+  {date:"2026-03-08",merchant:"Marks & Spencer",amount:-18.6,category:"Groceries"},
+  {date:"2026-03-08",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-03-07",merchant:"Marks & Spencer",amount:-3.2,category:"Groceries"},
+  {date:"2026-03-07",merchant:"Burger King",amount:-5.99,category:"Eating Out"},
+  {date:"2026-03-07",merchant:"Starbucks Coffee",amount:-4.8,category:"Eating Out"},
+  {date:"2026-03-07",merchant:"Colchester Zoo",amount:-85.5,category:"Entertainment"},
+  {date:"2026-03-07",merchant:"Marks & Spencer",amount:-14.49,category:"Groceries"},
+  {date:"2026-03-07",merchant:"Sos Coffee",amount:-8.8,category:"Eating Out"},
+  {date:"2026-03-07",merchant:"Sos Coffee",amount:-37.7,category:"Eating Out"},
+  {date:"2026-03-07",merchant:"Apple",amount:-214.99,category:"One Off Costs"},
+  {date:"2026-03-07",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-07",merchant:"Subway",amount:-4.59,category:"Eating Out"},
+  {date:"2026-03-07",merchant:"Colchester Zoo",amount:-8.4,category:"Entertainment"},
+  {date:"2026-03-07",merchant:"Colchester Zoo",amount:-2.5,category:"Entertainment"},
+  {date:"2026-03-06",merchant:"Barehams Kennels",amount:-20.75,category:"General"},
+  {date:"2026-03-06",merchant:"Marks & Spencer",amount:-5.3,category:"Groceries"},
+  {date:"2026-03-06",merchant:"Sainsburys",amount:-71.62,category:"Groceries"},
+  {date:"2026-03-06",merchant:"Sainsburys",amount:-6.35,category:"Groceries"},
+  {date:"2026-03-06",merchant:"Sainsburys",amount:-6.85,category:"Groceries"},
+  {date:"2026-03-06",merchant:"Amazon",amount:-4.42,category:"Health & Beauty"},
+  {date:"2026-03-06",merchant:"Amazon",amount:-4.25,category:"Health & Beauty"},
+  {date:"2026-03-06",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-06",merchant:"Private Psychiatry Expert (Health)",amount:-805.0,category:"One Off Costs"},
+  {date:"2026-03-06",merchant:"Thortful",amount:-5.79,category:"General"},
+  {date:"2026-03-06",merchant:"Amazon",amount:-19.25,category:"Health & Beauty"},
+  {date:"2026-03-05",merchant:"Sent DJB PROPERTY MAINTENANCE LTD.",amount:-216.0,category:"Home & Family"},
+  {date:"2026-03-05",merchant:"Spotify",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-03-05",merchant:"WillPowders",amount:-17.49,category:"Health & Beauty"},
+  {date:"2026-03-04",merchant:"Sent DJB PROPERTY MAINTENANCE LTD.",amount:-600.0,category:"Home & Family"},
+  {date:"2026-03-04",merchant:"Collctiv",amount:20.0,category:"General"},
+  {date:"2026-03-04",merchant:"Marks & Spencer",amount:-23.33,category:"Groceries"},
+  {date:"2026-03-04",merchant:"TK Maxx",amount:-10.48,category:"General"},
+  {date:"2026-03-04",merchant:"Edufocus Limited Woodbridge",amount:-19.98,category:"School Costs"},
+  {date:"2026-03-04",merchant:"Primark",amount:-27.0,category:"Clothing & Shoes"},
+  {date:"2026-03-04",merchant:"TFL",amount:-7.4,category:"Transport"},
+  {date:"2026-03-04",merchant:"Boots",amount:-7.65,category:"Health & Beauty"},
+  {date:"2026-03-04",merchant:"Edufocus Limited Woodbridge",amount:-9.9,category:"General"},
+  {date:"2026-03-04",merchant:"Poundland",amount:-11.0,category:"General"},
+  {date:"2026-03-04",merchant:"Make Mine",amount:-12.0,category:"Groceries"},
+  {date:"2026-03-04",merchant:"Apple",amount:-17.99,category:"Subscriptions"},
+  {date:"2026-03-04",merchant:"Village Fruit And Veg",amount:-3.45,category:"Groceries"},
+  {date:"2026-03-03",merchant:"Healthy Mind Counselling Psychology Limi",amount:-100.0,category:"Health & Beauty"},
+  {date:"2026-03-03",merchant:"Assets fee",amount:-8.19,category:"Finances"},
+  {date:"2026-03-03",merchant:"National Lottery",amount:-10.0,category:"Subscriptions"},
+  {date:"2026-03-03",merchant:"EE",amount:-69.84,category:"Household Bills"},
+  {date:"2026-03-03",merchant:"Apple",amount:-8.99,category:"Subscriptions"},
+  {date:"2026-03-03",merchant:"Edufocus Limited Woodbridge",amount:-19.8,category:"School Costs"},
+  {date:"2026-03-03",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-03-03",merchant:"Amazon",amount:-15.98,category:"General"},
+  {date:"2026-03-03",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-03",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-03-03",merchant:"Sainsburys",amount:-173.59,category:"Groceries"},
+  {date:"2026-03-03",merchant:"Saba Parking",amount:-4.3,category:"Travel"},
+  {date:"2026-03-03",merchant:"Mighty Kids",amount:-27.49,category:"Health & Beauty"},
+  {date:"2026-03-03",merchant:"Costa Coffee",amount:-4.2,category:"Eating Out"},
+  {date:"2026-03-03",merchant:"Sainsburys",amount:4.0,category:"Groceries"},
+  {date:"2026-03-03",merchant:"Costa Coffee",amount:-9.48,category:"Eating Out"},
+  {date:"2026-03-03",merchant:"Octopus Energy",amount:-298.97,category:"Household Bills"},
+  {date:"2026-03-03",merchant:"London Borough Lewisha",amount:-1.61,category:"Transport"},
+  {date:"2026-03-02",merchant:"Mtech Education",amount:-66.0,category:"School Costs"},
+  {date:"2026-03-02",merchant:"Verisure Alarms",amount:-53.26,category:"Household Bills"},
+  {date:"2026-03-02",merchant:"Pet Plan",amount:-29.4,category:"Coco"},
+  {date:"2026-03-02",merchant:"G&Bhospice Lottery",amount:-4.34,category:"Charity"},
+  {date:"2026-03-02",merchant:"Royal Borough Of Greenwich",amount:-276.0,category:"Household Bills"},
+  {date:"2026-03-02",merchant:"Aviva Life Insurance",amount:-28.28,category:"Household Bills"},
+  {date:"2026-03-02",merchant:"TV Licensing",amount:-44.87,category:"Household Bills"},
+  {date:"2026-03-02",merchant:"Battersea Dogs",amount:-10.0,category:"Charity"},
+  {date:"2026-03-02",merchant:"Octopus Energy",amount:-360.7,category:"Household Bills"},
+  {date:"2026-03-02",merchant:"Amazon Prime",amount:-8.99,category:"Subscriptions"},
+  {date:"2026-03-02",merchant:"Amazon",amount:-10.9,category:"Health & Beauty"},
+  {date:"2026-03-02",merchant:"Make Mine",amount:-19.35,category:"Groceries"},
+  {date:"2026-03-02",merchant:"Sainsburys",amount:-6.5,category:"Groceries"},
+  {date:"2026-03-02",merchant:"London Borough Lewisha",amount:-6.42,category:"Transport"},
+  {date:"2026-03-02",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-03-02",merchant:"Village Fruit And Veg",amount:-4.19,category:"Groceries"},
+  {date:"2026-03-01",merchant:"Amazon",amount:-44.99,category:"Health & Beauty"},
+  {date:"2026-03-01",merchant:"TFL",amount:-8.5,category:"Transport"},
+  {date:"2026-03-01",merchant:"Ruxley Manor Garden Cen Sidcup",amount:-18.76,category:"Eating Out"},
+  {date:"2026-03-01",merchant:"Ruxley Manor Sidcup",amount:-8.38,category:"General"},
+  {date:"2026-03-01",merchant:"Boots",amount:-14.48,category:"Health & Beauty"},
+  {date:"2026-03-01",merchant:"Oliver Bonas",amount:-19.5,category:"Clothing & Shoes"},
+  {date:"2026-03-01",merchant:"Weight Watchers",amount:-5.65,category:"Health & Beauty"},
+  {date:"2026-03-01",merchant:"Zizzi",amount:-85.0,category:"Eating Out"},
+  {date:"2026-03-01",merchant:"Weight Watchers",amount:-5.65,category:"Health & Beauty"},
+  {date:"2026-03-01",merchant:"Men Grooming",amount:-18.0,category:"Health & Beauty"},
+  {date:"2026-02-28",merchant:"Gracie Spence",amount:20.0,category:"General"},
+  {date:"2026-02-28",merchant:"Gracie Spence",amount:24.0,category:"General"},
+  {date:"2026-02-28",merchant:"Jemma (Joanne Bridgeman)",amount:-10.0,category:"General"},
+  {date:"2026-02-28",merchant:"Perks",amount:-7.0,category:"Finances"},
+  {date:"2026-02-28",merchant:"Amazon",amount:-8.99,category:"General"},
+  {date:"2026-02-28",merchant:"S.O.S Coffee",amount:-4.4,category:"Eating Out"},
+  {date:"2026-02-28",merchant:"S.O.S Coffee",amount:-4.4,category:"Eating Out"},
+  {date:"2026-02-28",merchant:"Amazon",amount:-5.69,category:"General"},
+  {date:"2026-02-28",merchant:"44874 Blackheath",amount:-14.95,category:"General"},
+  {date:"2026-02-28",merchant:"Amazon",amount:-4.79,category:"General"},
+  {date:"2026-02-28",merchant:"Apple",amount:-0.99,category:"Subscriptions"},
+  {date:"2026-02-28",merchant:"Apple",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-02-28",merchant:"S.O.S Coffee",amount:-37.7,category:"Eating Out"},
+  {date:"2026-02-28",merchant:"Marks & Spencer",amount:-28.05,category:"Groceries"},
+  {date:"2026-02-28",merchant:"Pets Corner",amount:-14.54,category:"Coco"},
+  {date:"2026-02-27",merchant:"Jemma",amount:-50.0,category:"Holidays"},
+  {date:"2026-02-27",merchant:"Jemma",amount:-40.0,category:"Holidays"},
+  {date:"2026-02-27",merchant:"Lex Autolease",amount:-1437.16,category:"Range Rover"},
+  {date:"2026-02-27",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-27",merchant:"Pets at Home",amount:-28.39,category:"Coco"},
+  {date:"2026-02-27",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-02-27",merchant:"Blackheath Prep P",amount:-4.0,category:"General"},
+  {date:"2026-02-27",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-27",merchant:"Apple",amount:-19.99,category:"Subscriptions"},
+  {date:"2026-02-27",merchant:"Smyths Toys Superstores",amount:-11.99,category:"Presents"},
+  {date:"2026-02-27",merchant:"Sainsburys",amount:-92.48,category:"Groceries"},
+  {date:"2026-02-27",merchant:"Blackheath Pet Supplie",amount:-12.4,category:"Coco"},
+  {date:"2026-02-26",merchant:"Beechcroft Pharmacy",amount:-7.89,category:"Health & Beauty"},
+  {date:"2026-02-26",merchant:"Sky",amount:-100.99,category:"Household Bills"},
+  {date:"2026-02-26",merchant:"Beechcroft Pharmacy",amount:-36.1,category:"Health & Beauty"},
+  {date:"2026-02-26",merchant:"Amazon",amount:-14.61,category:"Health & Beauty"},
+  {date:"2026-02-26",merchant:"Costa Coffee",amount:-13.0,category:"Eating Out"},
+  {date:"2026-02-26",merchant:"Peloton",amount:-45.0,category:"Subscriptions"},
+  {date:"2026-02-26",merchant:"Saba Parking",amount:-10.0,category:"Travel"},
+  {date:"2026-02-26",merchant:"Sainsburys",amount:-4.61,category:"Groceries"},
+  {date:"2026-02-26",merchant:"Costa Coffee",amount:-5.98,category:"Eating Out"},
+  {date:"2026-02-25",merchant:"National Lottery",amount:30.0,category:"Subscriptions"},
+  {date:"2026-02-25",merchant:"Trafigura Limited (Trafigura Limited)",amount:14977.46,category:"Salary"},
+  {date:"2026-02-25",merchant:"Amazon",amount:-12.73,category:"General"},
+  {date:"2026-02-25",merchant:"Chemcare Pharmacy Se3 9",amount:-17.34,category:"Health & Beauty"},
+  {date:"2026-02-25",merchant:"Sainsburys",amount:-2.2,category:"Groceries"},
+  {date:"2026-02-25",merchant:"Vinita Mothers",amount:-50.0,category:"Health & Beauty"},
+  {date:"2026-02-25",merchant:"Amazon",amount:-9.99,category:"General"},
+  {date:"2026-02-25",merchant:"Hillarys",amount:-972.5,category:"Home & Family"},
+  {date:"2026-02-24",merchant:"London Doctors Clinic",amount:-99.0,category:"Health & Beauty"},
+  {date:"2026-02-24",merchant:"London Doctors Clinic",amount:-25.96,category:"Health & Beauty"},
+  {date:"2026-02-24",merchant:"Sainsburys",amount:-178.03,category:"Groceries"},
+  {date:"2026-02-24",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-24",merchant:"Sainsburys",amount:-6.8,category:"Groceries"},
+  {date:"2026-02-24",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-23",merchant:"Marks & Spencer",amount:-21.8,category:"Groceries"},
+  {date:"2026-02-23",merchant:"TFL",amount:-7.4,category:"Transport"},
+  {date:"2026-02-23",merchant:"discovery+",amount:-30.99,category:"Household Bills"},
+  {date:"2026-02-23",merchant:"Hobbycraft",amount:-11.49,category:"General"},
+  {date:"2026-02-23",merchant:"Make Mine",amount:-1.95,category:"Groceries"},
+  {date:"2026-02-22",merchant:"Musical Instrument Hir",amount:-24.0,category:"School Costs"},
+  {date:"2026-02-22",merchant:"Rontec Roadside",amount:-2.0,category:"Transport"},
+  {date:"2026-02-22",merchant:"Starbucks Coffee",amount:-8.3,category:"Eating Out"},
+  {date:"2026-02-22",merchant:"Marks & Spencer",amount:-20.51,category:"Groceries"},
+  {date:"2026-02-22",merchant:"Musical Instrument Hir Holwell",amount:-27.0,category:"School Costs"},
+  {date:"2026-02-22",merchant:"Smyths Toys Superstores",amount:-39.97,category:"Presents"},
+  {date:"2026-02-21",merchant:"Zara",amount:-35.99,category:"Clothing & Shoes"},
+  {date:"2026-02-21",merchant:"S.O.S Coffee",amount:-33.3,category:"Eating Out"},
+  {date:"2026-02-21",merchant:"ADHD Health Clinic (Health)",amount:-995.0,category:"One Off Costs"},
+  {date:"2026-02-21",merchant:"Marks & Spencer",amount:-13.5,category:"Groceries"},
+  {date:"2026-02-21",merchant:"S.O.S Coffee",amount:-4.4,category:"Eating Out"},
+  {date:"2026-02-21",merchant:"Holland And Barrett",amount:-15.49,category:"Health & Beauty"},
+  {date:"2026-02-21",merchant:"Amazon Prime Video",amount:-7.99,category:"Entertainment"},
+  {date:"2026-02-21",merchant:"S.O.S Coffee",amount:-4.4,category:"Eating Out"},
+  {date:"2026-02-21",merchant:"The Works",amount:-10.0,category:"General"},
+  {date:"2026-02-21",merchant:"The Entertainer",amount:-12.0,category:"Entertainment"},
+  {date:"2026-02-21",merchant:"Oliver Bonas",amount:-33.95,category:"Clothing & Shoes"},
+  {date:"2026-02-20",merchant:"Spotify",amount:35.77,category:"Subscriptions"},
+  {date:"2026-02-20",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-20",merchant:"Amazon",amount:-28.44,category:"Health & Beauty"},
+  {date:"2026-02-20",merchant:"Tesco",amount:-41.45,category:"Groceries"},
+  {date:"2026-02-20",merchant:"Marks & Spencer",amount:-54.54,category:"Groceries"},
+  {date:"2026-02-20",merchant:"The George",amount:-20.0,category:"Eating Out"},
+  {date:"2026-02-20",merchant:"Barehamskennels.Co.Uk Orsett",amount:-65.5,category:"Coco"},
+  {date:"2026-02-20",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-19",merchant:"Lex Autolease",amount:-10.0,category:"Transport"},
+  {date:"2026-02-19",merchant:"The Entertainer",amount:-5.0,category:"Entertainment"},
+  {date:"2026-02-19",merchant:"Amazon",amount:-8.9,category:"Health & Beauty"},
+  {date:"2026-02-19",merchant:"Amazon",amount:-20.0,category:"Health & Beauty"},
+  {date:"2026-02-19",merchant:"Waterstones",amount:-5.99,category:"Entertainment"},
+  {date:"2026-02-19",merchant:"Amazon",amount:-7.49,category:"Clothing & Shoes"},
+  {date:"2026-02-19",merchant:"Marks & Spencer",amount:-9.78,category:"Groceries"},
+  {date:"2026-02-19",merchant:"Sainsburys",amount:-12.95,category:"Groceries"},
+  {date:"2026-02-19",merchant:"Boots",amount:-35.47,category:"Health & Beauty"},
+  {date:"2026-02-19",merchant:"Marks & Spencer",amount:-21.05,category:"Groceries"},
+  {date:"2026-02-19",merchant:"London Borough Lewisha",amount:-2.21,category:"Transport"},
+  {date:"2026-02-19",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-19",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-18",merchant:"Amazon",amount:-18.99,category:"Groceries"},
+  {date:"2026-02-18",merchant:"Sainsburys",amount:-3.4,category:"Groceries"},
+  {date:"2026-02-18",merchant:"Home Bargains",amount:-12.97,category:"General"},
+  {date:"2026-02-18",merchant:"Communityhospice",amount:-12.0,category:"Charity"},
+  {date:"2026-02-18",merchant:"Wise Parking",amount:-3.7,category:"Transport"},
+  {date:"2026-02-18",merchant:"IKEA",amount:-22.0,category:"General"},
+  {date:"2026-02-18",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-02-17",merchant:"TTINV-1390 (Tag Tuition Ltd)",amount:-330.0,category:"School Costs"},
+  {date:"2026-02-17",merchant:"Netflix",amount:-18.99,category:"Entertainment"},
+  {date:"2026-02-17",merchant:"Amazon",amount:-9.99,category:"Clothing & Shoes"},
+  {date:"2026-02-17",merchant:"Amazon",amount:-10.99,category:"Clothing & Shoes"},
+  {date:"2026-02-17",merchant:"Sainsburys",amount:-177.49,category:"Groceries"},
+  {date:"2026-02-17",merchant:"Pets at Home",amount:-32.63,category:"Coco"},
+  {date:"2026-02-17",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-17",merchant:"Barehams Kennels Grays",amount:-48.0,category:"Coco"},
+  {date:"2026-02-17",merchant:"Tiptree Tea Rooms",amount:-7.0,category:"Eating Out"},
+  {date:"2026-02-17",merchant:"Sainsburys",amount:2.0,category:"Groceries"},
+  {date:"2026-02-17",merchant:"Tiptree Tea Rooms",amount:-23.1,category:"Eating Out"},
+  {date:"2026-02-17",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-16",merchant:"Royal Borough Of Greenwich",amount:-335.0,category:"Household Bills"},
+  {date:"2026-02-16",merchant:"Thames Water",amount:-102.0,category:"Household Bills"},
+  {date:"2026-02-16",merchant:"Aviva Life Insurance",amount:-27.26,category:"Household Bills"},
+  {date:"2026-02-16",merchant:"Amazon",amount:-14.49,category:"Health & Beauty"},
+  {date:"2026-02-16",merchant:"Boots",amount:-12.84,category:"Health & Beauty"},
+  {date:"2026-02-16",merchant:"RingGo",amount:-2.6,category:"Transport"},
+  {date:"2026-02-16",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-16",merchant:"Make Mine",amount:-9.55,category:"Groceries"},
+  {date:"2026-02-16",merchant:"Harvester",amount:-71.46,category:"Eating Out"},
+  {date:"2026-02-16",merchant:"Dart Charge",amount:-7.0,category:"Transport"},
+  {date:"2026-02-15",merchant:"James Spence",amount:521.4,category:"Interest"},
+  {date:"2026-02-15",merchant:"INVESTEC INTEREST (Jemma Spence)",amount:503.69,category:"Interest"},
+  {date:"2026-02-15",merchant:"Starbucks Coffee",amount:-4.8,category:"Eating Out"},
+  {date:"2026-02-15",merchant:"Sainsburys",amount:-8.85,category:"Groceries"},
+  {date:"2026-02-15",merchant:"T.M.Lewin",amount:-139.95,category:"Clothing & Shoes"},
+  {date:"2026-02-15",merchant:"Tesco",amount:-18.91,category:"Groceries"},
+  {date:"2026-02-15",merchant:"Amazon",amount:-10.9,category:"Health & Beauty"},
+  {date:"2026-02-14",merchant:"Amazon",amount:-19.99,category:"Health & Beauty"},
+  {date:"2026-02-14",merchant:"Rontec Roadside",amount:-87.3,category:"Transport"},
+  {date:"2026-02-14",merchant:"Sainsburys",amount:-4.0,category:"Groceries"},
+  {date:"2026-02-14",merchant:"S.O.S Coffee",amount:-13.0,category:"Eating Out"},
+  {date:"2026-02-14",merchant:"Google Nest",amount:-8.0,category:"Subscriptions"},
+  {date:"2026-02-14",merchant:"Blue Boys Connect Tonbridge",amount:-1.7,category:"General"},
+  {date:"2026-02-14",merchant:"Starbucks Coffee",amount:-5.05,category:"Eating Out"},
+  {date:"2026-02-14",merchant:"Marks & Spencer",amount:-8.2,category:"Groceries"},
+  {date:"2026-02-14",merchant:"Pets at Home",amount:-21.63,category:"Coco"},
+  {date:"2026-02-14",merchant:"Forestry England",amount:-8.0,category:"Transport"},
+  {date:"2026-02-14",merchant:"S.O.S Coffee",amount:-37.7,category:"Eating Out"},
+  {date:"2026-02-14",merchant:"Bedgebury",amount:-7.2,category:"Eating Out"},
+  {date:"2026-02-13",merchant:"Spotify",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-02-13",merchant:"Edufocus Limited Woodbridge",amount:-9.9,category:"General"},
+  {date:"2026-02-13",merchant:"Boots",amount:-17.95,category:"Health & Beauty"},
+  {date:"2026-02-13",merchant:"Sainsburys",amount:-7.5,category:"Groceries"},
+  {date:"2026-02-13",merchant:"Marks & Spencer",amount:-15.45,category:"Groceries"},
+  {date:"2026-02-13",merchant:"Marks & Spencer",amount:-65.54,category:"Groceries"},
+  {date:"2026-02-13",merchant:"Marks & Spencer",amount:-4.75,category:"Groceries"},
+  {date:"2026-02-13",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-13",merchant:"Amazon",amount:-20.0,category:"Health & Beauty"},
+  {date:"2026-02-13",merchant:"Pets Corner",amount:-13.16,category:"Coco"},
+  {date:"2026-02-13",merchant:"Marks & Spencer",amount:-2.85,category:"Groceries"},
+  {date:"2026-02-13",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-13",merchant:"Apple",amount:-89.99,category:"Subscriptions"},
+  {date:"2026-02-13",merchant:"London Borough Lewisha",amount:-3.21,category:"Transport"},
+  {date:"2026-02-13",merchant:"Barehamskennels.Co.Uk Orsett",amount:-48.0,category:"Coco"},
+  {date:"2026-02-13",merchant:"Blackheath Pet Supplie",amount:-9.0,category:"Coco"},
+  {date:"2026-02-12",merchant:"Virgin Media",amount:-41.0,category:"Household Bills"},
+  {date:"2026-02-12",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-12",merchant:"Euro Car Parks",amount:-50.0,category:"Transport"},
+  {date:"2026-02-12",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-02-12",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-12",merchant:"Twinkl",amount:-7.99,category:"School Costs"},
+  {date:"2026-02-12",merchant:"Everyday Cashback",amount:15.0,category:"Finances"},
+  {date:"2026-02-11",merchant:"Nspcc",amount:-100.0,category:"Charity"},
+  {date:"2026-02-11",merchant:"Sainsburys",amount:2.0,category:"Groceries"},
+  {date:"2026-02-11",merchant:"Marks & Spencer",amount:-8.35,category:"Groceries"},
+  {date:"2026-02-11",merchant:"Sainsburys",amount:-1.65,category:"Groceries"},
+  {date:"2026-02-11",merchant:"Sainsburys",amount:-174.89,category:"Groceries"},
+  {date:"2026-02-10",merchant:"Amazon",amount:-63.33,category:"Health & Beauty"},
+  {date:"2026-02-10",merchant:"Sainsburys",amount:-7.2,category:"Groceries"},
+  {date:"2026-02-10",merchant:"Sainsburys",amount:-4.25,category:"Groceries"},
+  {date:"2026-02-10",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-10",merchant:"0313 - Charlton? Greenwich Charl",amount:-7.0,category:"General"},
+  {date:"2026-02-10",merchant:"London Borough Lewisha",amount:-0.8,category:"Transport"},
+  {date:"2026-02-10",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-10",merchant:"London Borough Lewisha",amount:-1.61,category:"Transport"},
+  {date:"2026-02-09",merchant:"Jemma (Healthy Mind Counselling Psycholo",amount:-100.0,category:"Health & Beauty"},
+  {date:"2026-02-09",merchant:"Starbucks Coffee",amount:-30.0,category:"Eating Out"},
+  {date:"2026-02-09",merchant:"Sainsburys",amount:-5.9,category:"Groceries"},
+  {date:"2026-02-09",merchant:"Edufocus Limited Woodbridge",amount:-2.0,category:"General"},
+  {date:"2026-02-09",merchant:"Pets at Home",amount:-26.21,category:"Coco"},
+  {date:"2026-02-09",merchant:"Make Mine",amount:-11.4,category:"Groceries"},
+  {date:"2026-02-09",merchant:"TFL",amount:-8.3,category:"Transport"},
+  {date:"2026-02-09",merchant:"London Borough Lewisha",amount:-3.21,category:"Transport"},
+  {date:"2026-02-08",merchant:"Marks & Spencer",amount:-22.74,category:"Groceries"},
+  {date:"2026-02-08",merchant:"Amazon",amount:-9.99,category:"Clothing & Shoes"},
+  {date:"2026-02-08",merchant:"Starbucks Coffee",amount:-4.25,category:"Eating Out"},
+  {date:"2026-02-08",merchant:"Amazon",amount:-16.98,category:"General"},
+  {date:"2026-02-08",merchant:"Greenwich Park",amount:-9.15,category:"Eating Out"},
+  {date:"2026-02-07",merchant:"S.O.S Coffee",amount:-4.4,category:"Eating Out"},
+  {date:"2026-02-07",merchant:"Boots",amount:-14.0,category:"Health & Beauty"},
+  {date:"2026-02-07",merchant:"Marks & Spencer",amount:-9.3,category:"Groceries"},
+  {date:"2026-02-07",merchant:"Amazon",amount:-16.85,category:"Health & Beauty"},
+  {date:"2026-02-07",merchant:"Zara",amount:-62.97,category:"Clothing & Shoes"},
+  {date:"2026-02-07",merchant:"Zara",amount:-0.1,category:"Clothing & Shoes"},
+  {date:"2026-02-07",merchant:"The Works",amount:-2.0,category:"General"},
+  {date:"2026-02-07",merchant:"S.O.S Coffee",amount:-36.7,category:"Eating Out"},
+  {date:"2026-02-07",merchant:"Lindex",amount:-9.99,category:"Clothing & Shoes"},
+  {date:"2026-02-06",merchant:"Sainsburys",amount:-1.35,category:"Groceries"},
+  {date:"2026-02-06",merchant:"Aldi",amount:-7.97,category:"Groceries"},
+  {date:"2026-02-06",merchant:"Blackheath Prep P",amount:-4.0,category:"General"},
+  {date:"2026-02-06",merchant:"B&M",amount:-5.65,category:"General"},
+  {date:"2026-02-06",merchant:"Blackheath Prep P",amount:-3.5,category:"General"},
+  {date:"2026-02-06",merchant:"Blackheath Prep P",amount:-2.0,category:"General"},
+  {date:"2026-02-06",merchant:"Gemini Parking Sol Lon",amount:-1.5,category:"Transport"},
+  {date:"2026-02-05",merchant:"Soho Coffee",amount:-5.44,category:"Eating Out"},
+  {date:"2026-02-05",merchant:"Restaurant LE 15",amount:-16.1,category:"Eating Out"},
+  {date:"2026-02-05",merchant:"Bruno AU Petit Delice",amount:-22.85,category:"Eating Out"},
+  {date:"2026-02-05",merchant:"Jemma (Healthy Mind Counselling Psycholo",amount:-100.0,category:"Health & Beauty"},
+  {date:"2026-02-05",merchant:"Starbucks Coffee",amount:-7.01,category:"Eating Out"},
+  {date:"2026-02-05",merchant:"Amazon",amount:-20.0,category:"Health & Beauty"},
+  {date:"2026-02-05",merchant:"Spotify",amount:-12.99,category:"Subscriptions"},
+  {date:"2026-02-05",merchant:"Sainsburys",amount:-197.33,category:"Groceries"},
+  {date:"2026-02-04",merchant:"Starbucks Coffee",amount:-6.98,category:"Eating Out"},
+  {date:"2026-02-04",merchant:"Uniform Schoolwear Lim",amount:-32.0,category:"Clothing & Shoes"},
+  {date:"2026-02-03",merchant:"Assets fee",amount:-1.14,category:"Finances"},
+  {date:"2026-02-03",merchant:"Assets fee",amount:-12.3,category:"Finances"},
+  {date:"2026-02-03",merchant:"Boréal Coffee Shop",amount:-6.13,category:"Eating Out"},
+  {date:"2026-02-03",merchant:"Bruno AU Petit Delice",amount:-11.32,category:"Groceries"},
+  {date:"2026-02-03",merchant:"Migros",amount:-20.29,category:"Groceries"},
+  {date:"2026-02-03",merchant:"Starbucks Coffee",amount:-6.97,category:"Eating Out"},
+  {date:"2026-02-03",merchant:"National Lottery",amount:-8.0,category:"Subscriptions"},
+  {date:"2026-02-03",merchant:"Boots",amount:-14.47,category:"Health & Beauty"},
+  {date:"2026-02-03",merchant:"Apple",amount:-8.99,category:"Subscriptions"},
+  {date:"2026-02-03",merchant:"Homesense",amount:-11.46,category:"General"},
+  {date:"2026-02-03",merchant:"Marks & Spencer",amount:-8.95,category:"Groceries"},
+  {date:"2026-02-03",merchant:"Pets at Home",amount:-13.14,category:"Coco"},
+  {date:"2026-02-03",merchant:"Home Bargains",amount:-40.55,category:"General"},
+  {date:"2026-02-02",merchant:"Verisure Alarms",amount:-53.26,category:"Household Bills"},
+  {date:"2026-02-02",merchant:"G&Bhospice Lottery",amount:-4.34,category:"Charity"},
+  {date:"2026-02-02",merchant:"Pet Plan",amount:-29.4,category:"Coco"},
+  {date:"2026-02-02",merchant:"Royal Borough Of Greenwich",amount:-275.13,category:"Household Bills"},
+  {date:"2026-02-02",merchant:"Aviva Life Insurance",amount:-28.28,category:"Household Bills"},
+  {date:"2026-02-02",merchant:"EE",amount:-82.52,category:"Household Bills"},
+  {date:"2026-02-02",merchant:"Battersea Dogs",amount:-10.0,category:"Charity"},
+  {date:"2026-02-02",merchant:"Amazon",amount:-13.1,category:"General"},
+  {date:"2026-02-02",merchant:"Marks & Spencer",amount:-38.45,category:"Groceries"},
+  {date:"2026-02-02",merchant:"Pret a Manger",amount:-3.1,category:"Eating Out"},
+  {date:"2026-02-02",merchant:"TFL",amount:-16.3,category:"Transport"},
+  {date:"2026-02-02",merchant:"Amazon",amount:-11.99,category:"Clothing & Shoes"},
+  {date:"2026-02-02",merchant:"Pret a Manger",amount:-29.49,category:"Eating Out"},
+  {date:"2026-02-02",merchant:"Sde Catering",amount:-8.8,category:"Eating Out"},
+  {date:"2026-02-02",merchant:"Amazon Prime",amount:-8.99,category:"Subscriptions"},
+  {date:"2026-02-02",merchant:"London Borough Lewisha",amount:-3.21,category:"Transport"},
+  {date:"2026-02-02",merchant:"Octopus Energy",amount:-855.44,category:"Household Bills"},
+  {date:"2026-02-02",merchant:"eBay",amount:-11.97,category:"General"},
+  {date:"2026-02-01",merchant:"Amazon",amount:-7.0,category:"General"},
+  {date:"2026-02-01",merchant:"Polhill Garden Centre",amount:-9.69,category:"Eating Out"},
+  {date:"2026-02-01",merchant:"Amazon",amount:-9.99,category:"Clothing & Shoes"},
+  {date:"2026-02-01",merchant:"Weight Watchers",amount:-5.65,category:"Health & Beauty"},
+  {date:"2026-02-01",merchant:"Amazon",amount:-9.99,category:"Health & Beauty"},
+  {date:"2026-02-01",merchant:"Polhill Garden Centre L",amount:-58.99,category:"General"},
+  {date:"2026-02-01",merchant:"Dojo*Polhill Farm Shop",amount:-0.99,category:"General"},
+  {date:"2026-02-01",merchant:"Marks & Spencer",amount:-11.08,category:"Groceries"},
+  {date:"2026-02-01",merchant:"Polhill Garden Centre L",amount:-4.95,category:"General"},
+  {date:"2026-02-01",merchant:"Demelza.Org.Uk Sittingbourne",amount:-5000.0,category:"Charity"},
+  {date:"2026-02-01",merchant:"Starbucks Coffee",amount:-6.35,category:"Eating Out"},
+  {date:"2026-02-01",merchant:"Amazon",amount:-23.69,category:"Coco"},
+  {date:"2026-02-01",merchant:"Weight Watchers",amount:-5.65,category:"Health & Beauty"},
+  {date:"2026-02-01",merchant:"Hush Homewear Ltd",amount:-17.45,category:"Clothing & Shoes"},
+  {date:"2026-02-01",merchant:"Marks & Spencer",amount:-12.0,category:"Groceries"},
+];
+
+// STATIC DATA
+// ============================================================
+
+const TAX_DATA = [
+  { name: "HMRC (Shares)", amount: -242644, notes: "Payable Jan 2027" },
+  { name: "Tax - Jan 27", amount: null, notes: "Interest income tax @ 45% on 25/26 income (computed from interest table)" },
+  { name: "Tax - Jan 28", amount: null, notes: "Interest income tax @ 45% on 26/27 income (computed from interest table)" },
+];
+
+function getTaxAmount(t) {
+  if (t.amount !== null) return t.amount;
+  if (t.name === "Tax - Jan 27") {
+    return -INTEREST_DATA.filter(function(a){ return a.taxYear === "25/26"; })
+      .reduce(function(s,a){ return s + (a.interest * a.taxRate); }, 0);
+  }
+  if (t.name === "Tax - Jan 28") {
+    return -INTEREST_DATA.filter(function(a){ return a.taxYear === "26/27"; })
+      .reduce(function(s,a){ return s + (a.interest * a.taxRate); }, 0);
+  }
+  return 0;
+}
+
+const TAX_WAREHOUSE = [
+  { name: "Investec 90 Day Saver - James", value: 97644, owner: "James", notes: "52,356 in transit to another account (90 day notice)" },
+  { name: "Investec 90 Day Saver - Jemma", value: 145000, owner: "Jemma", notes: "" },
+];
+
+const INVESTMENT_DATA = [
+  { category: "Properties", value: 695000 },
+  { category: "Traf Shares - Holding (inc Tax)", value: 1488889, taxOffset: -357333 },
+  { category: "Downsize House", value: 1000000 },
+  { category: "Current Property", value: 0 },
+  { category: "Pension", value: 72219 },
+  { category: "SIP", value: 533727 },
+  { category: "ISA", value: 281491 },
+  { category: "GIA", value: 571345, taxOffset: -20000 },
+  { category: "Junior ISA", value: 58426 },
+  { category: "Pending Investment allocation", value: 819000 },
+  { category: "Cash Provision", value: 196400 },
+];
+
+const DEFERRED_SHARES_DATA = [
+  { name: "Traf Shares - Deferred",       values: { y2026: 0, y2027: 1240480, y2028: 720899, y2029: 720899, y2030: 720899 } },
+  { name: "Traf Shares - Prescribed Rate", values: { y2026: 0, y2027: 85079, y2028: 43254, y2029: 28836, y2030: 14418  } },
+  { name: "Traf Shares - Tax",             values: { y2026: 0, y2027: -318134, y2028: -183397, y2029: -179936, y2030: -176476 }, isOffset: true },
+];
+
+const DEFERRED_YEARS = ["y2026", "y2027", "y2028", "y2029", "y2030"];
+
+const FORWARD_PROVISIONS = [
+  { name: "Annual Costs",        values: { y2027: -11251, y2028: -11251, y2029: -11251, y2030: -11251 } },
+  { name: "School Fees",         values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
+  { name: "Charity",             values: { y2027: -20149, y2028: -11615, y2029: -11396, y2030: -11177 } },
+  { name: "Flats",               values: { y2027: -2000, y2028: -2000, y2029: -2000, y2030: -2000  } },
+  { name: "Holiday",             values: { y2027: -20000, y2028: -20000, y2029: -20000, y2030: -20000 } },
+  { name: "£1k - Jemma",        values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
+  { name: "£1k - Jimbo",        values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
+  { name: "Offset School Fees",  values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
+  { name: "Tax - Interest",      values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
+  { name: "Home & Family",    values: { y2027: -15000, y2028: -15000, y2029: -15000, y2030: -15000 } },
+  { name: "Range Rover",         values: { y2027: -18500, y2028: -18500, y2029: -18500, y2030: -18500 } },
+];
+
+const SUMMARY_YEARS = ["y2026", "y2027", "y2028", "y2029", "y2030"];
+
+const INTEREST_DATA = [
+  // Tax year 2025/26 (6 Apr 2025 - 5 Apr 2026) — feeds Tax - Jan 27 liability
+  { name: "Bank of London", interest: 1939.10, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Cahoot", interest: 4721.79, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Chase Bank", interest: 517.89, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Chip", interest: 102.33, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Hampshire Trust Bank", interest: 4642.23, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Investec - 90 Day Saver", interest: 6618.04, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Investec - 90 Day Saver", interest: 470.94, owner: "Jemma", taxRate: 0, taxYear: "25/26" },
+  { name: "Investec - GBP Access", interest: 460.20, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Marcus by Goldman Sachs", interest: 1651.06, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Monzo", interest: 3658.07, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Paragon", interest: 4448.60, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Snoop", interest: 573.92, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Vida Savings", interest: 961.71, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Whiteaway Laidlaw", interest: 1047.16, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  { name: "Wise", interest: 1590.48, owner: "James", taxRate: 0.45, taxYear: "25/26" },
+  // Tax year 2026/27 (6 Apr 2026 - 5 Apr 2027) — feeds Tax - Jan 28 liability (add entries as year progresses)
+  { name: "Cahoot", interest: 779.86, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Marcus by Goldman Sachs", interest: 54.67, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Snoop", interest: 266.93, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Wise", interest: 206.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+];
+
+const CASH_DATA = {
+  currentAccounts: [
+    { name: "Barclays", value: 126.85, owner: "James" },
+    { name: "Monzo (1)", value: 2494, owner: "James" },
+    { name: "Monzo (2)", value: 73.00, owner: "James" },
+    { name: "Chase Bank", value: 100.00, owner: "James" },
+  ],
+  creditCards: [
+    { name: "American Express", value: -18302, owner: "Joint" },
+    { name: "M&S Bank", value: 0, owner: "Joint" },
+    { name: "Virgin Money", value: -1669, owner: "Joint" },
+    { name: "Barclaycard", value: 68.46, owner: "Joint" },
+  ],
+  savings: [
+    { name: "Bank of London", value: 2.99, owner: "James", rate: 3.34 },
+    { name: "Cahoot", value: 231681.54, owner: "James", rate: 4.05 },
+    { name: "Chase Bank (Saver)", value: 38.34, owner: "James", rate: 2.5 },
+    { name: "Chip", value: 100, owner: "James", rate: 2.49 },
+    { name: "Chip", value: 100, owner: "Jemma", rate: 2.49 },
+    { name: "Hampshire Trust Bank", value: 195477, owner: "James", rate: 3.61 },
+    { name: "Investec 90 Day Saver re-allocation", value: 52356, owner: "James", rate: 4.05 },
+    { name: "Investec - GBP Access", value: 3726, owner: "James", rate: 2.84 },
+    { name: "Marcus by Goldman Sachs", value: 17489, owner: "James", rate: 3.75 },
+    { name: "Monzo Savings", value: 108182, owner: "James", rate: 3.25 },
+    { name: "Monzo", value: 995.83, owner: "Jemma", rate: 3.25 },
+    { name: "NS&I", value: 5000, owner: "James", rate: null },
+    { name: "NS&I", value: 5000, owner: "Jemma", rate: null },
+    { name: "Paragon", value: 168377, owner: "James", rate: 3.51 },
+    { name: "Revolut", value: 529.80, owner: "James", rate: 3 },
+    { name: "Revolut", value: 383.96, owner: "Jemma", rate: 3.00 },
+    { name: "Wise", value: 1475, owner: "Jemma", rate: 3.00 },
+    { name: "Snoop Savings", value: 85847, owner: "James", rate: 4.35 },
+    { name: "Snoop Savings", value: 40100, owner: "Jemma", rate: 4.35 },
+    { name: "Vida Savings", value: 100672, owner: "James", rate: 4 },
+    { name: "Whiteaway Laidlaw", value: 100741, owner: "James", rate: 4.05 },
+    { name: "Wise", value: 60945, owner: "James", rate: 3.32 },
+    { name: "Wise (expired)", value: 3024.60, owner: "James", rate: 3.32 },
+  ],
+  pendingInvestment: -819000,
+};
+
+const PROVISIONS_DATA = [
+  { name: "1k - James", opening: 1000, drawdowns: [
+    { date: "Jan 2026", desc: "Amazon earplugs", amount: 54.95, cat: "Health & Beauty" },
+    { date: "Mar 2026", desc: "Amazon film", amount: 6.99, cat: "General" },
+    { date: "Mar 2026", desc: "Apple Claude subscription", amount: 214.99, cat: "One Off Costs" },
+    { date: "Apr 2026", desc: "SP Stanley", amount: 38.70, cat: "Shopping" },
+  ]},
+  { name: "1k - Jemma", opening: 1000, drawdowns: [] },
+  { name: "Annual Costs", opening: 13568, drawdowns: [
+    { date: "Jan 2026", desc: "Sent Luke Gough (present)", amount: 50.28, cat: "Presents" },
+    { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
+  ], notes: [
+    { label: "Building & Contents Insurance", amount: 2371 },
+    { label: "Car Insurance",                 amount: 1500 },
+    { label: "iPad Parental Controls",        amount: 70 },
+    { label: "Norton (IT Security)",          amount: 80 },
+    { label: "1Password",                     amount: 35 },
+    { label: "Christmas",                     amount: 5000 },
+    { label: "Birthdays",                     amount: 2000 },
+    { label: "Barleylands Farm",              amount: 330 },
+    { label: "iPhone Replacement (3yr)",      amount: 660 },
+    { label: "Microsoft Subscription",        amount: 70 },
+    { label: "Gardener",                      amount: 1250 },
+    { label: "Amex Card Fee",                 amount: 195 },
+  ]},
+  { name: "Cash Provision", opening: 200000, drawdowns: [
+    { date: "Feb 2026", desc: "ADHD Health Clinic (Health)", amount: 995, cat: "One Off Costs" },
+    { date: "Mar 2026", desc: "Private Psychiatry Expert (Health)", amount: 805, cat: "One Off Costs" },
+    { date: "Mar 2026", desc: "The Royal Parks - GaGa bench", amount: 10000, cat: "One Off Costs" },
+    // Transfer to Clothing & Shoes provision (£5,000) is an internal balance movement
+    // not recorded as spend — Clothing & Shoes opening balance funded from Cash Provision
+  ]},
+  { name: "Clothing & Shoes", opening: 5000, drawdowns: [
+    { date: "Mar 2026", desc: "Superdry", amount: 155.08, cat: "Clothing & Shoes" },
+    { date: "Mar 2026", desc: "Sweaty Betty", amount: 233.00, cat: "Clothing & Shoes" },
+    { date: "Mar 2026", desc: "Superdry", amount: 80.08, cat: "Clothing & Shoes" },
+    { date: "Mar 2026", desc: "Zara", amount: 161.03, cat: "Clothing & Shoes" },
+    { date: "Mar 2026", desc: "VF Northern Europe Serv", amount: 65.84, cat: "Clothing & Shoes" },
+    { date: "Mar 2026", desc: "Zara", amount: 72.92, cat: "Clothing & Shoes" },
+    { date: "Apr 2026", desc: "Zara", amount: 58.92, cat: "Clothing & Shoes" },
+    { date: "Apr 2026", desc: "Zara", amount: 250.12, cat: "Clothing & Shoes" },
+  ] },
+  { name: "Charity", opening: 35259, notes: [
+    { label: "Allocated to tax year 24/25", amount: 10000 },
+    { label: "Allocated to tax year 25/26", amount: 25259 },
+    { label: "─────────────────────────", amount: null },
+    { label: "Spent in 25/26 (to date)", amount: -15428.74 },
+    { label: "Remaining to donate in 25/26", amount: 9830.26 },
+    { label: "─────────────────────────", amount: null },
+    { label: "Note: figures from memory — adjust allocated 24/25 as needed", amount: null },
+    { label: "Note: one further Mar-26 donation pending — charity TBC", amount: null },
+  ], drawdowns: [
+    { date: "Jan 2026", desc: "Demelza", amount: 5000, cat: "Charity" },
+    { date: "Jan 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+    { date: "Jan 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
+    { date: "Jan 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
+    { date: "Jan 2026", desc: "Jemma (Joanne Bridgeman)", amount: 10, cat: "Charity" },
+    { date: "Feb 2026", desc: "Demelza", amount: 5000, cat: "Charity" },
+    { date: "Feb 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+    { date: "Feb 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
+    { date: "Feb 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
+    { date: "Feb 2026", desc: "Community Hospice", amount: 12, cat: "Charity" },
+    { date: "Mar 2026", desc: "Demelza", amount: 5000, cat: "Charity" },
+    { date: "Mar 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+    { date: "Mar 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
+    { date: "Mar 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
+    { date: "Apr 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+    { date: "Apr 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
+    { date: "Apr 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
+    { date: "Apr 2026", desc: "Trussell Trust", amount: 5100, cat: "Charity" },
+    { date: "Apr 2026", desc: "Jemma (Joanne Bridgeman)", amount: 10, cat: "Charity" },
+  ]},
+  { name: "Flats", opening: 8293, drawdowns: [
+    { date: "Jan 2026", desc: "Flat - Bearsted", amount: 4791.77, cat: "Flats" },
+  ]},
+  { name: "Holidays", opening: 29308, drawdowns: [
+    // Hardcoded monthly sub-totals — reconciled from Snoop data May 2026
+    // Provision window starts Oct-25 (dashboard built from Oct-25 data)
+    // Opening balance of 21,622 reflects position at start of Oct-25
+    { date: "Oct 2025", desc: "Dubai", amount: 2217.76, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 621.52, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Abu Dhabi", amount: 7190.00, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Dubai", amount: 2618.54, cat: "Holidays" },
+    { date: "Feb 2026", desc: "Christy's Hen Do", amount: 90.00, cat: "Holidays" },
+    { date: "Mar 2026", desc: "Abu Dhabi", amount: -7190.00, cat: "Holidays" },
+    { date: "Mar 2026", desc: "Disney World", amount: 10768.40, cat: "Holidays" },
+    { date: "Mar 2026", desc: "Christy's Hen Do", amount: 41.00, cat: "Holidays" },
+    { date: "Apr 2026", desc: "Disney World", amount: 3289.27, cat: "Holidays" },
+    { date: "Apr 2026", desc: "Christy's Hen Do", amount: 398.24, cat: "Holidays" },
+    { date: "Apr 2026", desc: "Center Parcs", amount: 103.50, cat: "Holidays" },
+    { date: "Apr 2026", desc: "Center Parcs", amount: 758.80, cat: "Holidays" },
+  ]},
+  { name: "Home & Family", opening: 132171, drawdowns: [
+    // House Blinds
+    { date: "Jan 2026", desc: "House Blinds", amount: 972.50, cat: "Home & Family" },
+    { date: "Jan 2026", desc: "House Blinds", amount: 5625.53, cat: "Home & Family" },
+    { date: "Feb 2026", desc: "House Blinds", amount: 972.50, cat: "Home & Family" },
+    // Utility Room
+    { date: "Mar 2026", desc: "Utility Room", amount: 726.26, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 970.46, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 2000, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 3240, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 186, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 219.90, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 168.82, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "Utility Room", amount: 1278, cat: "Home & Family" },
+    { date: "Apr 2026", desc: "Utility Room", amount: 6889, cat: "Home & Family" },
+    { date: "Apr 2026", desc: "Utility Room", amount: 1980, cat: "Home & Family" },
+    // DJB - Electrical and Maintenance Work
+    { date: "Jan 2026", desc: "DJB - Electrical and Maintenance Work", amount: 1344, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "DJB - Electrical and Maintenance Work", amount: 216, cat: "Home & Family" },
+    { date: "Mar 2026", desc: "DJB - Electrical and Maintenance Work", amount: 600, cat: "Home & Family" },
+    { date: "Apr 2026", desc: "DJB - Electrical and Maintenance Work", amount: 840, cat: "Home & Family" },
+    // Master Bedroom
+    { date: "Jan 2026", desc: "Master Bedroom", amount: 172, cat: "Home & Family" },
+    { date: "Jan 2026", desc: "Master Bedroom", amount: 169, cat: "Home & Family" },
+    { date: "Jan 2026", desc: "Master Bedroom", amount: -134, cat: "Home & Family" },
+    // Other
+    { date: "Apr 2026", desc: "No1Roofing", amount: 45, cat: "Home & Family" },
+  ]},
+  { name: "Range Rover", opening: 18500, drawdowns: [
+    { date: "Jan 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
+    { date: "Feb 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
+    { date: "Mar 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
+    { date: "Apr 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
+  ]},
+  { name: "School Fees", opening: 13178.40, isIncome: true, drawdowns: [], excludes: [
+    { date: "Sep 2025", desc: "Blackheath Prep - autumn term", amount: 5644, cat: "School Fees" },
+    { date: "Sep 2025", desc: "Blackheath Prep - autumn term", amount: 7534.40, cat: "School Fees" },
+    { date: "Jan 2026", desc: "Blackheath Prep - spring term", amount: 5644, cat: "School Fees" },
+    { date: "Jan 2026", desc: "Blackheath Prep - spring term", amount: 7534.40, cat: "School Fees" },
+    { date: "Apr 2026", desc: "Blackheath Prep - summer term", amount: 5644, cat: "School Fees" },
+    { date: "Apr 2026", desc: "Blackheath Prep - summer term", amount: 7534.40, cat: "School Fees" },
+  ] },
+];
+
+// Shared helper — single source of truth for provision remaining balance
+// Used by both ProvisionsTab and SummaryTab to guarantee they always match
+function getProvisionRemaining(p) {
+  var drawn = (p.drawdowns || []).reduce(function(s, d) { return s + d.amount; }, 0);
+  var rem = p.opening - drawn;
+  return p.isIncome ? rem : -rem;
+}
+// Returns a function isAllocated(mk, amount) -> bool
+function buildAllocationMap() {
+  // Build allocation counts keyed by mk + category + amount
+  var allocCount = {};
+  PROVISIONS_DATA.forEach(function(p) {
+    var allEntries = (p.drawdowns || []).concat(p.excludes || []);
+    allEntries.forEach(function(d) {
+      var mk = d.date === "Sep 2025" ? "2025-09" : d.date === "Jan 2026" ? "2026-01" : d.date === "Feb 2026" ? "2026-02" : d.date === "Mar 2026" ? "2026-03" : d.date === "Apr 2026" ? "2026-04" : null;
+      if (!mk || !d.cat || d.amount < 0) return; // skip refunds and untagged
+      var key = mk + "|" + d.cat + "|" + Math.round(d.amount * 100);
+      allocCount[key] = (allocCount[key] || 0) + 1;
+    });
+  });
+
+  // Pre-match transactions to drawdowns by category + amount, storing matched indices
+  var matchedIdx = new Set();
+  Object.keys(allocCount).forEach(function(key) {
+    var parts = key.split("|");
+    var mk = parts[0];
+    var cat = parts[1];
+    var amtCents = parseInt(parts[2]);
+    var slots = allocCount[key];
+    var matched = 0;
+    for (var i = 0; i < RAW_TRANSACTIONS.length; i++) {
+      if (matched >= slots) break;
+      var t = RAW_TRANSACTIONS[i];
+      if (getMonthKey(t.date) === mk
+          && resolveCategory(t) === cat
+          && Math.round(Math.abs(t.amount) * 100) === amtCents
+          && t.amount < 0
+          && !matchedIdx.has(i)) {
+        matchedIdx.add(i);
+        matched++;
+      }
+    }
+  });
+
+  return function(mk, amount) {
+    var amtCents = Math.round(Math.abs(amount) * 100);
+    for (var i = 0; i < RAW_TRANSACTIONS.length; i++) {
+      if (matchedIdx.has(i)) {
+        var t = RAW_TRANSACTIONS[i];
+        if (getMonthKey(t.date) === mk && Math.round(Math.abs(t.amount) * 100) === amtCents) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+}
+
+// Computed once at module level — single source of truth for all tabs
+var ALLOCATION_MAP = buildAllocationMap();
+
+// ============================================================
+// WEALTH TRACKER SNAPSHOTS
+// Each entry is a month-end snapshot of the Summary exec table
+// Add a new entry each month
+// ============================================================
+
+const WEALTH_SNAPSHOTS = [
+  {
+    month: "Feb-26",
+    investments:  5339164,
+    tax:          -12063,
+    cash:         395428,
+    deferred:     2716821,
+    provisions:   -691662,
+    total:        7747687,
+  },
+];
+
+// ============================================================
+// TAB: WEALTH TRACKER
+// ============================================================
+
+function WealthTab() {
+  var sections = [
+    { key: "investments", label: "Investments", color: STYLE.green },
+    { key: "tax",         label: "Tax",         color: STYLE.red   },
+    { key: "cash",        label: "Cash",         color: STYLE.green },
+    { key: "deferred",    label: "Deferred",     color: STYLE.green },
+    { key: "provisions",  label: "Provisions",   color: STYLE.red   },
+    { key: "total",       label: "Grand Total",  color: STYLE.blue, bold: true },
+  ];
+
+  return (
+    <div>
+      <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
+        Month-end snapshots from the Summary tab. A new entry is added each month.
+      </p>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <thead>
+          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+            <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px", width: "18%" }}>Section</th>
+            {WEALTH_SNAPSHOTS.map(function(s) {
+              return (
+                <th key={s.month} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{s.month}</th>
+              );
+            })}
+            {WEALTH_SNAPSHOTS.length > 1 && (
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>Movement</th>
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {sections.map(function(sec, si) {
+            var isBold = sec.bold;
+            var bg = isBold ? "#141c2c" : si % 2 === 0 ? STYLE.card : "transparent";
+            var borderTop = isBold ? "3px solid " + STYLE.blue : "1px solid #1a1e28";
+            var first = WEALTH_SNAPSHOTS[0][sec.key];
+            var last = WEALTH_SNAPSHOTS[WEALTH_SNAPSHOTS.length - 1][sec.key];
+            var movement = last - first;
+            return (
+              <tr key={sec.key} style={{ borderTop: borderTop, background: bg }}>
+                <td style={{ padding: "10px 12px", color: isBold ? STYLE.text : STYLE.textSub, fontWeight: isBold ? "bold" : "normal", fontSize: isBold ? "13px" : "12px" }}>{sec.label}</td>
+                {WEALTH_SNAPSHOTS.map(function(snap) {
+                  var v = snap[sec.key];
+                  return (
+                    <td key={snap.month} style={{ textAlign: "right", padding: "10px 12px", color: colN(v), fontWeight: isBold ? "bold" : "normal", fontSize: isBold ? "13px" : "12px" }}>{fmtN(v)}</td>
+                  );
+                })}
+                {WEALTH_SNAPSHOTS.length > 1 && (
+                  <td style={{ textAlign: "right", padding: "10px 12px", color: movement === 0 ? "#3a4a5a" : colN(movement), fontWeight: isBold ? "bold" : "normal", fontSize: isBold ? "13px" : "12px" }}>
+                    {movement === 0 ? "-" : (movement > 0 ? "+" : "") + fmtN(movement)}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const TABS = [
+  { id: "pnl",        label: "P&L Summary" },
+  { id: "budget",     label: "Budget" },
+  { id: "provisions", label: "Annual Provisions" },
+  { id: "tax",        label: "Tax" },
+  { id: "investments",label: "Investments" },
+  { id: "cash",       label: "Cash" },
+  { id: "candidates", label: "Provision Candidates" },
+  { id: "wealth",     label: "Wealth Tracker" },
+  { id: "summary",    label: "Summary" },
+];
+
+const STYLE = {
+  bg: "#0f1117", card: "#161b27", border: "#2a3040",
+  text: "#e8e0d0", textMuted: "#7a8a9a", textSub: "#c0b8a8",
+  green: "#a0c890", red: "#d08070", amber: "#c8a090",
+  blue: "#90a8c8", purple: "#a090c8", gold: "#7a8a6a",
+};
+
+const MONTHS = ["Apr-26", "Mar-26", "Feb-26"];
+const MONTH_KEYS = ["2026-04", "2026-03", "2026-02"];
+const INCOME_CATS = new Set(["Salary"]);
+const EXCLUDE_CATS = new Set(["Internal Transfers", "Finances", "Savings Deposits", "Cash", "Work Expenses", "Shopping", "Travel"]);
+const NON_OP_CATS = new Set(["Interest", "Income"]);
+const DAY_TO_DAY_CATS = ["Coco","Eating Out","Entertainment","General","Groceries","Health & Beauty","Household Bills","Household Maintenance","Presents","School Costs","Subscriptions","Transport"];
+const PROVISION_DISPLAY_CATS = ["1k - James","1k - Jemma","Annual Costs","Cash Provision","Charity","Clothing & Shoes","Flats","Holidays","Home & Family","Range Rover","School Fees"];
+
+function getMonthKey(d) { return d.substring(0, 7); }
+
+// Rule: transactions named "Interest" or "Interest earned" are always Interest category
+function resolveCategory(t) {
+  var merchant = (t.merchant || "").toLowerCase().trim();
+  if (merchant === "interest" || merchant === "interest earned") return "Interest";
+  return t.category;
+}
+
+function fmtN(v) {
+  if (v === 0) return "-";
+  var a = Math.round(Math.abs(v));
+  return v < 0 ? "(£" + a.toLocaleString("en-GB") + ")" : "£" + a.toLocaleString("en-GB");
+}
+
+function colN(v) {
+  return v < 0 ? "#d08070" : v === 0 ? "#3a4a5a" : "#a0c890";
+}
+
+function SectionHeader({ children, style }) {
+  return (
+    <div style={Object.assign({ fontSize: "10px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", padding: "12px 0 8px", borderBottom: "1px solid " + STYLE.border, marginBottom: "12px", marginTop: "24px" }, style)}>
+      {children}
+    </div>
+  );
+}
+
+function THead({ cols }) {
+  return (
+    <thead>
+      <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+        {cols.map(function(c, i) {
+          return (
+            <th key={i} style={{ textAlign: c.right ? "right" : "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px", letterSpacing: "1px" }}>
+              {c.label}
+            </th>
+          );
+        })}
+      </tr>
+    </thead>
+  );
+}
+
+// ============================================================
+// BUDGET DATA
+// ============================================================
+
+const BUDGET_DATA = {
+  salary:       8253,
+  categories: {
+    "Groceries":             -1500,
+    "Eating Out":            -520,
+    "Transport":             -150,
+    "Health & Beauty":       -200,
+    "Subscriptions":         -105,
+    "Household Bills":       -1300,
+    "Coco":                  -150,
+    "Clothing & Shoes":      -450,
+    "Entertainment":         -150,
+    "General":               -200,
+    "Presents":              -200,
+    "Household Maintenance":  0,
+    "School Costs":          -200,
+  },
+};
+
+// ============================================================
+// TAB: BUDGET
+// ============================================================
+
+function BudgetTab({ monthlyData, isAllocated }) {
+  var selectedState = React.useState(null);
+  var selected = selectedState[0];
+  var setSelected = selectedState[1];
+
+  var isAllocatedFn = isAllocated || ALLOCATION_MAP;
+
+  function getTransactions(mk, cat) {
+    return RAW_TRANSACTIONS.filter(function(t) {
+      return getMonthKey(t.date) === mk && resolveCategory(t) === cat && t.amount < 0 && !isAllocatedFn(mk, t.amount);
+    }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+  }
+
+  // Read actuals directly from monthlyData — same source as P&L, guarantees reconciliation
+  function getActual(mk, cat) {
+    if (!monthlyData[mk]) return 0;
+    return monthlyData[mk].categories[cat] || 0;
+  }
+
+  function handleClick(mk, cat) {
+    var key = mk + "|" + cat;
+    setSelected(selected === key ? null : key);
+  }
+
+  function Row({ label, cat, est, mkActualFn, indent, bold, highlight, isIncome, clickable }) {
+    var bg = highlight ? "#1a2030" : "transparent";
+    var baseColor = bold ? STYLE.text : STYLE.textSub;
+    return (
+      <tr style={{ borderBottom: "1px solid #1a1e28", background: bg }}>
+        <td style={{ padding: "7px 12px 7px " + (indent ? "24px" : "12px"), color: baseColor, fontSize: "12px", fontWeight: bold ? "bold" : "normal" }}>{label}</td>
+        {MONTH_KEYS.map(function(mk) {
+          var actual = mkActualFn(mk);
+          var diff = est !== null ? actual - est : null;
+          var diffColor = diff === null || diff === 0 ? "#3a4a5a"
+            : isIncome ? (diff > 0 ? STYLE.green : STYLE.red)
+            : (diff < 0 ? STYLE.green : STYLE.red);
+          var key = mk + "|" + cat;
+          var isActive = selected === key;
+          var actCellStyle = {
+            textAlign: "right", padding: "7px 8px", fontSize: "12px",
+            color: actual ? colN(actual) : STYLE.textMuted,
+            cursor: clickable ? "pointer" : "default",
+            background: isActive ? "#1e3050" : "transparent",
+          };
+          return [
+            <td key={mk+"-e"} style={{ textAlign: "right", padding: "7px 8px", fontSize: "12px", color: STYLE.textMuted }}>{est !== null ? fmtN(est) : "-"}</td>,
+            <td key={mk+"-a"} style={actCellStyle} onClick={clickable ? function(){ handleClick(mk, cat); } : null}>
+              {actual ? fmtN(actual) : "-"}{clickable && actual ? <span style={{ fontSize: "9px", color: isActive ? STYLE.blue : "#3a4a5a", marginLeft: "3px" }}>{isActive ? "\u25b2" : "\u25bc"}</span> : null}
+            </td>,
+            <td key={mk+"-d"} style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: diffColor, borderRight: "1px solid #1a2030" }}>{diff !== null && actual ? fmtN(diff) : "-"}</td>,
+          ];
+        })}
+      </tr>
+    );
+  }
+
+  function DrillDown({ mk, cat }) {
+    var txns = getTransactions(mk, cat);
+    var label = MONTHS[MONTH_KEYS.indexOf(mk)];
+    if (!txns.length) return (
+      <tr style={{ background: "#0d1520" }}>
+        <td colSpan={10} style={{ padding: "8px 12px 12px 32px", fontSize: "11px", color: STYLE.textMuted, fontStyle: "italic" }}>No transactions found.</td>
+      </tr>
+    );
+    return (
+      <tr style={{ background: "#0d1520" }}>
+        <td colSpan={10} style={{ padding: "0 12px 12px 32px" }}>
+          <div style={{ fontSize: "10px", color: STYLE.blue, letterSpacing: "1px", textTransform: "uppercase", padding: "8px 0 6px" }}>{label} — {cat}</div>
+          <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "11px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #1a2030" }}>
+                <th style={{ textAlign: "left", padding: "4px 10px", color: STYLE.textMuted, fontWeight: "normal" }}>Date</th>
+                <th style={{ textAlign: "left", padding: "4px 10px", color: STYLE.textMuted, fontWeight: "normal" }}>Merchant</th>
+                <th style={{ textAlign: "right", padding: "4px 10px", color: STYLE.textMuted, fontWeight: "normal" }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txns.map(function(t, i) {
+                return (
+                  <tr key={i} style={{ borderBottom: "1px solid #0f1520" }}>
+                    <td style={{ padding: "5px 10px", color: STYLE.textMuted }}>{t.date.substring(8)}/{t.date.substring(5,7)}</td>
+                    <td style={{ padding: "5px 10px", color: STYLE.textSub }}>{t.merchant}</td>
+                    <td style={{ textAlign: "right", padding: "5px 10px", color: STYLE.red }}>{fmtN(t.amount)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    );
+  }
+
+  var SALARY_ADJ_MONTH = "2026-02";
+  var SALARY_ADJ = -6247;
+  var actualSalary = {};
+  MONTH_KEYS.forEach(function(mk) {
+    actualSalary[mk] = (monthlyData[mk] ? monthlyData[mk].income : 0) + (mk === SALARY_ADJ_MONTH ? SALARY_ADJ : 0);
+  });
+
+  var SCHOOL_FEES_PRORATA = -3294.60;
+  var d2dEst = Object.values(BUDGET_DATA.categories).reduce(function(s,v){ return s+v; }, 0) + SCHOOL_FEES_PRORATA;
+  var actualD2d = {};
+  MONTH_KEYS.forEach(function(mk) {
+    actualD2d[mk] = DAY_TO_DAY_CATS.reduce(function(s,c){ return s + getActual(mk,c); }, 0) + SCHOOL_FEES_PRORATA;
+  });
+
+  // Find categories with actual spend not in DAY_TO_DAY_CATS and not excluded
+  var EXCLUDED_CATS_BUDGET = ["Internal Transfers","Finances","Savings Deposits","Cash","Work Expenses","Shopping","Travel","Interest","Income","Salary",
+    "1k - James","1k - Jemma","Annual Costs","Cash Provision","Charity","Clothing & Shoes","Flats","Holidays","Home & Family","Range Rover","School Fees"];
+  var extraCatsSet = {};
+  MONTH_KEYS.forEach(function(mk) {
+    RAW_TRANSACTIONS.forEach(function(t) {
+      if (getMonthKey(t.date) === mk && t.amount < 0 && !isAllocatedFn(mk, t.amount)
+          && EXCLUDED_CATS_BUDGET.indexOf(t.category) === -1 && DAY_TO_DAY_CATS.indexOf(t.category) === -1) {
+        extraCatsSet[t.category] = true;
+      }
+    });
+  });
+  var extraCats = Object.keys(extraCatsSet).sort();
+
+  var estOpNet = BUDGET_DATA.salary + d2dEst;
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: "16px", marginBottom: "28px" }}>
+        {MONTH_KEYS.map(function(mk, i) {
+          var actNet = actualSalary[mk] + actualD2d[mk];
+          var netVar = actNet - estOpNet;
+          return (
+            <div key={mk} style={{ background: STYLE.card, border: "1px solid " + STYLE.border, borderRadius: "4px", padding: "16px 20px", minWidth: "160px" }}>
+              <div style={{ fontSize: "10px", color: STYLE.textMuted, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "6px" }}>{MONTHS[i]}</div>
+              <div style={{ fontSize: "20px", color: colN(actNet), fontWeight: "300" }}>{fmtN(actNet)}</div>
+              <div style={{ fontSize: "11px", color: netVar >= 0 ? STYLE.green : STYLE.red, marginTop: "4px" }}>{netVar >= 0 ? "+" : ""}{fmtN(netVar)} vs budget</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <thead>
+          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+            <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px", width: "22%" }}>Category</th>
+            {MONTHS.map(function(m) {
+              return [
+                <th key={m+"-e"} style={{ textAlign: "right", padding: "10px 8px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "10px" }}>Est</th>,
+                <th key={m+"-a"} style={{ textAlign: "right", padding: "10px 8px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m}</th>,
+                <th key={m+"-d"} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderRight: "1px solid #1a2030" }}>Diff</th>,
+              ];
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colSpan={10} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Income</td></tr>
+          <Row label="Salary" cat="Salary" est={BUDGET_DATA.salary} mkActualFn={function(mk){ return actualSalary[mk]; }} indent={true} isIncome={true} />
+
+          <tr><td colSpan={10} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Day-to-Day Costs</td></tr>
+          {DAY_TO_DAY_CATS.map(function(cat) {
+            var est = BUDGET_DATA.categories[cat] !== undefined ? BUDGET_DATA.categories[cat] : null;
+            var selMk = selected && selected.endsWith("|" + cat) ? selected.split("|")[0] : null;
+            return [
+              <Row key={cat} label={cat} cat={cat} est={est} mkActualFn={function(mk){ return getActual(mk,cat) || null; }} indent={true} clickable={true} />,
+              selMk ? <DrillDown key={cat+"-drill"} mk={selMk} cat={cat} /> : null,
+            ];
+          })}
+          <Row label="School Fees (pro-rata)" cat={null} est={SCHOOL_FEES_PRORATA} mkActualFn={function(mk){ return SCHOOL_FEES_PRORATA; }} indent={true} muted={true} />
+          <Row label="Day-to-Day Total" cat={null} est={d2dEst} mkActualFn={function(mk){ return actualD2d[mk]; }} bold={true} highlight={true} />
+          <Row label="Net Operating Total" cat={null} est={estOpNet} mkActualFn={function(mk){ return actualSalary[mk] + actualD2d[mk]; }} bold={true} highlight={true} isIncome={true} />
+
+          {extraCats.length > 0 && [
+            <tr key="unbudgeted-hdr"><td colSpan={10} style={{ padding: "8px 12px", color: STYLE.amber, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Unbudgeted (no estimate set)</td></tr>,
+            extraCats.map(function(cat) {
+              var selMk = selected && selected.endsWith("|" + cat) ? selected.split("|")[0] : null;
+              return [
+                <Row key={cat} label={cat} cat={cat} est={null} mkActualFn={function(mk){ return getActual(mk,cat) || null; }} indent={true} clickable={true} />,
+                selMk ? <DrillDown key={cat+"-drill"} mk={selMk} cat={cat} /> : null,
+              ];
+            })
+          ]}
+        </tbody>
+      </table>
+      <p style={{ marginTop: "12px", fontSize: "11px", color: STYLE.textMuted, fontStyle: "italic" }}>
+        Click any actual amount to see transactions. Diff: green = favourable, red = unfavourable.
+      </p>
+    </div>
+  );
+}
+
+
+// ============================================================
+// TAB: P&L
+// ============================================================
+
+function PnLTab({ monthlyData }) {
+  function getVal(mk, cat) {
+    if (!monthlyData[mk]) return 0;
+    return monthlyData[mk].categories[cat] || 0;
+  }
+  function getProvVal(mk, cat) {
+    if (!monthlyData[mk]) return 0;
+    return monthlyData[mk].provisions[cat] || 0;
+  }
+
+  // Actual salary from transactions
+  var salary = {};
+  MONTH_KEYS.forEach(function(mk) { salary[mk] = monthlyData[mk] ? monthlyData[mk].income : 0; });
+  var salaryAdj = -6247;
+  var salary3mo = MONTH_KEYS.reduce(function(s, mk) { return s + salary[mk]; }, 0) + salaryAdj;
+
+  var totals3mo = {};
+  DAY_TO_DAY_CATS.forEach(function(cat) {
+    totals3mo[cat] = MONTH_KEYS.reduce(function(s, mk) { return s + getVal(mk, cat); }, 0);
+  });
+  PROVISION_DISPLAY_CATS.forEach(function(cat) {
+    totals3mo[cat] = MONTH_KEYS.reduce(function(s, mk) { return s + getProvVal(mk, cat); }, 0);
+  });
+
+  var SCHOOL_FEES_PRORATA = -3294.60;
+
+  var d2dTotal = {};
+  MONTH_KEYS.forEach(function(mk) {
+    d2dTotal[mk] = DAY_TO_DAY_CATS.reduce(function(s, c) { return s + getVal(mk, c); }, 0) + SCHOOL_FEES_PRORATA;
+  });
+  var d2dTotal3mo = DAY_TO_DAY_CATS.reduce(function(s, c) { return s + totals3mo[c]; }, 0) + SCHOOL_FEES_PRORATA * 3;
+
+  var provTotal = {};
+  MONTH_KEYS.forEach(function(mk) {
+    provTotal[mk] = PROVISION_DISPLAY_CATS.reduce(function(s, c) { return s + getProvVal(mk, c); }, 0);
+  });
+  var provTotal3mo = PROVISION_DISPLAY_CATS.reduce(function(s, c) { return s + totals3mo[c]; }, 0);
+
+  var opNet = {};
+  MONTH_KEYS.forEach(function(mk) { opNet[mk] = salary[mk] + (mk === "2026-02" ? salaryAdj : 0) + d2dTotal[mk]; });
+  var opNet3mo = salary3mo + d2dTotal3mo;
+
+
+  function Row({ label, mkFn, total, indent, bold, highlight, muted }) {
+    var baseColor = muted ? STYLE.textMuted : bold ? STYLE.text : STYLE.textSub;
+    var bg = highlight ? "#1a2030" : "transparent";
+    return (
+      <tr style={{ borderBottom: "1px solid #1a1e28", background: bg }}>
+        <td style={{ padding: "7px 12px 7px " + (indent ? "24px" : "12px"), color: baseColor, fontSize: "12px", fontWeight: bold ? "bold" : "normal" }}>{label}</td>
+        {MONTH_KEYS.map(function(mk) {
+          var v = mkFn(mk);
+          return <td key={mk} style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: v === null ? STYLE.textMuted : colN(v), fontWeight: bold ? "bold" : "normal" }}>{v === null ? "-" : fmtN(v)}</td>;
+        })}
+        <td style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: total === null ? STYLE.textMuted : colN(total), fontWeight: bold ? "bold" : "normal" }}>{total === null ? "-" : fmtN(total)}</td>
+      </tr>
+    );
+  }
+
+  var summaryBoxes = [
+    { label: "Net Operating Total (3mo)", value: opNet3mo, desc: "Salary less day-to-day" },
+    { label: "Income (3mo)", value: salary3mo, desc: "Actual salary received" },
+    { label: "Day-to-Day (3mo)", value: d2dTotal3mo, desc: "Operating costs" },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: "16px", marginBottom: "28px" }}>
+        {summaryBoxes.map(function(b) {
+          return (
+            <div key={b.label} style={{ background: STYLE.card, border: "1px solid " + STYLE.border, borderRadius: "4px", padding: "16px 20px", minWidth: "160px" }}>
+              <div style={{ fontSize: "10px", color: STYLE.textMuted, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "6px" }}>{b.label}</div>
+              <div style={{ fontSize: "20px", color: colN(b.value), fontWeight: "300" }}>{fmtN(b.value)}</div>
+              <div style={{ fontSize: "10px", color: STYLE.textMuted, marginTop: "4px" }}>{b.desc}</div>
+            </div>
+          );
+        })}
+        <div style={{ width: "1px", background: STYLE.border, margin: "0 8px" }}></div>
+        <div style={{ background: STYLE.card, border: "1px dashed " + STYLE.border, borderRadius: "4px", padding: "16px 20px", minWidth: "160px" }}>
+          <div style={{ fontSize: "10px", color: STYLE.textMuted, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "6px" }}>Provisioned (3mo)</div>
+          <div style={{ fontSize: "20px", color: colN(provTotal3mo), fontWeight: "300" }}>{fmtN(provTotal3mo)}</div>
+          <div style={{ fontSize: "10px", color: STYLE.textMuted, marginTop: "4px" }}>Provision-backed spend</div>
+        </div>
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <THead cols={[{ label: "Item" }, { label: "Apr-26", right: true }, { label: "Mar-26", right: true }, { label: "Feb-26", right: true }, { label: "3mo Total", right: true }]} />
+        <tbody>
+          <tr><td colSpan={5} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Revenue</td></tr>
+          <Row label="Salary - James" mkFn={function(mk){ return salary[mk] || null; }} total={salary3mo} indent={true} />
+          <Row label="Adjustment - Share Monies" mkFn={function(mk){ return mk === "2026-02" ? -6247 : null; }} total={-6247} indent={true} muted={true} />
+
+          <tr><td colSpan={5} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Day-to-Day Costs</td></tr>
+          {DAY_TO_DAY_CATS.map(function(cat) {
+            return <Row key={cat} label={cat} mkFn={function(mk){ return getVal(mk,cat) || null; }} total={totals3mo[cat] || null} indent={true} />;
+          })}
+          <Row label="School Fees (pro-rata)" mkFn={function(mk){ return -3294.60; }} total={-3294.60 * 3} indent={true} />
+          <Row label="Day-to-Day Total" mkFn={function(mk){ return d2dTotal[mk]; }} total={d2dTotal3mo} bold={true} highlight={true} />
+          <Row label="Net Operating Total" mkFn={function(mk){ return opNet[mk]; }} total={opNet3mo} bold={true} highlight={true} />
+
+          <tr><td colSpan={5} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisioned Spend</td></tr>
+          {PROVISION_DISPLAY_CATS.map(function(cat) {
+            return <Row key={cat} label={cat} mkFn={function(mk){ return getProvVal(mk,cat) || null; }} total={totals3mo[cat] || null} indent={true} muted={true} />;
+          })}
+          <Row label="School Fees (pro-rata offset)" mkFn={function(mk){ return 3294.60; }} total={3294.60 * 3} indent={true} muted={true} />
+          <Row label="Provisioned Spend Total" mkFn={function(mk){ return provTotal[mk]; }} total={provTotal3mo} bold={true} highlight={true} />
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: PROVISIONS
+// ============================================================
+
+function ProvisionsTab() {
+  var openNotes = React.useState(null);
+  var expandedNote = openNotes[0];
+  var setExpandedNote = openNotes[1];
+
+  var ALL_PROV_MONTHS = [
+    { mk: "2026-04", prefix: "Apr 2026", label: "Apr-26" },
+    { mk: "2026-03", prefix: "Mar 2026", label: "Mar-26" },
+    { mk: "2026-02", prefix: "Feb 2026", label: "Feb-26" },
+    { mk: "2026-01", prefix: "Jan 2026", label: "Jan-26" },
+    { mk: "2025-12", prefix: "Dec 2025", label: "Dec-25" },
+    { mk: "2025-11", prefix: "Nov 2025", label: "Nov-25" },
+    { mk: "2025-10", prefix: "Oct 2025", label: "Oct-25" },
+  ];
+  var cols = [
+    { label: "Provision" }, { label: "Remaining", right: true },
+    ...ALL_PROV_MONTHS.map(function(m){ return { label: m.label, right: true }; }),
+    { label: "Type" }, { label: "Opening", right: true },
+  ];
+
+  // drawdowns ONLY — prefix is full month string e.g. "Apr 2026"
+  function getDrawn(p, prefix) {
+    return (p.drawdowns || []).filter(function(d){ return d.date === prefix; })
+      .reduce(function(s,d){ return s + d.amount; }, 0);
+  }
+
+  var totalRem = PROVISIONS_DATA.reduce(function(s, p) {
+    return s + getProvisionRemaining(p);
+  }, 0);
+
+  var detailProvisions = PROVISIONS_DATA.filter(function(p) {
+    return (p.drawdowns||[]).some(function(d){
+      return d.date === "Apr 2026" || d.date === "Mar 2026" || d.date === "Feb 2026";
+    });
+  });
+
+  return (
+    <div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <THead cols={cols} />
+        <tbody>
+          {PROVISIONS_DATA.map(function(p, i) {
+            var rem = getProvisionRemaining(p);
+            return (
+              <tr key={p.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{p.name}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: colN(rem) }}>{fmtN(rem)}</td>
+                {ALL_PROV_MONTHS.map(function(m) {
+                  var v = getDrawn(p, m.prefix);
+                  return <td key={m.mk} style={{ textAlign: "right", padding: "10px 12px", color: v ? STYLE.amber : STYLE.textMuted }}>{v ? fmtN(-v) : "-"}</td>;
+                })}
+                <td style={{ padding: "10px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{p.isIncome ? "Income" : "Provision"}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.textMuted }}>{fmtN(p.opening)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Net Remaining</td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: colN(-totalRem), fontWeight: "bold" }}>{fmtN(totalRem)}</td>
+            {ALL_PROV_MONTHS.map(function(m) {
+              var mTotal = PROVISIONS_DATA.reduce(function(s,p){ return s + getDrawn(p,m.prefix); }, 0);
+              return <td key={m.mk} style={{ textAlign: "right", padding: "10px 12px", color: mTotal ? STYLE.amber : STYLE.textMuted, fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "-"}</td>;
+            })}
+            <td style={{ padding: "10px 12px" }}></td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "bold" }}>{fmtN(PROVISIONS_DATA.reduce(function(s,p){ return s+p.opening; },0))}</td>
+          </tr>
+          <tr style={{ background: "#1a1e28" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px", fontStyle: "italic" }}>School Fees pro-rata offset</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px", fontStyle: "italic" }}>+£3,295/mo</td>
+            {MONTH_KEYS.map(function(mk) {
+              return <td key={mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontSize: "11px" }}>£3,295</td>;
+            })}
+            <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px", fontStyle: "italic" }}>Termly fees offset in P&L — not a provision movement</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {detailProvisions.length > 0 && (
+        <div style={{ marginTop: "32px" }}>
+          <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Drawdown Detail</div>
+          {detailProvisions.map(function(p) {
+            var windowMonths = ["Feb 2026", "Mar 2026", "Apr 2026"];
+            var allMonths = ["Sep 2025","Oct 2025","Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"];
+            var drawdownRows = (p.drawdowns||[]).filter(function(d){
+              return allMonths.indexOf(d.date) !== -1;
+            });
+            if (!drawdownRows.length) return null;
+
+            // Get distinct months that actually have entries, in order
+            var monthsPresent = allMonths.filter(function(m){
+              return drawdownRows.some(function(d){ return d.date === m; });
+            });
+
+            // Group by desc (sub-category), summing per month
+            var subCats = {};
+            drawdownRows.forEach(function(d) {
+              if (!subCats[d.desc]) subCats[d.desc] = {};
+              subCats[d.desc][d.date] = (subCats[d.desc][d.date] || 0) + d.amount;
+            });
+
+            var grandTotal = drawdownRows.reduce(function(s,d){ return s + d.amount; }, 0);
+
+            return (
+              <div key={p.name} style={{ marginBottom: "28px" }}>
+                <div style={{ fontSize: "12px", color: STYLE.text, fontWeight: "bold", marginBottom: "8px", paddingLeft: "4px" }}>{p.name}</div>
+                <table style={{ width: "auto", minWidth: "60%", borderCollapse: "collapse", fontSize: "12px" }}>
+                  <thead>
+                    <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+                      <th style={{ textAlign: "left", padding: "7px 14px", color: STYLE.textMuted, fontWeight: "normal", minWidth: "180px" }}>Sub-category</th>
+                      {monthsPresent.map(function(m) {
+                        return <th key={m} style={{ textAlign: "right", padding: "7px 14px", color: STYLE.blue, fontWeight: "bold", minWidth: "100px" }}>{m.replace(" 20", " '")}</th>;
+                      })}
+                      <th style={{ textAlign: "right", padding: "7px 14px", color: STYLE.text, fontWeight: "bold", minWidth: "100px" }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(subCats).map(function(desc, i) {
+                      var monthAmts = subCats[desc];
+                      var rowTotal = Object.values(monthAmts).reduce(function(s,v){ return s+v; }, 0);
+                      return (
+                        <tr key={desc} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                          <td style={{ padding: "7px 14px", color: STYLE.textSub }}>{desc}</td>
+                          {monthsPresent.map(function(m) {
+                            var v = monthAmts[m] || 0;
+                            return (
+                              <td key={m} style={{ textAlign: "right", padding: "7px 14px", color: v ? (v < 0 ? STYLE.green : STYLE.amber) : "#3a4a5a" }}>
+                                {v ? fmtN(-v) : "—"}
+                              </td>
+                            );
+                          })}
+                          <td style={{ textAlign: "right", padding: "7px 14px", color: rowTotal < 0 ? STYLE.green : STYLE.amber, fontWeight: "bold" }}>
+                            {fmtN(-rowTotal)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+                      <td style={{ padding: "7px 14px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+                      {monthsPresent.map(function(m) {
+                        var mTotal = drawdownRows.filter(function(d){ return d.date === m; }).reduce(function(s,d){ return s+d.amount; }, 0);
+                        return <td key={m} style={{ textAlign: "right", padding: "7px 14px", color: mTotal ? STYLE.amber : "#3a4a5a", fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "—"}</td>;
+                      })}
+                      <td style={{ textAlign: "right", padding: "7px 14px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(-grandTotal)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {detailProvisions.length > 0 && (
+        <div style={{ marginTop: "32px" }}>
+          <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Transaction Detail</div>
+          {detailProvisions.map(function(p) {
+            var isOpen = expandedNote === ("txn-" + p.name);
+            // Collect all Snoop categories used by this provision's drawdowns + excludes
+            var cats = {};
+            (p.drawdowns || []).forEach(function(d){ if (d.cat) cats[d.cat] = true; });
+            (p.excludes || []).forEach(function(d){ if (d.cat) cats[d.cat] = true; });
+            var catList = Object.keys(cats);
+            // All raw transactions for this provision's categories, within the window months + Jan
+            var txns = RAW_TRANSACTIONS.filter(function(t){
+              var mk = getMonthKey(t.date);
+              return (mk === "2026-04" || mk === "2026-03" || mk === "2026-02" || mk === "2026-01")
+                && catList.indexOf(resolveCategory(t)) !== -1;
+            }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+            var txnTotal = txns.reduce(function(s,t){ return s+t.amount; }, 0);
+            if (!txns.length) return null;
+            return (
+              <div key={p.name} style={{ marginBottom: "8px", border: "1px solid " + STYLE.border, borderRadius: "4px", overflow: "hidden" }}>
+                <div
+                  onClick={function(){ setExpandedNote(isOpen ? null : "txn-" + p.name); }}
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: STYLE.card, cursor: "pointer", userSelect: "none" }}
+                >
+                  <span style={{ fontSize: "12px", color: STYLE.text, fontWeight: "bold" }}>{p.name}</span>
+                  <span style={{ fontSize: "11px", color: STYLE.textMuted }}>{isOpen ? "▲ hide" : "▼ show transactions (" + txns.length + ")"}</span>
+                </div>
+                {isOpen && (
+                  <div style={{ padding: "12px 14px", background: "#0f1117" }}>
+                    <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "12px" }}>
+                      <THead cols={[{ label: "Date" }, { label: "Merchant" }, { label: "Category" }, { label: "Amount", right: true }]} />
+                      <tbody>
+                        {txns.map(function(t, i) {
+                          return (
+                            <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                              <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.date.substring(8)}/{t.date.substring(5,7)}/{t.date.substring(2,4)}</td>
+                              <td style={{ padding: "6px 12px", color: STYLE.textSub }}>{t.merchant}</td>
+                              <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.category}</td>
+                              <td style={{ textAlign: "right", padding: "6px 12px", color: t.amount < 0 ? STYLE.amber : STYLE.green }}>{fmtN(t.amount)}</td>
+                            </tr>
+                          );
+                        })}
+                        <tr style={{ borderTop: "1px solid " + STYLE.border }}>
+                          <td colSpan={3} style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Total</td>
+                          <td style={{ textAlign: "right", padding: "8px 12px", color: colN(txnTotal), fontWeight: "bold" }}>{fmtN(txnTotal)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: TAX
+// ============================================================
+
+function TaxTab() {
+  var totalLiability = TAX_DATA.reduce(function(s,t){return s+getTaxAmount(t);},0);
+  var totalWarehouse = TAX_WAREHOUSE.reduce(function(s,t){return s+t.value;},0);
+  var shortfall = totalWarehouse + totalLiability;
+
+  // Tax year spending: 6 Apr 2025 - 5 Apr 2026
+  var TAX_YEAR_CATS = [
+    { key: "Charity", label: "Charity" },
+  ];
+
+  var taxYearData = TAX_YEAR_CATS.map(function(cat) {
+    var txns = RAW_TRANSACTIONS.filter(function(t) {
+      return t.category === cat.key && t.amount < 0 && t.date >= "2025-04-06" && t.date <= "2026-04-05";
+    }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var total = txns.reduce(function(s,t){ return s+t.amount; }, 0);
+    return { label: cat.label, txns: txns, total: total };
+  });
+
+  var openState = React.useState(null);
+  var openCat = openState[0];
+  var setOpenCat = openState[1];
+
+  return (
+    <div>
+      <SectionHeader>Tax Liabilities</SectionHeader>
+      <table style={{ width: "55%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
+        <THead cols={[{ label: "Item" }, { label: "Amount", right: true }, { label: "Notes" }]} />
+        <tbody>
+          {TAX_DATA.map(function(t, i) {
+            return (
+              <tr key={t.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{t.name}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.red }}>{fmtN(getTaxAmount(t))}</td>
+                <td style={{ padding: "10px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.notes}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.red, fontWeight: "bold" }}>{fmtN(totalLiability)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <SectionHeader>Tax Warehouse (Investec 90 Day)</SectionHeader>
+      <table style={{ width: "55%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
+        <THead cols={[{ label: "Account" }, { label: "Value", right: true }, { label: "Owner" }, { label: "Notes" }]} />
+        <tbody>
+          {TAX_WAREHOUSE.map(function(t, i) {
+            return (
+              <tr key={t.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{t.name}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green }}>{fmtN(t.value)}</td>
+                <td style={{ padding: "10px 12px", color: t.owner === "James" ? STYLE.blue : STYLE.purple }}>{t.owner}</td>
+                <td style={{ padding: "10px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.notes}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total Warehouse</td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(totalWarehouse)}</td>
+            <td colSpan={2}></td>
+          </tr>
+          <tr style={{ background: "#141c2c" }}>
+            <td style={{ padding: "10px 12px", color: shortfall >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold" }}>
+              {shortfall >= 0 ? "Surplus" : "Shortfall"}
+            </td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: shortfall >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold" }}>{fmtN(shortfall)}</td>
+            <td colSpan={2}></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <SectionHeader>Tax Year Spending (6 Apr 2025 – 5 Apr 2026)</SectionHeader>
+      <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "16px", fontStyle: "italic" }}>
+        Click a category to see the underlying transactions. Additional categories added on request.
+      </p>
+      <table style={{ width: "55%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "8px" }}>
+        <THead cols={[{ label: "Category" }, { label: "Transactions", right: true }, { label: "Total", right: true }]} />
+        <tbody>
+          {taxYearData.map(function(cat, i) {
+            var isOpen = openCat === cat.label;
+            return [
+              <tr key={cat.label} onClick={function(){ setOpenCat(isOpen ? null : cat.label); }}
+                style={{ borderBottom: "1px solid #1a1e28", background: isOpen ? "#1a2838" : i % 2 === 0 ? STYLE.card : "transparent", cursor: "pointer" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{cat.label}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.textMuted }}>{cat.txns.length}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.red, textDecoration: isOpen ? "underline" : "none" }}>{fmtN(cat.total)}</td>
+              </tr>,
+              isOpen && (
+                <tr key={cat.label + "-detail"}>
+                  <td colSpan={3} style={{ padding: "0", background: "#0d1220" }}>
+                    <div style={{ padding: "12px 24px 16px", borderBottom: "2px solid " + STYLE.blue }}>
+                      <div style={{ fontSize: "10px", color: STYLE.blue, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "10px" }}>
+                        {cat.label} — all transactions this tax year
+                      </div>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                        <thead>
+                          <tr style={{ borderBottom: "1px solid " + STYLE.border }}>
+                            <th style={{ textAlign: "left", padding: "5px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Date</th>
+                            <th style={{ textAlign: "left", padding: "5px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Merchant</th>
+                            <th style={{ textAlign: "right", padding: "5px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cat.txns.map(function(t, j) {
+                            return (
+                              <tr key={j} style={{ borderBottom: "1px solid #1a1e28" }}>
+                                <td style={{ padding: "5px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.date}</td>
+                                <td style={{ padding: "5px 12px", color: STYLE.textSub }}>{t.merchant}</td>
+                                <td style={{ textAlign: "right", padding: "5px 12px", color: STYLE.red }}>{fmtN(t.amount)}</td>
+                              </tr>
+                            );
+                          })}
+                          <tr style={{ borderTop: "1px solid " + STYLE.border }}>
+                            <td colSpan={2} style={{ padding: "6px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>Total</td>
+                            <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.red, fontWeight: "bold", fontSize: "11px" }}>{fmtN(cat.total)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              ),
+            ];
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: INVESTMENTS
+// ============================================================
+
+function InvestmentsTab() {
+  // Keep Cash Provision in sync with Annual Provisions remaining
+  var cashProvData = PROVISIONS_DATA.find(function(p){ return p.name === "Cash Provision"; });
+  var cashProvRemaining = cashProvData ? -getProvisionRemaining(cashProvData) : 0;
+  var investmentRows = INVESTMENT_DATA.map(function(i){
+    return i.category === "Cash Provision" ? Object.assign({}, i, { value: cashProvRemaining }) : i;
+  });
+
+  var grossTotal = investmentRows.reduce(function(s,i){return s+i.value;},0);
+  var taxTotal = investmentRows.reduce(function(s,i){return s+(i.taxOffset||0);},0);
+  var netTotal = grossTotal + taxTotal;
+  var totalInterest = INTEREST_DATA.reduce(function(s,a){return s+a.interest;},0);
+  var totalTax = INTEREST_DATA.reduce(function(s,a){return s+(a.interest * a.taxRate);},0);
+  var interest2526 = INTEREST_DATA.filter(function(a){ return a.taxYear === "25/26"; });
+  var interest2627 = INTEREST_DATA.filter(function(a){ return a.taxYear === "26/27"; });
+  var total2526 = interest2526.reduce(function(s,a){return s+a.interest;},0);
+  var total2627 = interest2627.reduce(function(s,a){return s+a.interest;},0);
+  var tax2526 = interest2526.reduce(function(s,a){return s+(a.interest*a.taxRate);},0);
+  var tax2627 = interest2627.reduce(function(s,a){return s+(a.interest*a.taxRate);},0);
+
+  return (
+    <div>
+      <SectionHeader>Investment Portfolio</SectionHeader>
+      <table style={{ width: "45%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
+        <THead cols={[{ label: "Category" }, { label: "Net Value", right: true }]} />
+        <tbody>
+          {investmentRows.map(function(inv, i) {
+            var net = inv.value + (inv.taxOffset || 0);
+            return (
+              <tr key={inv.category} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{inv.category}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(net)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(netTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <SectionHeader>Interest Income - updated Apr 2026</SectionHeader>
+      <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
+        <THead cols={[{ label: "Account" }, { label: "Owner" }, { label: "Interest", right: true }, { label: "Tax Due", right: true }]} />
+        <tbody>
+          <tr><td colSpan={4} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax Year 25/26 — Jan 27 liability (pending reconciliation)</td></tr>
+          {interest2526.map(function(acc, i) {
+            return (
+              <tr key={acc.name + acc.owner} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{acc.name}</td>
+                <td style={{ padding: "8px 12px", color: acc.owner === "Jemma" ? STYLE.purple : STYLE.textMuted, fontSize: "11px" }}>{acc.owner}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green }}>{fmtN(acc.interest)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: acc.taxRate === 0 ? STYLE.textMuted : STYLE.red }}>{acc.taxRate === 0 ? "—" : fmtN(-(acc.interest * acc.taxRate))}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
+            <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>25/26 Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(total2526)}</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red, fontWeight: "bold" }}>{fmtN(-tax2526)}</td>
+          </tr>
+          {interest2627.length > 0 && [
+            <tr key="hy2627"><td colSpan={4} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax Year 26/27 — Jan 28 liability (pending reconciliation)</td></tr>,
+            interest2627.map(function(acc, i) {
+              return (
+                <tr key={acc.name + acc.owner + "2627"} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                  <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{acc.name}</td>
+                  <td style={{ padding: "8px 12px", color: acc.owner === "Jemma" ? STYLE.purple : STYLE.textMuted, fontSize: "11px" }}>{acc.owner}</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green }}>{fmtN(acc.interest)}</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: acc.taxRate === 0 ? STYLE.textMuted : STYLE.red }}>{acc.taxRate === 0 ? "—" : fmtN(-(acc.interest * acc.taxRate))}</td>
+                </tr>
+              );
+            }),
+            <tr key="tot2627" style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
+              <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>26/27 Total</td>
+              <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(total2627)}</td>
+              <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red, fontWeight: "bold" }}>{fmtN(-tax2627)}</td>
+            </tr>
+          ]}
+        </tbody>
+      </table>
+
+      <SectionHeader>Deferred Share Payments</SectionHeader>
+      <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "16px", fontStyle: "italic" }}>
+        Fixed payment schedule net of tax. Dates indicative.
+      </p>
+      <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <THead cols={[{ label: "Item" }, { label: "2026", right: true }, { label: "2027", right: true }, { label: "2028", right: true }, { label: "2029", right: true }, { label: "2030", right: true }, { label: "Total", right: true }]} />
+        <tbody>
+          {DEFERRED_SHARES_DATA.map(function(item, i) {
+            var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
+            var total = ykeys.reduce(function(s,k){ return s + (item.values[k]||0); }, 0);
+            return (
+              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "10px 12px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
+                {ykeys.map(function(k) {
+                  var v = item.values[k] || 0;
+                  return <td key={k} style={{ textAlign: "right", padding: "10px 12px", color: colN(v) }}>{fmtN(v)}</td>;
+                })}
+                <td style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: colN(total) }}>{fmtN(total)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Net (after tax)</td>
+            {["y2026","y2027","y2028","y2029","y2030"].map(function(k) {
+              var net = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s + (r.values[k]||0); }, 0);
+              return <td key={k} style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: colN(net) }}>{fmtN(net)}</td>;
+            })}
+            <td style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: STYLE.blue }}>
+              {fmtN(DEFERRED_SHARES_DATA.reduce(function(s,r){ return ["y2026","y2027","y2028","y2029","y2030"].reduce(function(ss,k){ return ss+(r.values[k]||0); }, s); }, 0))}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: CASH
+// ============================================================
+
+function CashTab() {
+  var accounts = CASH_DATA.currentAccounts.reduce(function(s,a){return s+a.value;},0);
+  var cards = CASH_DATA.creditCards.reduce(function(s,a){return s+a.value;},0);
+  var savings = CASH_DATA.savings.reduce(function(s,a){return s+a.value;},0);
+  var gross = accounts + cards + savings;
+  var net = gross + CASH_DATA.pendingInvestment;
+
+  function ownerColor(o) { return o === "James" ? STYLE.blue : o === "Jemma" ? STYLE.purple : STYLE.textMuted; }
+
+  function AccountTable({ title, rows }) {
+    var subtotal = rows.reduce(function(s,r){return s+r.value;},0);
+    return (
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>{title}</div>
+        <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px" }}>
+          <THead cols={[{ label: "Account" }, { label: "Owner" }, { label: "Balance", right: true }]} />
+          <tbody>
+            {rows.map(function(r, i) {
+              return (
+                <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                  <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{r.name}</td>
+                  <td style={{ padding: "8px 12px", color: ownerColor(r.owner), fontSize: "11px" }}>{r.owner}</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: r.value < 0 ? STYLE.red : STYLE.green }}>{fmtN(r.value)}</td>
+                </tr>
+              );
+            })}
+            <tr style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
+              <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Subtotal</td>
+              <td style={{ textAlign: "right", padding: "8px 12px", color: colN(subtotal), fontWeight: "bold" }}>{fmtN(subtotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  function SavingsTable({ title, rows }) {
+    var subtotal = rows.reduce(function(s,r){return s+r.value;},0);
+    return (
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>{title}</div>
+        <table style={{ width: "60%", borderCollapse: "collapse", fontSize: "12px" }}>
+          <THead cols={[{ label: "Account" }, { label: "Owner" }, { label: "Rate", right: true }, { label: "Balance", right: true }]} />
+          <tbody>
+            {rows.map(function(r, i) {
+              return (
+                <tr key={r.name+i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                  <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{r.name}</td>
+                  <td style={{ padding: "8px 12px", color: ownerColor(r.owner), fontSize: "11px" }}>{r.owner}</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: r.rate != null ? STYLE.gold : STYLE.textMuted, fontSize: "11px" }}>{r.rate != null ? r.rate.toFixed(2) + "%" : "—"}</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: r.value < 0 ? STYLE.red : STYLE.green }}>{fmtN(r.value)}</td>
+                </tr>
+              );
+            })}
+            <tr style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
+              <td colSpan={3} style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Subtotal</td>
+              <td style={{ textAlign: "right", padding: "8px 12px", color: colN(subtotal), fontWeight: "bold" }}>{fmtN(subtotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <SectionHeader>Cash Summary</SectionHeader>
+      <table style={{ width: "40%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
+        <tbody>
+          {[
+            { label: "Current Accounts", value: accounts },
+            { label: "Credit Cards (net)", value: cards },
+            { label: "Savings", value: savings },
+            { label: "Gross Cash", value: gross, bold: true },
+            { label: "Pending Investment", value: CASH_DATA.pendingInvestment },
+            { label: "Net Cash Position", value: net, bold: true, highlight: true },
+          ].map(function(r) {
+            return (
+              <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: r.highlight ? "#1a2030" : "transparent" }}>
+                <td style={{ padding: "10px 12px", color: r.bold ? STYLE.text : STYLE.textSub, fontWeight: r.bold ? "bold" : "normal" }}>{r.label}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: colN(r.value), fontWeight: r.bold ? "bold" : "normal" }}>{fmtN(r.value)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      <AccountTable title="Current Accounts" rows={CASH_DATA.currentAccounts} />
+      <AccountTable title="Credit Cards" rows={CASH_DATA.creditCards} />
+      <SavingsTable title="Savings" rows={CASH_DATA.savings} />
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: SUMMARY (Deferred Share Payments only for now)
+// ============================================================
+
+function SummaryTab() {
+  var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
+
+  // Investments
+  var invNetTotal = INVESTMENT_DATA.reduce(function(s,i){ return s + i.value + (i.taxOffset||0); }, 0);
+
+  // Tax — split by when payable
+  // Jan 27 items (HMRC Shares, Tax-Jan27) are 2026 liabilities
+  // Jan 28 items (Tax-Jan28) fall in 2027
+  var TAX_2026 = ["HMRC (Shares)", "Tax - Jan 27"];
+  var TAX_2027 = ["Tax - Jan 28"];
+  var taxLiabilities2026 = TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
+    .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
+  var taxLiabilities2027 = TAX_DATA.filter(function(t){ return TAX_2027.includes(t.name); })
+    .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
+  var taxWarehouseTotal = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0);
+  var taxNet2026 = taxLiabilities2026 + taxWarehouseTotal;
+  var taxNet2027 = taxLiabilities2027;
+  var taxRows = [
+    ...TAX_WAREHOUSE.map(function(t){ return { name: t.name, val: t.value, isAsset: true, year: "2026" }; }),
+    ...TAX_DATA.map(function(t){ return { name: t.name, val: getTaxAmount(t), isAsset: false, year: TAX_2027.includes(t.name) ? "2027" : "2026" }; }),
+  ];
+
+  // Cash (2026)
+  var cashAccounts = CASH_DATA.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashCards = CASH_DATA.creditCards.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashSavings = CASH_DATA.savings.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashPending = CASH_DATA.pendingInvestment;
+  var cashRows = [
+    { name: "Current Accounts", val: cashAccounts },
+    { name: "Credit Cards", val: cashCards },
+    { name: "Savings", val: cashSavings },
+    { name: "Pending Investment", val: cashPending },
+  ];
+  var cashNet2026 = cashAccounts + cashCards + cashSavings + cashPending;
+
+  // Deferred
+  var deferredByYear = ykeys.reduce(function(o,k){
+    o[k] = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s+(r.values[k]||0); }, 0);
+    return o;
+  }, {});
+  var deferredTotal = ykeys.reduce(function(s,k){ return s+deferredByYear[k]; }, 0);
+
+  // Provisions: pair each PROVISIONS_DATA row with its FORWARD_PROVISIONS equivalent
+  // fwdKey is the name in FORWARD_PROVISIONS that matches this provision (null if none)
+  var PROV_MAP = {
+    "1k - James":       "£1k - Jimbo",
+    "1k - Jemma":       "£1k - Jemma",
+    "Annual Costs":     "Annual Costs",
+    "Cash Provision":   null,
+    "Charity":          "Charity",
+    "Clothing & Shoes": null,
+    "Flats":            "Flats",
+    "Holidays":         "Holiday",
+    "Home & Family":    "Home & Family",
+    "Range Rover":      "Range Rover",
+    "School Fees":      "School Fees",
+  };
+  // FORWARD_PROVISIONS rows that have no matching PROVISIONS_DATA entry
+  var FWDONLY = ["Offset School Fees", "Tax - Interest"];
+
+  var fwdMap = {};
+  FORWARD_PROVISIONS.forEach(function(p){ fwdMap[p.name] = p.values; });
+
+  var provRows = PROVISIONS_DATA.map(function(p) {
+    var val2026 = getProvisionRemaining(p);
+    var fwdKey = PROV_MAP[p.name];
+    var fwd = fwdKey ? (fwdMap[fwdKey] || {}) : {};
+    return { name: p.name, val2026: val2026, fwd: fwd };
+  });
+
+  // Append forward-only rows
+  FWDONLY.forEach(function(name) {
+    if (fwdMap[name]) {
+      provRows.push({ name: name, val2026: 0, fwd: fwdMap[name] });
+    }
+  });
+
+  var provTotal2026 = provRows.reduce(function(s,r){ return s+r.val2026; }, 0);
+  var fwdByYear = {};
+  ["y2027","y2028","y2029","y2030"].forEach(function(k){
+    fwdByYear[k] = provRows.reduce(function(s,r){ return s+(r.fwd[k]||0); }, 0);
+  });
+  var provSectionTotal = provTotal2026 + ["y2027","y2028","y2029","y2030"].reduce(function(s,k){ return s+fwdByYear[k]; }, 0);
+
+  var grandTotal = invNetTotal + deferredTotal + provSectionTotal + taxNet2026 + taxNet2027 + cashNet2026;
+  var grandByYear = ykeys.reduce(function(o,k){
+    o[k] = deferredByYear[k] + (k === "y2026" ? provTotal2026 + taxNet2026 + cashNet2026 : (fwdByYear[k]||0))
+         + (k === "y2027" ? taxNet2027 : 0);
+    return o;
+  }, {});
+
+  return (
+    <div>
+
+      {/* Executive Summary */}
+      <div style={{ marginBottom: "36px" }}>
+        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Executive Summary</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+          <thead>
+            <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+              <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Section</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>Total</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2026</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2027</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2028</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2029</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2030</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.purple, fontWeight: "bold", fontSize: "11px" }}>Retirement</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { label: "Investments",  total: invNetTotal,      y2026: 0,             y2027: 0,                    y2028: 0,                    y2029: 0,                    y2030: 0,                    ret: invNetTotal },
+              { label: "Tax",          total: taxNet2026 + taxNet2027, y2026: taxNet2026, y2027: taxNet2027,       y2028: 0,                    y2029: 0,                    y2030: 0,                    ret: 0 },
+              { label: "Cash",         total: cashNet2026,      y2026: cashNet2026,   y2027: 0,                    y2028: 0,                    y2029: 0,                    y2030: 0,                    ret: 0 },
+              { label: "Deferred",     total: deferredTotal,    y2026: deferredByYear.y2026, y2027: deferredByYear.y2027, y2028: deferredByYear.y2028, y2029: deferredByYear.y2029, y2030: deferredByYear.y2030, ret: 0 },
+              { label: "Provisions",   total: provSectionTotal, y2026: provTotal2026, y2027: fwdByYear.y2027,      y2028: fwdByYear.y2028,      y2029: fwdByYear.y2029,      y2030: fwdByYear.y2030,      ret: 0 },
+            ].map(function(r, i) {
+              return (
+                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                  <td style={{ padding: "10px 12px", color: STYLE.textSub, fontWeight: "500" }}>{r.label}</td>
+                  <td style={{ textAlign: "right", padding: "10px 12px", color: colN(r.total), fontWeight: "bold" }}>{fmtN(r.total)}</td>
+                  {[r.y2026, r.y2027, r.y2028, r.y2029, r.y2030].map(function(v, j) {
+                    return <td key={j} style={{ textAlign: "right", padding: "10px 12px", color: v ? colN(v) : "#3a4a5a" }}>{fmtN(v)}</td>;
+                  })}
+                  <td style={{ textAlign: "right", padding: "10px 12px", color: r.ret ? colN(r.ret) : "#3a4a5a" }}>{fmtN(r.ret)}</td>
+                </tr>
+              );
+            })}
+            <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+              <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
+              <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal)}</td>
+              {ykeys.map(function(k) {
+                var v = grandByYear[k];
+                return <td key={k} style={{ textAlign: "right", padding: "10px 12px", color: v ? colN(v) : "#3a4a5a", fontWeight: "bold", fontSize: "13px" }}>{fmtN(v)}</td>;
+              })}
+              <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.purple, fontWeight: "bold", fontSize: "13px" }}>{fmtN(invNetTotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
+        Multi-year view. Total is the first number to the right of each item.
+      </p>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <thead>
+          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+            <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Item</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>Total</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2026</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2027</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2028</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2029</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2030</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.purple, fontWeight: "bold", fontSize: "11px" }}>Retirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Investments</td></tr>
+          {INVESTMENT_DATA.map(function(inv, i) {
+            var net = inv.value + (inv.taxOffset || 0);
+            return (
+              <tr key={inv.category} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{inv.category}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: net === 0 ? "#3a4a5a" : STYLE.green, fontWeight: "bold" }}>{fmtN(net)}</td>
+                <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: net === 0 ? "#3a4a5a" : STYLE.purple }}>{fmtN(net)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Investments Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(invNetTotal)}</td>
+            <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.purple, fontWeight: "bold" }}>{fmtN(invNetTotal)}</td>
+          </tr>
+
+          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax</td></tr>
+          {taxRows.map(function(r, i) {
+            var is2027 = r.year === "2027";
+            return (
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: is2027 ? "#3a4a5a" : colN(r.val) }}>{is2027 ? "-" : fmtN(r.val)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: is2027 ? colN(r.val) : "#3a4a5a" }}>{is2027 ? fmtN(r.val) : "-"}</td>
+                <td colSpan={3} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Tax Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026 + taxNet2027), fontWeight: "bold" }}>{fmtN(taxNet2026 + taxNet2027)}</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026), fontWeight: "bold" }}>{fmtN(taxNet2026)}</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2027), fontWeight: "bold" }}>{fmtN(taxNet2027)}</td>
+            <td colSpan={3} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+          </tr>
+
+          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Cash</td></tr>
+          {cashRows.map(function(r, i) {
+            return (
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
+                <td colSpan={4} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Cash Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
+            <td colSpan={4} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+          </tr>
+
+          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Deferred Share Payments</td></tr>
+          {DEFERRED_SHARES_DATA.map(function(item, i) {
+            var total = ykeys.reduce(function(s,k){ return s+(item.values[k]||0); }, 0);
+            return (
+              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(total), fontWeight: "bold" }}>{fmtN(total)}</td>
+                {ykeys.map(function(k) {
+                  var v = item.values[k] || 0;
+                  return <td key={k} style={{ textAlign: "right", padding: "8px 12px", color: v ? colN(v) : "#3a4a5a" }}>{fmtN(v)}</td>;
+                })}
+                <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Deferred Total (net)</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(deferredTotal), fontWeight: "bold" }}>{fmtN(deferredTotal)}</td>
+            {ykeys.map(function(k) {
+              var v = deferredByYear[k];
+              return <td key={k} style={{ textAlign: "right", padding: "8px 12px", color: v ? colN(v) : "#3a4a5a", fontWeight: "bold" }}>{fmtN(v)}</td>;
+            })}
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+          </tr>
+
+          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisions</td></tr>
+          {provRows.map(function(r, i) {
+            var rowTotal = r.val2026 + ["y2027","y2028","y2029","y2030"].reduce(function(s,k){ return s+(r.fwd[k]||0); }, 0);
+            return (
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(rowTotal), fontWeight: "bold" }}>{fmtN(rowTotal)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: r.val2026 ? colN(r.val2026) : "#3a4a5a" }}>{fmtN(r.val2026)}</td>
+                {["y2027","y2028","y2029","y2030"].map(function(k) {
+                  var v = r.fwd[k] || 0;
+                  return <td key={k} style={{ textAlign: "right", padding: "8px 12px", color: v ? colN(v) : "#3a4a5a" }}>{fmtN(v)}</td>;
+                })}
+                <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Provisions Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(provSectionTotal), fontWeight: "bold" }}>{fmtN(provSectionTotal)}</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(provTotal2026), fontWeight: "bold" }}>{fmtN(provTotal2026)}</td>
+            {["y2027","y2028","y2029","y2030"].map(function(k) {
+              return <td key={k} style={{ textAlign: "right", padding: "8px 12px", color: colN(fwdByYear[k]), fontWeight: "bold" }}>{fmtN(fwdByYear[k])}</td>;
+            })}
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+          </tr>
+
+          <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal)}</td>
+            {ykeys.map(function(k) {
+              var v = grandByYear[k];
+              return <td key={k} style={{ textAlign: "right", padding: "10px 12px", color: v ? colN(v) : "#3a4a5a", fontWeight: "bold", fontSize: "13px" }}>{fmtN(v)}</td>;
+            })}
+            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.purple, fontWeight: "bold", fontSize: "13px" }}>{fmtN(invNetTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+// ============================================================
+// TAB: PROVISION CANDIDATES
+// ============================================================
+
+// Manual notifications — transactions spotted in Snoop but not yet in uploaded data
+// Add entries here; remove once confirmed after next Snoop upload
+const MANUAL_NOTIFICATIONS = [
+  // SP Stanley £38.70 Apr-26 — moved to 1k-James drawdowns
+  // Sent Clive Taylor £1,980 Apr-26 — moved to Home & Family / Utility Room drawdown
+];
+
+function CandidatesTab({ candidates }) {
+  var byMonth = {};
+  MONTH_KEYS.forEach(function(mk){ byMonth[mk] = []; });
+  candidates.forEach(function(t) {
+    var mk = getMonthKey(t.date);
+    if (byMonth[mk]) byMonth[mk].push(t);
+  });
+
+  return (
+    <div>
+      {/* Manual Notifications */}
+      {MANUAL_NOTIFICATIONS.length > 0 && (
+        <div style={{ marginBottom: "32px" }}>
+          <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "10px" }}>
+            ⚠ Manually Flagged — Pending Next Snoop Upload
+          </div>
+          <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "12px" }}>
+            <THead cols={[{ label: "Date" }, { label: "Merchant" }, { label: "Amount", right: true }, { label: "Provision" }, { label: "Notes" }]} />
+            <tbody>
+              {MANUAL_NOTIFICATIONS.map(function(n, i) {
+                return (
+                  <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? "#1a2030" : "transparent" }}>
+                    <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{n.date.substring(8)}-{n.date.substring(5,7)}-{n.date.substring(0,4)}</td>
+                    <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{n.merchant}</td>
+                    <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red }}>{fmtN(-n.amount)}</td>
+                    <td style={{ padding: "8px 12px", color: STYLE.blue, fontSize: "11px" }}>{n.provision}</td>
+                    <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px", fontStyle: "italic" }}>{n.notes}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p style={{ marginTop: "8px", fontSize: "11px", color: STYLE.textMuted, fontStyle: "italic" }}>
+            Review and confirm these after uploading Snoop data. Remove entries once actioned.
+          </p>
+        </div>
+      )}
+
+      <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
+        No unreconciled provision transactions — all Feb–Apr 2026 transactions have been attributed. New candidates will appear here after the next Snoop upload.
+      </p>
+      {MONTH_KEYS.map(function(mk) {
+        var items = byMonth[mk];
+        if (!items || items.length === 0) return null;
+        var total = items.reduce(function(s,t){ return s + t.amount; }, 0);
+        return (
+          <div key={mk} style={{ marginBottom: "28px" }}>
+            <SectionHeader>{MONTHS[MONTH_KEYS.indexOf(mk)]}</SectionHeader>
+            <table style={{ width: "65%", borderCollapse: "collapse", fontSize: "12px" }}>
+              <THead cols={[{ label: "Date" }, { label: "Merchant" }, { label: "Category" }, { label: "Amount", right: true }]} />
+              <tbody>
+                {items.map(function(t, i) {
+                  return (
+                    <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                      <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.date.substring(8)}-{t.date.substring(5,7)}-{t.date.substring(0,4)}</td>
+                      <td style={{ padding: "6px 12px", color: STYLE.textSub }}>{t.merchant}</td>
+                      <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.category}</td>
+                      <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.amber }}>{fmtN(t.amount)}</td>
+                    </tr>
+                  );
+                })}
+                <tr style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
+                  <td colSpan={3} style={{ padding: "6px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(total)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+
+function DashboardInner({ userEmail, onSignOut }) {
+  var [activeTab, setActiveTab] = useState("pnl");
+
+  
+
+  var monthlyData = useMemo(function() {
+    var data = {};
+    MONTH_KEYS.forEach(function(mk) {
+      data[mk] = { income: 0, categories: {}, provisions: {} };
+      DAY_TO_DAY_CATS.forEach(function(c){ data[mk].categories[c] = 0; });
+      PROVISION_DISPLAY_CATS.forEach(function(c){ data[mk].provisions[c] = 0; });
+    });
+
+    // Provisions: read from PROVISIONS_DATA.drawdowns — single source of truth
+    // shared with the Annual Provisions tab. Drawdowns stored as positive costs /
+    // negative refunds. monthlyData.provisions uses negative = cost (raw txn convention).
+    var mkPrefix = { "2026-04": "Apr", "2026-03": "Mar", "2026-02": "Feb" };
+    PROVISIONS_DATA.forEach(function(p) {
+      if (!PROVISION_DISPLAY_CATS.includes(p.name)) return;
+      (p.drawdowns || []).forEach(function(d) {
+        var mk = Object.keys(mkPrefix).find(function(k){ return d.date.startsWith(mkPrefix[k]); });
+        if (!mk || !data[mk]) return;
+        data[mk].provisions[p.name] = (data[mk].provisions[p.name] || 0) - d.amount;
+      });
+    });
+
+    var isAllocated = ALLOCATION_MAP;
+    RAW_TRANSACTIONS.forEach(function(t) {
+      var mk = getMonthKey(t.date);
+      if (!data[mk]) return;
+      var cat = resolveCategory(t);
+      if (INCOME_CATS.has(cat)) {
+        data[mk].income += t.amount;
+      } else if (EXCLUDE_CATS.has(cat) || NON_OP_CATS.has(cat)) {
+        return;
+      } else if (PROVISION_DISPLAY_CATS.includes(cat)) {
+        // One Off Costs has no PROVISIONS_DATA entry so reads from raw txns.
+        // All other provision categories are driven by drawdowns above.
+        if (cat === "One Off Costs") {
+          data[mk].provisions[cat] = (data[mk].provisions[cat] || 0) + t.amount;
+        }
+      } else if (DAY_TO_DAY_CATS.includes(cat)) {
+        if (!isAllocated(mk, t.amount)) {
+          data[mk].categories[cat] = (data[mk].categories[cat] || 0) + t.amount;
+        }
+      }
+    });
+    return data;
+  }, []);
+
+  var candidates = useMemo(function() {
+    var isAllocated = ALLOCATION_MAP;
+    return RAW_TRANSACTIONS
+      .filter(function(t) {
+        if (!PROVISION_DISPLAY_CATS.includes(resolveCategory(t))) return false;
+        if (t.amount >= 0) return false;
+        if (t.date < "2026-05-01") return false;  // Only show May-26 onwards once reconciled
+        return !isAllocated(getMonthKey(t.date), t.amount);
+      })
+      .sort(function(a,b){ return a.date.localeCompare(b.date); })
+      .map(function(t){ return Object.assign({}, t, { amount: Math.abs(t.amount) }); });
+  }, []);
+
+  return (
+    <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", background: STYLE.bg, minHeight: "100vh", color: STYLE.text }}>
+      <div style={{ background: "linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)", borderBottom: "1px solid " + STYLE.border, padding: "24px 32px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div>
+            <div style={{ fontSize: "11px", letterSpacing: "3px", color: STYLE.gold, textTransform: "uppercase", marginBottom: "4px" }}>Household Finance</div>
+            <div style={{ fontSize: "26px", color: STYLE.text, fontWeight: "300", letterSpacing: "1px" }}>Spence Family</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "11px", color: STYLE.textMuted }}>James {'&'} Jemma</div>
+            <div style={{ fontSize: "11px", color: STYLE.gold }}>Feb 2026 — Apr 2026</div>
+            <button onClick={onSignOut} style={{ marginTop: "6px", background: "none", border: "1px solid #2a2f3e", color: STYLE.textMuted, borderRadius: "3px", padding: "3px 10px", cursor: "pointer", fontSize: "10px", letterSpacing: "0.5px" }}>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+      <div style={{ borderBottom: "1px solid " + STYLE.border, background: STYLE.card, padding: "0 32px", display: "flex" }}>
+        {TABS.map(function(tab) {
+          return (
+            <button key={tab.id} onClick={function(){ setActiveTab(tab.id); }} style={{
+              padding: "14px 20px", background: "none", border: "none", cursor: "pointer",
+              color: activeTab === tab.id ? STYLE.text : STYLE.textMuted,
+              borderBottom: activeTab === tab.id ? "2px solid " + STYLE.green : "2px solid transparent",
+              fontSize: "12px", letterSpacing: "0.5px", fontFamily: "inherit"
+            }}>
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ padding: "28px 32px" }}>
+        {activeTab === "pnl" && <PnLTab monthlyData={monthlyData} />}
+        {activeTab === "budget" && <BudgetTab monthlyData={monthlyData} isAllocated={ALLOCATION_MAP} />}
+        {activeTab === "provisions" && <ProvisionsTab />}
+        {activeTab === "tax" && <TaxTab />}
+        {activeTab === "investments" && <InvestmentsTab />}
+        {activeTab === "cash" && <CashTab />}
+        {activeTab === "summary" && <SummaryTab />}
+        {activeTab === "candidates" && <CandidatesTab candidates={candidates} />}
+        {activeTab === "wealth" && <WealthTab />}
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const { authState, userEmail, signIn, signOut } = useGoogleAuth();
+
+  if (authState === "loading") return <LoadingScreen />;
+  if (authState === "signedOut") return <SignInScreen onSignIn={signIn} />;
+  if (authState === "unauthorised") return <UnauthorisedScreen userEmail={userEmail} onSignOut={signOut} />;
+  return <DashboardInner userEmail={userEmail} onSignOut={signOut} />;
+}

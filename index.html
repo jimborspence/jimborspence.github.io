@@ -42,39 +42,29 @@ body { background: #0f1117; }
       if (window.__mountDashboard) window.__mountDashboard();
       return;
     }
-    google.accounts.id.initialize({
-      client_id: CLIENT_ID,
-      callback: handleCredentialResponse,
-      ux_mode: 'popup',
-      auto_select: false,
-    });
-    google.accounts.id.renderButton(
-      document.getElementById('google-btn'),
-      { theme: 'outline', size: 'large', text: 'signin_with' }
-    );
+    google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse });
+    google.accounts.id.renderButton(document.getElementById('google-btn'), { theme: 'outline', size: 'large' });
   }
-  // Wait for Google Identity Services to load (it's async)
+
   function waitForGoogle() {
-    if (typeof google !== 'undefined') {
+    if (typeof google !== 'undefined' && google.accounts) {
       initGoogle();
     } else {
       setTimeout(waitForGoogle, 100);
     }
   }
-  waitForGoogle();
+  window.addEventListener('load', waitForGoogle);
 </script>
 </head>
 <body>
 <div id="login-screen">
   <h1>Spence Family Finance</h1>
-  <p>Sign in with your Google account to access the dashboard</p>
+  <p>Sign in to access the dashboard</p>
   <div id="google-btn"></div>
-  <div id="denied" class="denied">Access denied — your account is not authorised.</div>
+  <div id="denied" class="denied">Access denied. This dashboard is private.</div>
 </div>
 <div id="root" style="display:none"></div>
 <script type="text/babel">
-const { useState, useMemo } = React;
-
 // ============================================================
 // RAW TRANSACTION DATA
 // ============================================================
@@ -1032,6 +1022,16 @@ const FORWARD_PROVISIONS = [
 
 const SUMMARY_YEARS = ["y2026", "y2027", "y2028", "y2029", "y2030"];
 
+// Historical monthly P&L summary rows — hardcoded once agreed.
+// Keys match DAY_TO_DAY_CATS and PROVISION_DISPLAY_CATS.
+// Blank (null) until populated via the local rec process.
+const HISTORICAL_MONTHLY = [
+  { month: "Oct-25", mk: "2025-10", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Nov-25", mk: "2025-11", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Dec-25", mk: "2025-12", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Jan-26", mk: "2026-01", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+];
+
 const INTEREST_DATA = [
   // Tax year 2025/26 (6 Apr 2025 - 5 Apr 2026) — feeds Tax - Jan 27 liability
   { name: "Bank of London", interest: 1939.10, owner: "James", taxRate: 0.45, taxYear: "25/26" },
@@ -1059,13 +1059,14 @@ const INTEREST_DATA = [
 const CASH_DATA = {
   currentAccounts: [
     { name: "Barclays", value: 126.85, owner: "James" },
-    { name: "Monzo", value: 1618, owner: "James" },
+    { name: "Monzo (1)", value: 2494, owner: "James" },
+    { name: "Monzo (2)", value: 73.00, owner: "James" },
     { name: "Chase Bank", value: 100.00, owner: "James" },
   ],
   creditCards: [
-    { name: "American Express", value: -18895, owner: "Joint" },
+    { name: "American Express", value: -18302, owner: "Joint" },
     { name: "M&S Bank", value: 0, owner: "Joint" },
-    { name: "Virgin Money", value: -1690, owner: "Joint" },
+    { name: "Virgin Money", value: -1669, owner: "Joint" },
     { name: "Barclaycard", value: 68.46, owner: "Joint" },
   ],
   savings: [
@@ -1376,15 +1377,16 @@ function WealthTab() {
 }
 
 const TABS = [
-  { id: "pnl",        label: "P&L Summary" },
-  { id: "budget",     label: "Budget" },
-  { id: "provisions", label: "Annual Provisions" },
-  { id: "tax",        label: "Tax" },
-  { id: "investments",label: "Investments" },
-  { id: "cash",       label: "Cash" },
-  { id: "candidates", label: "Provision Candidates" },
-  { id: "wealth",     label: "Wealth Tracker" },
-  { id: "summary",    label: "Summary" },
+  { id: "2026summary", label: "2026 Summary" },
+  { id: "pnl",         label: "Monthly View" },
+  { id: "budget",      label: "Budget" },
+  { id: "provisions",  label: "Annual Provisions" },
+  { id: "tax",         label: "Tax" },
+  { id: "investments", label: "Investments" },
+  { id: "cash",        label: "Cash" },
+  { id: "candidates",  label: "Provision Candidates" },
+  { id: "summary",     label: "Summary" },
+  { id: "wealth",      label: "Wealth Tracker" },
 ];
 
 const STYLE = {
@@ -1662,63 +1664,76 @@ function BudgetTab({ monthlyData, isAllocated }) {
 
 
 // ============================================================
-// TAB: P&L
+// TAB: MONTHLY VIEW (formerly P&L)
 // ============================================================
 
 function PnLTab({ monthlyData }) {
+  // Build unified column list: historical (blank) + live transaction months
+  // Columns run right-to-left visually: Apr-26, Mar-26, Feb-26, Jan-26, Dec-25, Nov-25, Oct-25
+  var ALL_MONTHS = [
+    { mk: "2026-04", label: "Apr-26", live: true },
+    { mk: "2026-03", label: "Mar-26", live: true },
+    { mk: "2026-02", label: "Feb-26", live: true },
+    { mk: "2026-01", label: "Jan-26", live: false },
+    { mk: "2025-12", label: "Dec-25", live: false },
+    { mk: "2025-11", label: "Nov-25", live: false },
+    { mk: "2025-10", label: "Oct-25", live: false },
+  ];
+
+  // Build a lookup for historical data by mk
+  var histMap = {};
+  HISTORICAL_MONTHLY.forEach(function(h) { histMap[h.mk] = h; });
+
   function getVal(mk, cat) {
-    if (!monthlyData[mk]) return 0;
-    return monthlyData[mk].categories[cat] || 0;
+    if (monthlyData[mk]) return monthlyData[mk].categories[cat] || 0;
+    if (histMap[mk] && histMap[mk].categories[cat] !== null) return histMap[mk].categories[cat];
+    return null;
   }
   function getProvVal(mk, cat) {
-    if (!monthlyData[mk]) return 0;
-    return monthlyData[mk].provisions[cat] || 0;
+    if (monthlyData[mk]) return monthlyData[mk].provisions[cat] || 0;
+    if (histMap[mk] && histMap[mk].provisions[cat] !== null) return histMap[mk].provisions[cat];
+    return null;
+  }
+  function getIncome(mk) {
+    if (monthlyData[mk]) return monthlyData[mk].income || 0;
+    if (histMap[mk] && histMap[mk].income !== null) return histMap[mk].income;
+    return null;
   }
 
-  // Actual salary from transactions
-  var salary = {};
-  MONTH_KEYS.forEach(function(mk) { salary[mk] = monthlyData[mk] ? monthlyData[mk].income : 0; });
-  var salaryAdj = -6247;
-  var salary3mo = MONTH_KEYS.reduce(function(s, mk) { return s + salary[mk]; }, 0) + salaryAdj;
-
-  var totals3mo = {};
-  DAY_TO_DAY_CATS.forEach(function(cat) {
-    totals3mo[cat] = MONTH_KEYS.reduce(function(s, mk) { return s + getVal(mk, cat); }, 0);
-  });
-  PROVISION_DISPLAY_CATS.forEach(function(cat) {
-    totals3mo[cat] = MONTH_KEYS.reduce(function(s, mk) { return s + getProvVal(mk, cat); }, 0);
-  });
-
   var SCHOOL_FEES_PRORATA = -3294.60;
+  var salaryAdj = -6247;
 
-  var d2dTotal = {};
-  MONTH_KEYS.forEach(function(mk) {
-    d2dTotal[mk] = DAY_TO_DAY_CATS.reduce(function(s, c) { return s + getVal(mk, c); }, 0) + SCHOOL_FEES_PRORATA;
-  });
-  var d2dTotal3mo = DAY_TO_DAY_CATS.reduce(function(s, c) { return s + totals3mo[c]; }, 0) + SCHOOL_FEES_PRORATA * 3;
-
-  var provTotal = {};
-  MONTH_KEYS.forEach(function(mk) {
-    provTotal[mk] = PROVISION_DISPLAY_CATS.reduce(function(s, c) { return s + getProvVal(mk, c); }, 0);
-  });
-  var provTotal3mo = PROVISION_DISPLAY_CATS.reduce(function(s, c) { return s + totals3mo[c]; }, 0);
-
-  var opNet = {};
-  MONTH_KEYS.forEach(function(mk) { opNet[mk] = salary[mk] + (mk === "2026-02" ? salaryAdj : 0) + d2dTotal[mk]; });
+  // Live months only for summary boxes
+  var salary3mo = MONTH_KEYS.reduce(function(s, mk) { return s + (monthlyData[mk] ? monthlyData[mk].income : 0); }, 0) + salaryAdj;
+  var d2dTotal3mo = DAY_TO_DAY_CATS.reduce(function(s, c) {
+    return s + MONTH_KEYS.reduce(function(s2, mk) { return s2 + (monthlyData[mk] ? (monthlyData[mk].categories[c] || 0) : 0); }, 0);
+  }, 0) + SCHOOL_FEES_PRORATA * 3;
   var opNet3mo = salary3mo + d2dTotal3mo;
+  var provTotal3mo = PROVISION_DISPLAY_CATS.reduce(function(s, c) {
+    return s + MONTH_KEYS.reduce(function(s2, mk) { return s2 + (monthlyData[mk] ? (monthlyData[mk].provisions[c] || 0) : 0); }, 0);
+  }, 0);
 
+  var colCount = ALL_MONTHS.length + 2; // label + all months + 3mo total
 
-  function Row({ label, mkFn, total, indent, bold, highlight, muted }) {
+  function Row({ label, mkFn, liveTotal, indent, bold, highlight, muted }) {
     var baseColor = muted ? STYLE.textMuted : bold ? STYLE.text : STYLE.textSub;
     var bg = highlight ? "#1a2030" : "transparent";
     return (
       <tr style={{ borderBottom: "1px solid #1a1e28", background: bg }}>
         <td style={{ padding: "7px 12px 7px " + (indent ? "24px" : "12px"), color: baseColor, fontSize: "12px", fontWeight: bold ? "bold" : "normal" }}>{label}</td>
-        {MONTH_KEYS.map(function(mk) {
-          var v = mkFn(mk);
-          return <td key={mk} style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: v === null ? STYLE.textMuted : colN(v), fontWeight: bold ? "bold" : "normal" }}>{v === null ? "-" : fmtN(v)}</td>;
+        {ALL_MONTHS.map(function(col) {
+          var v = mkFn(col.mk, col.live);
+          var color = v === null ? "#3a4a5a" : col.live ? (bold ? STYLE.text : colN(v)) : STYLE.textMuted;
+          if (bold && v !== null && col.live) color = colN(v);
+          return (
+            <td key={col.mk} style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: color, fontWeight: bold ? "bold" : "normal" }}>
+              {v === null ? "-" : fmtN(v)}
+            </td>
+          );
         })}
-        <td style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: total === null ? STYLE.textMuted : colN(total), fontWeight: bold ? "bold" : "normal" }}>{total === null ? "-" : fmtN(total)}</td>
+        <td style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: liveTotal === null ? "#3a4a5a" : colN(liveTotal), fontWeight: bold ? "bold" : "normal", borderLeft: "1px solid " + STYLE.border }}>
+          {liveTotal === null ? "-" : fmtN(liveTotal)}
+        </td>
       </tr>
     );
   }
@@ -1728,6 +1743,18 @@ function PnLTab({ monthlyData }) {
     { label: "Income (3mo)", value: salary3mo, desc: "Actual salary received" },
     { label: "Day-to-Day (3mo)", value: d2dTotal3mo, desc: "Operating costs" },
   ];
+
+  // Compute totals for live months only (3mo total column)
+  function liveCatTotal(cat) {
+    return MONTH_KEYS.reduce(function(s, mk) { return s + (monthlyData[mk] ? (monthlyData[mk].categories[cat] || 0) : 0); }, 0);
+  }
+  function liveProvTotal(cat) {
+    return MONTH_KEYS.reduce(function(s, mk) { return s + (monthlyData[mk] ? (monthlyData[mk].provisions[cat] || 0) : 0); }, 0);
+  }
+
+  var tHeadCols = [{ label: "Item" }]
+    .concat(ALL_MONTHS.map(function(col) { return { label: col.label, right: true }; }))
+    .concat([{ label: "3mo Total", right: true }]);
 
   return (
     <div>
@@ -1750,28 +1777,84 @@ function PnLTab({ monthlyData }) {
       </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-        <THead cols={[{ label: "Item" }, { label: "Apr-26", right: true }, { label: "Mar-26", right: true }, { label: "Feb-26", right: true }, { label: "3mo Total", right: true }]} />
+        <thead>
+          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+            <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Item</th>
+            {ALL_MONTHS.map(function(col) {
+              return (
+                <th key={col.mk} style={{ textAlign: "right", padding: "8px 12px", color: col.live ? STYLE.text : "#3a4a5a", fontWeight: col.live ? "bold" : "normal", fontSize: "11px" }}>
+                  {col.label}
+                </th>
+              );
+            })}
+            <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>3mo Total</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr><td colSpan={5} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Revenue</td></tr>
-          <Row label="Salary - James" mkFn={function(mk){ return salary[mk] || null; }} total={salary3mo} indent={true} />
-          <Row label="Adjustment - Share Monies" mkFn={function(mk){ return mk === "2026-02" ? -6247 : null; }} total={-6247} indent={true} muted={true} />
+          <tr><td colSpan={colCount} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Revenue</td></tr>
+          <Row label="Salary - James"
+            mkFn={function(mk){ var v = getIncome(mk); return v === 0 ? null : v; }}
+            liveTotal={salary3mo - salaryAdj}
+            indent={true} />
+          <Row label="Adjustment - Share Monies"
+            mkFn={function(mk){ return mk === "2026-02" ? salaryAdj : null; }}
+            liveTotal={salaryAdj}
+            indent={true} muted={true} />
 
-          <tr><td colSpan={5} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Day-to-Day Costs</td></tr>
+          <tr><td colSpan={colCount} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Day-to-Day Costs</td></tr>
           {DAY_TO_DAY_CATS.map(function(cat) {
-            return <Row key={cat} label={cat} mkFn={function(mk){ return getVal(mk,cat) || null; }} total={totals3mo[cat] || null} indent={true} />;
+            var lt = liveCatTotal(cat);
+            return <Row key={cat} label={cat}
+              mkFn={function(mk){ return getVal(mk, cat) || null; }}
+              liveTotal={lt || null}
+              indent={true} />;
           })}
-          <Row label="School Fees (pro-rata)" mkFn={function(mk){ return -3294.60; }} total={-3294.60 * 3} indent={true} />
-          <Row label="Day-to-Day Total" mkFn={function(mk){ return d2dTotal[mk]; }} total={d2dTotal3mo} bold={true} highlight={true} />
-          <Row label="Net Operating Total" mkFn={function(mk){ return opNet[mk]; }} total={opNet3mo} bold={true} highlight={true} />
+          <Row label="School Fees (pro-rata)"
+            mkFn={function(mk){ return SCHOOL_FEES_PRORATA; }}
+            liveTotal={SCHOOL_FEES_PRORATA * 3}
+            indent={true} />
+          <Row label="Day-to-Day Total"
+            mkFn={function(mk){
+              var inc = getIncome(mk);
+              var d2d = DAY_TO_DAY_CATS.reduce(function(s,c){ var v = getVal(mk,c); return s + (v || 0); }, 0);
+              return inc !== null || d2d !== 0 ? d2d + SCHOOL_FEES_PRORATA : null;
+            }}
+            liveTotal={d2dTotal3mo}
+            bold={true} highlight={true} />
+          <Row label="Net Operating Total"
+            mkFn={function(mk){
+              var inc = getIncome(mk);
+              if (inc === null) return null;
+              var adj = mk === "2026-02" ? salaryAdj : 0;
+              var d2d = DAY_TO_DAY_CATS.reduce(function(s,c){ var v = getVal(mk,c); return s + (v || 0); }, 0);
+              return inc + adj + d2d + SCHOOL_FEES_PRORATA;
+            }}
+            liveTotal={opNet3mo}
+            bold={true} highlight={true} />
 
-          <tr><td colSpan={5} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisioned Spend</td></tr>
+          <tr><td colSpan={colCount} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisioned Spend</td></tr>
           {PROVISION_DISPLAY_CATS.map(function(cat) {
-            return <Row key={cat} label={cat} mkFn={function(mk){ return getProvVal(mk,cat) || null; }} total={totals3mo[cat] || null} indent={true} muted={true} />;
+            var lt = liveProvTotal(cat);
+            return <Row key={cat} label={cat}
+              mkFn={function(mk){ return getProvVal(mk, cat) || null; }}
+              liveTotal={lt || null}
+              indent={true} muted={true} />;
           })}
-          <Row label="School Fees (pro-rata offset)" mkFn={function(mk){ return 3294.60; }} total={3294.60 * 3} indent={true} muted={true} />
-          <Row label="Provisioned Spend Total" mkFn={function(mk){ return provTotal[mk]; }} total={provTotal3mo} bold={true} highlight={true} />
+          <Row label="School Fees (pro-rata offset)"
+            mkFn={function(mk){ return 3294.60; }}
+            liveTotal={3294.60 * 3}
+            indent={true} muted={true} />
+          <Row label="Provisioned Spend Total"
+            mkFn={function(mk){
+              return PROVISION_DISPLAY_CATS.reduce(function(s,c){ var v = getProvVal(mk,c); return s + (v || 0); }, 0) || null;
+            }}
+            liveTotal={provTotal3mo}
+            bold={true} highlight={true} />
         </tbody>
       </table>
+      <p style={{ marginTop: "8px", fontSize: "11px", color: STYLE.textMuted, fontStyle: "italic" }}>
+        3mo Total covers the live transaction window only (Feb–Apr 26). Greyed columns are pending historical data.
+      </p>
     </div>
   );
 }
@@ -2351,6 +2434,175 @@ function CashTab() {
 }
 
 // ============================================================
+// TAB: 2026 SUMMARY
+// ============================================================
+
+function Summary2026Tab() {
+  // Re-use all the same computations as SummaryTab but filtered to 2026 column only
+  var TAX_2026 = ["HMRC (Shares)", "Tax - Jan 27"];
+  var taxLiabilities2026 = TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
+    .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
+  var taxWarehouseTotal = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0);
+  var taxNet2026 = taxLiabilities2026 + taxWarehouseTotal;
+  var taxRows2026 = [
+    ...TAX_WAREHOUSE.map(function(t){ return { name: t.name, val: t.value }; }),
+    ...TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
+      .map(function(t){ return { name: t.name, val: getTaxAmount(t) }; }),
+  ];
+
+  var cashAccounts = CASH_DATA.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashCards    = CASH_DATA.creditCards.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashSavings  = CASH_DATA.savings.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashPending  = CASH_DATA.pendingInvestment;
+  var cashNet2026  = cashAccounts + cashCards + cashSavings + cashPending;
+  var cashRows = [
+    { name: "Current Accounts", val: cashAccounts },
+    { name: "Credit Cards",     val: cashCards },
+    { name: "Savings",          val: cashSavings },
+    { name: "Pending Investment", val: cashPending },
+  ];
+
+  var deferred2026 = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s+(r.values.y2026||0); }, 0);
+
+  var PROV_MAP = {
+    "1k - James": "£1k - Jimbo", "1k - Jemma": "£1k - Jemma",
+    "Annual Costs": "Annual Costs", "Cash Provision": null, "Charity": "Charity",
+    "Clothing & Shoes": null, "Flats": "Flats", "Holidays": "Holiday",
+    "Home & Family": "Home & Family", "Range Rover": "Range Rover", "School Fees": "School Fees",
+  };
+  var provRows = PROVISIONS_DATA.map(function(p) {
+    return { name: p.name, val: getProvisionRemaining(p) };
+  });
+  var provTotal2026 = provRows.reduce(function(s,r){ return s+r.val; }, 0);
+
+  // Investments carry forward to Retirement — zero in 2026
+  var grandTotal2026 = taxNet2026 + cashNet2026 + deferred2026 + provTotal2026;
+
+  // Executive summary rows — Investments shown as retirement item only, not in 2026
+  var execRows = [
+    { label: "Investments (Retirement)", val: null },
+    { label: "Tax",         val: taxNet2026 },
+    { label: "Cash",        val: cashNet2026 },
+    { label: "Deferred",    val: deferred2026 },
+    { label: "Provisions",  val: provTotal2026 },
+  ];
+
+  function fmtCell(v) {
+    if (v === null) return <td style={{ textAlign: "right", padding: "10px 12px", color: "#3a4a5a", fontWeight: "bold" }}>—</td>;
+    return <td style={{ textAlign: "right", padding: "10px 12px", color: colN(v), fontWeight: "bold" }}>{fmtN(v)}</td>;
+  }
+
+  return (
+    <div>
+      {/* Executive Summary — 2026 only */}
+      <div style={{ marginBottom: "36px" }}>
+        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Executive Summary — 2026</div>
+        <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px" }}>
+          <thead>
+            <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+              <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Section</th>
+              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2026</th>
+            </tr>
+          </thead>
+          <tbody>
+            {execRows.map(function(r, i) {
+              return (
+                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                  <td style={{ padding: "10px 12px", color: STYLE.textSub, fontWeight: "500" }}>{r.label}</td>
+                  {fmtCell(r.val)}
+                </tr>
+              );
+            })}
+            <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+              <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
+              <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal2026), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal2026)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Detailed breakdown — 2026 column only */}
+      <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
+        2026 position. Investments carry forward to retirement; tax and cash are current-year items.
+      </p>
+      <table style={{ width: "65%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <thead>
+          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+            <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Item</th>
+            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2026</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax</td></tr>
+          {taxRows2026.map(function(r, i) {
+            return (
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Tax Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026), fontWeight: "bold" }}>{fmtN(taxNet2026)}</td>
+          </tr>
+
+          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Cash</td></tr>
+          {cashRows.map(function(r, i) {
+            return (
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Cash Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
+          </tr>
+
+          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Deferred Share Payments</td></tr>
+          {DEFERRED_SHARES_DATA.map(function(item, i) {
+            var v = item.values.y2026 || 0;
+            return (
+              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: v ? colN(v) : "#3a4a5a" }}>{fmtN(v)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Deferred Total (net)</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(deferred2026), fontWeight: "bold" }}>{fmtN(deferred2026)}</td>
+          </tr>
+
+          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisions</td></tr>
+          {provRows.map(function(r, i) {
+            return (
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: r.val ? colN(r.val) : "#3a4a5a" }}>{fmtN(r.val)}</td>
+              </tr>
+            );
+          })}
+          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Provisions Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(provTotal2026), fontWeight: "bold" }}>{fmtN(provTotal2026)}</td>
+          </tr>
+
+          <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal2026), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal2026)}</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ============================================================
 // TAB: SUMMARY (Deferred Share Payments only for now)
 // ============================================================
 
@@ -2733,7 +2985,7 @@ function CandidatesTab({ candidates }) {
 // ============================================================
 
 function Dashboard() {
-  var [activeTab, setActiveTab] = useState("pnl");
+  var [activeTab, setActiveTab] = useState("2026summary");
 
   
 
@@ -2824,6 +3076,7 @@ function Dashboard() {
         })}
       </div>
       <div style={{ padding: "28px 32px" }}>
+        {activeTab === "2026summary" && <Summary2026Tab />}
         {activeTab === "pnl" && <PnLTab monthlyData={monthlyData} />}
         {activeTab === "budget" && <BudgetTab monthlyData={monthlyData} isAllocated={ALLOCATION_MAP} />}
         {activeTab === "provisions" && <ProvisionsTab />}
@@ -2839,9 +3092,13 @@ function Dashboard() {
 }
 
 window.__mountDashboard = function() {
-  ReactDOM.createRoot(document.getElementById("root")).render(<Dashboard />);
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(React.createElement(Dashboard));
 };
-if (sessionStorage.getItem('auth')) window.__mountDashboard();
+
+if (sessionStorage.getItem('auth')) {
+  window.__mountDashboard();
+}
 </script>
 </body>
 </html>

@@ -1378,6 +1378,7 @@ function WealthTab() {
 }
 
 const TABS = [
+  { id: "ourmoney",    label: "Our Money" },
   { id: "2026summary", label: "2026 Summary" },
   { id: "pnl",         label: "Monthly View" },
   { id: "budget",      label: "Budget" },
@@ -2435,6 +2436,201 @@ function CashTab() {
 }
 
 // ============================================================
+// TAB: OUR MONEY
+// ============================================================
+
+function OurMoneyTab({ monthlyData }) {
+
+  var FRIENDLY = {
+    "Holidays":        { label: "Holidays",          emoji: "✈️",  group: "Family Life" },
+    "Clothing & Shoes":{ label: "Clothing & Shoes",  emoji: "👗",  group: "Family Life" },
+    "Home & Family":   { label: "House Projects",    emoji: "🏠",  group: "Family Life" },
+    "Annual Costs":    { label: "Big Annual Bills",  emoji: "📅",  group: "Family Life" },
+    "Charity":         { label: "Charity",           emoji: "💛",  group: "Family Life" },
+    "1k - James":      { label: "James's Personal Treats", emoji: "🎯", group: "Us" },
+    "1k - Jemma":      { label: "Jemma's Personal Treats", emoji: "🎯", group: "Us" },
+    "Range Rover":     { label: "Range Rover",       emoji: "🚗",  group: "Fixed" },
+    "School Fees":     { label: "School Fees",       emoji: "🎓",  group: "Fixed" },
+    "Flats":           { label: "Flats",             emoji: "🏢",  group: "Fixed" },
+  };
+
+  var GROUPS = ["Us", "Family Life", "Fixed"];
+
+  var FRIENDLY_D2D = {
+    "Groceries":      "Groceries",
+    "Eating Out":     "Eating Out",
+    "Household Bills":"Household Bills",
+    "Transport":      "Transport",
+    "Coco":           "Coco 🐾",
+    "Health & Beauty":"Health & Beauty",
+    "Entertainment":  "Entertainment",
+    "General":        "General",
+    "Subscriptions":  "Subscriptions",
+    "Presents":       "Presents",
+    "School Costs":   "School Costs",
+    "Household Maintenance": "Household Maintenance",
+  };
+
+  // Build pot data from PROVISIONS_DATA
+  var potsByName = {};
+  PROVISIONS_DATA.forEach(function(p) {
+    if (!FRIENDLY[p.name]) return;
+    var drawn = (p.drawdowns || []).reduce(function(s, d) { return s + d.amount; }, 0);
+    var remaining = p.opening - drawn;
+    var pct = Math.min(100, Math.round((drawn / p.opening) * 100));
+    potsByName[p.name] = {
+      label: FRIENDLY[p.name].label,
+      emoji: FRIENDLY[p.name].emoji,
+      group: FRIENDLY[p.name].group,
+      opening: p.opening,
+      spent: drawn,
+      remaining: remaining,
+      pct: pct,
+    };
+  });
+
+  // Emergency fund
+  var emergencyProv = PROVISIONS_DATA.find(function(p) { return p.name === "Cash Provision"; });
+  var emergencyDrawn = emergencyProv ? (emergencyProv.drawdowns || []).reduce(function(s,d){ return s+d.amount; }, 0) : 0;
+  var emergencyRemaining = emergencyProv ? emergencyProv.opening - emergencyDrawn : 0;
+
+  function ProgressBar({ pct, remaining }) {
+    var barColor = pct > 90 ? STYLE.red : pct > 70 ? "#c8a060" : STYLE.green;
+    return (
+      <div style={{ marginTop: "10px" }}>
+        <div style={{ background: "#1a2030", borderRadius: "4px", height: "6px", overflow: "hidden" }}>
+          <div style={{ width: pct + "%", height: "100%", background: barColor, borderRadius: "4px", transition: "width 0.3s" }}></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+          <span style={{ fontSize: "10px", color: STYLE.textMuted }}>{pct}% used</span>
+          <span style={{ fontSize: "10px", color: STYLE.textMuted }}>£{Math.round(remaining).toLocaleString()} left</span>
+        </div>
+      </div>
+    );
+  }
+
+  function PotCard({ pot }) {
+    return (
+      <div style={{
+        background: STYLE.card, border: "1px solid " + STYLE.border, borderRadius: "8px",
+        padding: "16px 18px", minWidth: "180px", flex: "1",
+      }}>
+        <div style={{ fontSize: "18px", marginBottom: "4px" }}>{pot.emoji}</div>
+        <div style={{ fontSize: "12px", color: STYLE.textMuted, marginBottom: "2px" }}>{pot.label}</div>
+        <div style={{ fontSize: "22px", color: pot.remaining < 0 ? STYLE.red : STYLE.green, fontWeight: "300", marginBottom: "2px" }}>
+          {fmtN(pot.remaining)}
+        </div>
+        <div style={{ fontSize: "11px", color: STYLE.textMuted }}>
+          spent {fmtN(-pot.spent)} of {fmtN(pot.opening)}
+        </div>
+        <ProgressBar pct={pot.pct} remaining={pot.remaining} />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ fontSize: "20px", color: STYLE.text, fontWeight: "300", marginBottom: "4px" }}>Our Money</div>
+        <div style={{ fontSize: "12px", color: STYLE.textMuted }}>What we have set aside and how we're tracking</div>
+      </div>
+
+      {/* Spending Pots by group */}
+      {GROUPS.map(function(group) {
+        var pots = Object.values(potsByName).filter(function(p) { return p.group === group; });
+        if (!pots.length) return null;
+        return (
+          <div key={group} style={{ marginBottom: "32px" }}>
+            <div style={{ fontSize: "10px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "14px" }}>{group}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              {pots.map(function(pot) { return <PotCard key={pot.label} pot={pot} />; })}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Emergency Fund — quiet single line */}
+      <div style={{ background: "#181e28", border: "1px dashed " + STYLE.border, borderRadius: "6px", padding: "12px 16px", marginBottom: "36px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <span style={{ fontSize: "12px", color: STYLE.textMuted }}>🛡️ Emergency Fund — </span>
+          <span style={{ fontSize: "12px", color: STYLE.textMuted }}>set aside for unexpected costs (roof, boiler etc)</span>
+        </div>
+        <div style={{ fontSize: "14px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(emergencyRemaining)}</div>
+      </div>
+
+      {/* Monthly Spending — rolling 3 months */}
+      <div style={{ marginBottom: "16px" }}>
+        <div style={{ fontSize: "10px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "14px" }}>Monthly Spending</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+          <thead>
+            <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+              <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Category</th>
+              {MONTHS.map(function(m) {
+                return <th key={m} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m}</th>;
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Salary row at top */}
+            <tr style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
+              <td style={{ padding: "8px 12px", color: STYLE.textSub }}>💰 Salary</td>
+              {MONTH_KEYS.map(function(mk) {
+                var v = monthlyData[mk] ? monthlyData[mk].income : 0;
+                return (
+                  <td key={mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>
+                    {v ? "£" + Math.round(v).toLocaleString() : "—"}
+                  </td>
+                );
+              })}
+            </tr>
+            <tr><td colSpan={MONTHS.length + 1} style={{ padding: "4px 12px", background: "#181e28" }}></td></tr>
+            {Object.keys(FRIENDLY_D2D).map(function(cat, i) {
+              var hasAny = MONTH_KEYS.some(function(mk) { return monthlyData[mk] && monthlyData[mk].categories[cat]; });
+              if (!hasAny) return null;
+              return (
+                <tr key={cat} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                  <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{FRIENDLY_D2D[cat]}</td>
+                  {MONTH_KEYS.map(function(mk) {
+                    var v = monthlyData[mk] ? (monthlyData[mk].categories[cat] || 0) : 0;
+                    return (
+                      <td key={mk} style={{ textAlign: "right", padding: "8px 12px", color: v ? STYLE.red : STYLE.textMuted }}>
+                        {v ? "−£" + Math.round(Math.abs(v)).toLocaleString() : "—"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+            {/* School Fees pro-rata row */}
+            <tr style={{ borderBottom: "1px solid #1a1e28" }}>
+              <td style={{ padding: "8px 12px", color: STYLE.textSub }}>School Fees (monthly)</td>
+              {MONTH_KEYS.map(function(mk) {
+                return <td key={mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red }}>−£3,295</td>;
+              })}
+            </tr>
+            {/* Net row */}
+            <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1a2030" }}>
+              <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold" }}>Net (Salary − Spend)</td>
+              {MONTH_KEYS.map(function(mk) {
+                var income = monthlyData[mk] ? monthlyData[mk].income : 0;
+                var spend = DAY_TO_DAY_CATS.reduce(function(s, c) {
+                  return s + (monthlyData[mk] ? (monthlyData[mk].categories[c] || 0) : 0);
+                }, 0) - 3294.60;
+                var net = income + spend;
+                return <td key={mk} style={{ textAlign: "right", padding: "10px 12px", color: net >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold" }}>
+                  {net >= 0 ? "£" : "−£"}{Math.round(Math.abs(net)).toLocaleString()}
+                </td>;
+              })}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // TAB: 2026 SUMMARY
 // ============================================================
 
@@ -2986,7 +3182,7 @@ function CandidatesTab({ candidates }) {
 // ============================================================
 
 function Dashboard() {
-  var [activeTab, setActiveTab] = useState("2026summary");
+  var [activeTab, setActiveTab] = useState("ourmoney");
 
   
 
@@ -3077,6 +3273,7 @@ function Dashboard() {
         })}
       </div>
       <div style={{ padding: "28px 32px" }}>
+        {activeTab === "ourmoney" && <OurMoneyTab monthlyData={monthlyData} />}
         {activeTab === "2026summary" && <Summary2026Tab />}
         {activeTab === "pnl" && <PnLTab monthlyData={monthlyData} />}
         {activeTab === "budget" && <BudgetTab monthlyData={monthlyData} isAllocated={ALLOCATION_MAP} />}

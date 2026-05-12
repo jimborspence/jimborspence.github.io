@@ -1388,6 +1388,7 @@ const TABS = [
   { id: "cash",        label: "Cash" },
   { id: "candidates",  label: "Provision Candidates" },
   { id: "summary",     label: "Summary" },
+  { id: "bigpicture",  label: "Big Picture" },
   { id: "wealth",      label: "Wealth Tracker" },
 ];
 
@@ -2800,6 +2801,180 @@ function Summary2026Tab() {
 }
 
 // ============================================================
+// TAB: BIG PICTURE
+// ============================================================
+
+function BigPictureTab() {
+  var expanded = React.useState(null);
+  var expandedTile = expanded[0];
+  var setExpanded = expanded[1];
+
+  function toggle(key) {
+    setExpanded(expandedTile === key ? null : key);
+  }
+
+  // ── Cash & Savings ──
+  var cashAccounts = CASH_DATA.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashCards    = CASH_DATA.creditCards.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashSavings  = CASH_DATA.savings.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashPending  = CASH_DATA.pendingInvestment;
+  var cashTotal    = cashAccounts + cashCards + cashSavings + cashPending;
+  var cashDetail   = [
+    { label: "Current Accounts", value: cashAccounts },
+    { label: "Credit Cards",     value: cashCards },
+    { label: "Savings",          value: cashSavings },
+    { label: "Pending Investment", value: cashPending },
+  ];
+
+  // ── Investments ──
+  var invTotal  = INVESTMENT_DATA.reduce(function(s,i){ return s + i.value + (i.taxOffset||0); }, 0);
+  var invDetail = INVESTMENT_DATA.map(function(i){ return { label: i.category, value: i.value + (i.taxOffset||0) }; })
+    .filter(function(r){ return r.value !== 0; });
+
+  // ── Tax ──
+  var taxLiabilities = TAX_DATA.reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
+  var taxWarehouse   = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0);
+  var taxTotal       = taxLiabilities + taxWarehouse;
+  var taxDetail      = TAX_WAREHOUSE.map(function(t){ return { label: t.name, value: t.value, positive: true }; })
+    .concat(TAX_DATA.map(function(t){ return { label: t.name, value: getTaxAmount(t) }; }));
+
+  // ── Provisions ──
+  var provTotal  = PROVISIONS_DATA.reduce(function(s,p){ return s + getProvisionRemaining(p); }, 0);
+  var provDetail = PROVISIONS_DATA.map(function(p){ return { label: p.name, value: getProvisionRemaining(p) }; });
+
+  // ── Deferred ──
+  var deferredYears = [
+    { label: "2027", key: "y2027" },
+    { label: "2028", key: "y2028" },
+    { label: "2029", key: "y2029" },
+    { label: "2030", key: "y2030" },
+  ];
+  var deferredTiles = deferredYears.map(function(y) {
+    var grossNet = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s + (r.values[y.key]||0); }, 0);
+    var provLines = FORWARD_PROVISIONS.filter(function(p){ return (p.values[y.key]||0) !== 0; })
+      .map(function(p){ return { label: p.name, value: p.values[y.key] }; });
+    var provTotal = provLines.reduce(function(s,p){ return s+p.value; }, 0);
+    var net = grossNet + provTotal;
+    return { label: y.label, key: y.key, grossNet: grossNet, provLines: provLines, provTotal: provTotal, net: net };
+  });
+  var deferredGrandTotal = deferredTiles.reduce(function(s,t){ return s+t.net; }, 0);
+
+  var TOP_TILES = [
+    { key: "cash",        emoji: "💰", label: "Cash & Savings",  value: cashTotal,  detail: cashDetail },
+    { key: "investments", emoji: "📈", label: "Investments",     value: invTotal,   detail: invDetail },
+    { key: "tax",         emoji: "🧾", label: "Tax Position",    value: taxTotal,   detail: taxDetail },
+    { key: "provisions",  emoji: "🏠", label: "Provisions",      value: provTotal,  detail: provDetail },
+  ];
+
+  function DetailRow({ label, value }) {
+    return (
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1a2030" }}>
+        <span style={{ fontSize: "11px", color: STYLE.textMuted }}>{label}</span>
+        <span style={{ fontSize: "11px", color: value >= 0 ? STYLE.green : STYLE.red, fontWeight: "500" }}>{fmtN(value)}</span>
+      </div>
+    );
+  }
+
+  function TopTile({ tile }) {
+    var isOpen = expandedTile === tile.key;
+    return (
+      <div style={{ flex: "1", minWidth: "200px" }}>
+        <div
+          onClick={function(){ toggle(tile.key); }}
+          style={{
+            background: isOpen ? "#1e2c40" : STYLE.card,
+            border: "1px solid " + (isOpen ? STYLE.blue : STYLE.border),
+            borderRadius: isOpen ? "8px 8px 0 0" : "8px",
+            padding: "20px", cursor: "pointer",
+            transition: "all 0.2s",
+          }}>
+          <div style={{ fontSize: "22px", marginBottom: "6px" }}>{tile.emoji}</div>
+          <div style={{ fontSize: "11px", color: STYLE.textMuted, marginBottom: "4px", textTransform: "uppercase", letterSpacing: "1px" }}>{tile.label}</div>
+          <div style={{ fontSize: "26px", color: tile.value >= 0 ? STYLE.green : STYLE.red, fontWeight: "300" }}>{fmtN(tile.value)}</div>
+          <div style={{ fontSize: "10px", color: STYLE.blue, marginTop: "8px" }}>{isOpen ? "▲ hide detail" : "▼ tap for detail"}</div>
+        </div>
+        {isOpen && (
+          <div style={{ background: "#111827", border: "1px solid " + STYLE.blue, borderTop: "none", borderRadius: "0 0 8px 8px", padding: "12px 16px" }}>
+            {tile.detail.map(function(r) { return <DetailRow key={r.label} label={r.label} value={r.value} />; })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function DeferredTile({ tile }) {
+    var isOpen = expandedTile === tile.key;
+    return (
+      <div style={{ flex: "1", minWidth: "160px" }}>
+        <div
+          onClick={function(){ toggle(tile.key); }}
+          style={{
+            background: isOpen ? "#1e2c40" : STYLE.card,
+            border: "1px solid " + (isOpen ? STYLE.blue : STYLE.border),
+            borderRadius: isOpen ? "8px 8px 0 0" : "8px",
+            padding: "20px", cursor: "pointer", transition: "all 0.2s",
+          }}>
+          <div style={{ fontSize: "11px", color: STYLE.textMuted, marginBottom: "4px", textTransform: "uppercase", letterSpacing: "1px" }}>{tile.label}</div>
+          <div style={{ fontSize: "24px", color: STYLE.green, fontWeight: "300" }}>{fmtN(tile.net)}</div>
+          <div style={{ fontSize: "10px", color: STYLE.textMuted, marginTop: "4px" }}>deferred {fmtN(tile.grossNet)}</div>
+          <div style={{ fontSize: "10px", color: STYLE.blue, marginTop: "8px" }}>{isOpen ? "▲ hide detail" : "▼ provisions"}</div>
+        </div>
+        {isOpen && (
+          <div style={{ background: "#111827", border: "1px solid " + STYLE.blue, borderTop: "none", borderRadius: "0 0 8px 8px", padding: "12px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0 8px 0", borderBottom: "1px solid #1a2030", marginBottom: "4px" }}>
+              <span style={{ fontSize: "11px", color: STYLE.textMuted }}>Deferred share payments</span>
+              <span style={{ fontSize: "11px", color: STYLE.green, fontWeight: "500" }}>{fmtN(tile.grossNet)}</span>
+            </div>
+            {tile.provLines.map(function(r) { return <DetailRow key={r.label} label={r.label} value={r.value} />; })}
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 4px 0", borderTop: "1px solid #1a2030", marginTop: "4px" }}>
+              <span style={{ fontSize: "11px", color: STYLE.text, fontWeight: "bold" }}>Net</span>
+              <span style={{ fontSize: "11px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(tile.net)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  var grandTotal = cashTotal + invTotal + taxTotal + provTotal + deferredGrandTotal;
+
+  return (
+    <div>
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ fontSize: "20px", color: STYLE.text, fontWeight: "300", marginBottom: "4px" }}>Big Picture</div>
+        <div style={{ fontSize: "12px", color: STYLE.textMuted }}>Where we stand today — tap any tile to see the detail</div>
+      </div>
+
+      {/* Grand Total tile */}
+      <div style={{
+        background: "#141c2c", border: "2px solid " + STYLE.blue,
+        borderRadius: "8px", padding: "20px 24px", marginBottom: "24px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{ fontSize: "11px", color: STYLE.blue, textTransform: "uppercase", letterSpacing: "2px", marginBottom: "4px" }}>Total Family Wealth</div>
+          <div style={{ fontSize: "10px", color: STYLE.textMuted }}>Cash + Investments + Tax + Provisions + Deferred</div>
+        </div>
+        <div style={{ fontSize: "32px", color: STYLE.green, fontWeight: "300" }}>{fmtN(grandTotal)}</div>
+      </div>
+
+      {/* Top 4 expandable tiles */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "36px", alignItems: "flex-start" }}>
+        {TOP_TILES.map(function(tile) { return <TopTile key={tile.key} tile={tile} />; })}
+      </div>
+
+      {/* Deferred Share Payments */}
+      <div style={{ marginBottom: "8px" }}>
+        <div style={{ fontSize: "10px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "14px" }}>Deferred Share Payments</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "flex-start" }}>
+          {deferredTiles.map(function(tile) { return <DeferredTile key={tile.label} tile={tile} />; })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 // TAB: SUMMARY (Deferred Share Payments only for now)
 // ============================================================
 
@@ -3282,6 +3457,7 @@ function Dashboard() {
         {activeTab === "investments" && <InvestmentsTab />}
         {activeTab === "cash" && <CashTab />}
         {activeTab === "summary" && <SummaryTab />}
+        {activeTab === "bigpicture" && <BigPictureTab />}
         {activeTab === "candidates" && <CandidatesTab candidates={candidates} />}
         {activeTab === "wealth" && <WealthTab />}
       </div>

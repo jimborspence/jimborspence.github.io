@@ -999,6 +999,59 @@ const INVESTMENT_DATA = [
   { category: "Cash Provision", value: 196400 },
 ];
 
+const MONTHLY_INVESTMENTS = [
+  {
+    month: "Dec-25", mk: "2025-12",
+    lines: [
+      { company: "Standard Life", type: "Pension",   owner: "James", value: 27219 },
+      { company: "Fidelity US",   type: "Pension",   owner: "James", value: 45000 },
+      { company: "AJ Bell",       type: "SIP",       owner: "James", value: 374639 },
+      { company: "Fidelity",      type: "SIP",       owner: "James", value: 159088 },
+      { company: "AJ Bell",       type: "ISA",       owner: "James", value: 20801 },
+      { company: "AJ Bell",       type: "ISA",       owner: "Jemma", value: 20000 },
+      { company: "Fidelity",      type: "ISA",       owner: "James", value: 144734 },
+      { company: "Fidelity",      type: "ISA",       owner: "Jemma", value: 51910 },
+      { company: "HL",            type: "ISA",       owner: "James", value: 21414 },
+      { company: "HL",            type: "ISA",       owner: "Jemma", value: 22632 },
+      { company: "AJ Bell",       type: "GIA",       owner: "Joint", value: 221989 },
+      { company: "Fidelity",      type: "GIA",       owner: "James", value: 349356 },
+      { company: "Fidelity",      type: "GIA Tax",   owner: "James", value: -20000 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Gracie", value: 9030 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Monte",  value: 9030 },
+      { company: "Fidelity",      type: "JISA",      owner: "Gracie", value: 34798 },
+      { company: "Fidelity",      type: "JISA",      owner: "Monte",  value: 5568 },
+      { company: "Trafigura",     type: "Shares",    owner: "James", value: 1131556 },
+      { company: "Properties",    type: "Property",  owner: "Joint", value: 695000 },
+      { company: "Downsize",      type: "Property",  owner: "Joint", value: 1000000 },
+    ]
+  },
+  {
+    month: "May-26", mk: "2026-05",
+    lines: [
+      { company: "Standard Life", type: "Pension",   owner: "James", value: 38621 },
+      { company: "Fidelity US",   type: "Pension",   owner: "James", value: 45000 },
+      { company: "AJ Bell",       type: "SIP",       owner: "James", value: 400568 },
+      { company: "Fidelity",      type: "SIP",       owner: "James", value: 166463 },
+      { company: "AJ Bell",       type: "ISA",       owner: "James", value: 22327 },
+      { company: "AJ Bell",       type: "ISA",       owner: "Jemma", value: 22192 },
+      { company: "Fidelity",      type: "ISA",       owner: "James", value: 152692 },
+      { company: "Fidelity",      type: "ISA",       owner: "Jemma", value: 53694 },
+      { company: "HL",            type: "ISA",       owner: "James", value: 22993 },
+      { company: "HL",            type: "ISA",       owner: "Jemma", value: 23886 },
+      { company: "AJ Bell",       type: "GIA",       owner: "Joint", value: 245270 },
+      { company: "Fidelity",      type: "GIA",       owner: "James", value: 361363 },
+      { company: "Fidelity",      type: "GIA Tax",   owner: "James", value: -20000 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Gracie", value: 9969 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Monte",  value: 9969 },
+      { company: "Fidelity",      type: "JISA",      owner: "Gracie", value: 36472 },
+      { company: "Fidelity",      type: "JISA",      owner: "Monte",  value: 5851 },
+      { company: "Trafigura",     type: "Shares",    owner: "James", value: 1131556 },
+      { company: "Properties",    type: "Property",  owner: "Joint", value: 695000 },
+      { company: "Downsize",      type: "Property",  owner: "Joint", value: 1000000 },
+    ]
+  },
+];
+
 const DEFERRED_SHARES_DATA = [
   { name: "Traf Shares - Deferred",       values: { y2026: 0, y2027: 1240480, y2028: 720899, y2029: 720899, y2030: 720899 } },
   { name: "Traf Shares - Prescribed Rate", values: { y2026: 0, y2027: 85079, y2028: 43254, y2029: 28836, y2030: 14418  } },
@@ -1027,10 +1080,10 @@ const SUMMARY_YEARS = ["y2026", "y2027", "y2028", "y2029", "y2030"];
 // Keys match DAY_TO_DAY_CATS and PROVISION_DISPLAY_CATS.
 // Blank (null) until populated via the local rec process.
 const HISTORICAL_MONTHLY = [
-  { month: "Oct-25", mk: "2025-10", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
-  { month: "Nov-25", mk: "2025-11", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
-  { month: "Dec-25", mk: "2025-12", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
-  { month: "Jan-26", mk: "2026-01", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "Presents": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Oct-25", mk: "2025-10", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Nov-25", mk: "2025-11", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Dec-25", mk: "2025-12", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Jan-26", mk: "2026-01", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
 ];
 
 const INTEREST_DATA = [
@@ -1107,8 +1160,9 @@ const PROVISIONS_DATA = [
   ]},
   { name: "1k - Jemma", opening: 1000, drawdowns: [] },
   { name: "Annual Costs", opening: 13568, drawdowns: [
-    { date: "Jan 2026", desc: "Sent Luke Gough (present)", amount: 50.28, cat: "Presents" },
-    { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
+    { date: "Dec 2025", desc: "Presents", amount: 2808.85, cat: "Presents" },
+    { date: "Dec 2025", desc: "Family Tech", amount: 32.40, cat: "Annual Costs" },
+    { date: "Jan 2026", desc: "Sent Luke Gough (present)", amount: 50.28, cat: "Presents" },    { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
   ], notes: [
     { label: "Building & Contents Insurance", amount: 2371 },
     { label: "Car Insurance",                 amount: 1500 },
@@ -1131,6 +1185,10 @@ const PROVISIONS_DATA = [
     // not recorded as spend — Clothing & Shoes opening balance funded from Cash Provision
   ]},
   { name: "Clothing & Shoes", opening: 5000, drawdowns: [
+    { date: "Jan 2026", desc: "Sweaty Betty", amount: 116.00, cat: "Clothing & Shoes" },
+    { date: "Jan 2026", desc: "Superdry", amount: 59.99, cat: "Clothing & Shoes" },
+    { date: "Jan 2026", desc: "Sweaty Betty", amount: 116.00, cat: "Clothing & Shoes" },
+    { date: "Jan 2026", desc: "Superdry", amount: 59.99, cat: "Clothing & Shoes" },
     { date: "Mar 2026", desc: "Superdry", amount: 155.08, cat: "Clothing & Shoes" },
     { date: "Mar 2026", desc: "Sweaty Betty", amount: 233.00, cat: "Clothing & Shoes" },
     { date: "Mar 2026", desc: "Superdry", amount: 80.08, cat: "Clothing & Shoes" },
@@ -1150,6 +1208,10 @@ const PROVISIONS_DATA = [
     { label: "Note: figures from memory — adjust allocated 24/25 as needed", amount: null },
     { label: "Note: one further Mar-26 donation pending — charity TBC", amount: null },
   ], drawdowns: [
+    { date: "Dec 2025", desc: "Demelza", amount: 4000, cat: "Charity" },
+    { date: "Dec 2025", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+    { date: "Dec 2025", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
+    { date: "Dec 2025", desc: "NSPCC", amount: 100, cat: "Charity" },
     { date: "Jan 2026", desc: "Demelza", amount: 5000, cat: "Charity" },
     { date: "Jan 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
     { date: "Jan 2026", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
@@ -1178,9 +1240,37 @@ const PROVISIONS_DATA = [
     // Provision window starts Oct-25 (dashboard built from Oct-25 data)
     // Opening balance of 21,622 reflects position at start of Oct-25
     { date: "Oct 2025", desc: "Dubai", amount: 2217.76, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 427.00, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 59.72, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 18.00, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 71.28, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 45.52, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 45.00, cat: "Holidays" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 83.76, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 75.00, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 36.71, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 36.50, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 20.00, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 23.10, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 9.85, cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 5.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 9.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 4.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 6.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 11.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 40.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 12.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 174.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 14.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 15.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 19.00, cat: "Eating Out" },
     { date: "Dec 2025", desc: "Trip to Lill's", amount: 621.52, cat: "Holidays" },
     { date: "Jan 2026", desc: "Abu Dhabi", amount: 7190.00, cat: "Holidays" },
     { date: "Jan 2026", desc: "Dubai", amount: 2618.54, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 177.50, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 25.00, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Dubai", amount: 293.75, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Dubai", amount: 293.75, cat: "Holidays" },
     { date: "Feb 2026", desc: "Christy's Hen Do", amount: 90.00, cat: "Holidays" },
     { date: "Mar 2026", desc: "Abu Dhabi", amount: -7190.00, cat: "Holidays" },
     { date: "Mar 2026", desc: "Disney World", amount: 10768.40, cat: "Holidays" },
@@ -1191,6 +1281,13 @@ const PROVISIONS_DATA = [
     { date: "Apr 2026", desc: "Center Parcs", amount: 758.80, cat: "Holidays" },
   ]},
   { name: "Home & Family", opening: 132171, drawdowns: [
+    // Master Bedroom
+    { date: "Dec 2025", desc: "Master Bedroom", amount: 379.96, cat: "Home & Family" },
+    { date: "Dec 2025", desc: "Master Bedroom", amount: 86.00, cat: "Home & Family" },
+    { date: "Dec 2025", desc: "Master Bedroom", amount: 434.20, cat: "Home & Family" },
+    { date: "Dec 2025", desc: "Master Bedroom", amount: 799.98, cat: "Home & Family" },
+    // Car & House Insurance
+    { date: "Dec 2025", desc: "Car & House Insurance", amount: 3838.93, cat: "Home & Family" },
     // House Blinds
     { date: "Jan 2026", desc: "House Blinds", amount: 972.50, cat: "Home & Family" },
     { date: "Jan 2026", desc: "House Blinds", amount: 5625.53, cat: "Home & Family" },
@@ -1218,13 +1315,16 @@ const PROVISIONS_DATA = [
     // Other
     { date: "Apr 2026", desc: "No1Roofing", amount: 45, cat: "Home & Family" },
   ]},
-  { name: "Range Rover", opening: 18500, drawdowns: [
+  { name: "Range Rover", opening: 22811.47, drawdowns: [
+    { date: "Dec 2025", desc: "Lex Autolease (deposit + first month)", amount: 5748.63, cat: "Range Rover" },
     { date: "Jan 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Feb 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Mar 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Apr 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
   ]},
-  { name: "School Fees", opening: 13178.40, isIncome: true, drawdowns: [], excludes: [
+  { name: "School Fees", opening: 13178.40, isIncome: true, drawdowns: [
+    { date: "Jan 2026", desc: "School fees refund", amount: -108, cat: "School Fees" },
+  ], excludes: [
     { date: "Sep 2025", desc: "Blackheath Prep - autumn term", amount: 5644, cat: "School Fees" },
     { date: "Sep 2025", desc: "Blackheath Prep - autumn term", amount: 7534.40, cat: "School Fees" },
     { date: "Jan 2026", desc: "Blackheath Prep - spring term", amount: 5644, cat: "School Fees" },
@@ -1404,7 +1504,7 @@ const MONTH_KEYS = ["2026-04", "2026-03", "2026-02"];
 const INCOME_CATS = new Set(["Salary"]);
 const EXCLUDE_CATS = new Set(["Internal Transfers", "Finances", "Savings Deposits", "Cash", "Work Expenses", "Shopping", "Travel"]);
 const NON_OP_CATS = new Set(["Interest", "Income"]);
-const DAY_TO_DAY_CATS = ["Coco","Eating Out","Entertainment","General","Groceries","Health & Beauty","Household Bills","Household Maintenance","Presents","School Costs","Subscriptions","Transport"];
+const DAY_TO_DAY_CATS = ["Coco","Eating Out","Entertainment","General","Groceries","Health & Beauty","Household Bills","Household Maintenance","School Costs","Subscriptions","Transport"];
 const PROVISION_DISPLAY_CATS = ["1k - James","1k - Jemma","Annual Costs","Cash Provision","Charity","Clothing & Shoes","Flats","Holidays","Home & Family","Range Rover","School Fees"];
 
 function getMonthKey(d) { return d.substring(0, 7); }
@@ -1413,6 +1513,7 @@ function getMonthKey(d) { return d.substring(0, 7); }
 function resolveCategory(t) {
   var merchant = (t.merchant || "").toLowerCase().trim();
   if (merchant === "interest" || merchant === "interest earned") return "Interest";
+  if (merchant === "daals" && t.amount === -799.98 && t.date === "2025-12-29") return "Home & Family";
   return t.category;
 }
 
@@ -1467,7 +1568,6 @@ const BUDGET_DATA = {
     "Clothing & Shoes":      -450,
     "Entertainment":         -150,
     "General":               -200,
-    "Presents":              -200,
     "Household Maintenance":  0,
     "School Costs":          -200,
   },
@@ -2240,6 +2340,105 @@ function InvestmentsTab() {
 
   return (
     <div>
+      <SectionHeader>Portfolio Tracker</SectionHeader>
+      <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "16px", fontStyle: "italic" }}>
+        Monthly snapshots by investment line. Change column shows movement from prior snapshot.
+      </p>
+      {(function() {
+        var GROUPS = [
+          { key: "Pension",   label: "Pension",    types: ["Pension"] },
+          { key: "SIP",       label: "SIP",        types: ["SIP"] },
+          { key: "ISA",       label: "ISA",        types: ["ISA"] },
+          { key: "GIA",       label: "GIA",        types: ["GIA", "GIA Tax"] },
+          { key: "JISA",      label: "Junior ISA", types: ["JISA"] },
+          { key: "Shares",    label: "Trafigura",  types: ["Shares"] },
+          { key: "Property",  label: "Properties", types: ["Property"] },
+        ];
+        var months = MONTHLY_INVESTMENTS;
+        var expandedGroup = React.useState(null);
+        var expandedKey = expandedGroup[0];
+        var setExpandedKey = expandedGroup[1];
+        function groupTotal(snapshot, types) {
+          return snapshot.lines.filter(function(l){ return types.indexOf(l.type) !== -1; })
+            .reduce(function(s,l){ return s+l.value; }, 0);
+        }
+        return (
+          <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
+            <thead>
+              <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+                <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Group</th>
+                {months.map(function(m) {
+                  return <th key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m.month}</th>;
+                })}
+                <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {GROUPS.map(function(g) {
+                var isOpen = expandedKey === g.key;
+                var totals = months.map(function(m){ return groupTotal(m, g.types); });
+                var change = totals.length >= 2 ? totals[totals.length-1] - totals[0] : null;
+                var detailLines = months[0].lines.filter(function(l){ return g.types.indexOf(l.type) !== -1; });
+                return [
+                  <tr key={g.key}
+                    onClick={function(){ setExpandedKey(isOpen ? null : g.key); }}
+                    style={{ borderBottom: "1px solid #1a1e28", background: isOpen ? "#1e2c40" : STYLE.card, cursor: "pointer" }}>
+                    <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold" }}>
+                      {g.label}
+                      <span style={{ fontSize: "10px", color: STYLE.blue, marginLeft: "8px" }}>{isOpen ? "▲" : "▼"}</span>
+                    </td>
+                    {totals.map(function(v, i) {
+                      return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(v)}</td>;
+                    })}
+                    <td style={{ textAlign: "right", padding: "10px 12px", color: change === null ? STYLE.textMuted : colN(change), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
+                      {change === null ? "—" : (change >= 0 ? "+" : "") + fmtN(change)}
+                    </td>
+                  </tr>,
+                  isOpen && detailLines.map(function(line, i) {
+                    var lineVals = months.map(function(m){
+                      var match = m.lines.find(function(l){ return l.company === line.company && l.type === line.type && l.owner === line.owner; });
+                      return match ? match.value : null;
+                    });
+                    var lineChange = lineVals.length >= 2 && lineVals[0] !== null && lineVals[lineVals.length-1] !== null
+                      ? lineVals[lineVals.length-1] - lineVals[0] : null;
+                    return (
+                      <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: "#111827" }}>
+                        <td style={{ padding: "7px 12px 7px 24px", color: STYLE.textMuted, fontSize: "11px" }}>
+                          {line.company} {line.type} <span style={{ color: "#4a5a6a", fontSize: "10px" }}>({line.owner})</span>
+                        </td>
+                        {lineVals.map(function(v, i) {
+                          return <td key={i} style={{ textAlign: "right", padding: "7px 12px", color: v === null ? "#3a4a5a" : v < 0 ? STYLE.red : STYLE.textSub, fontSize: "11px" }}>
+                            {v === null ? "—" : fmtN(v)}
+                          </td>;
+                        })}
+                        <td style={{ textAlign: "right", padding: "7px 12px", color: lineChange === null ? "#3a4a5a" : colN(lineChange), fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>
+                          {lineChange === null ? "—" : (lineChange >= 0 ? "+" : "") + fmtN(lineChange)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ];
+              })}
+              {(function(){
+                var grandTotals = months.map(function(m){ return m.lines.reduce(function(s,l){ return s+l.value; }, 0); });
+                var grandChange = grandTotals.length >= 2 ? grandTotals[grandTotals.length-1] - grandTotals[0] : null;
+                return (
+                  <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+                    <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+                    {grandTotals.map(function(v, i){
+                      return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(v)}</td>;
+                    })}
+                    <td style={{ textAlign: "right", padding: "10px 12px", color: grandChange === null ? STYLE.textMuted : colN(grandChange), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
+                      {grandChange === null ? "—" : (grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
+                    </td>
+                  </tr>
+                );
+              })()}
+            </tbody>
+          </table>
+        );
+      })()}
+
       <SectionHeader>Investment Portfolio</SectionHeader>
       <table style={{ width: "45%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
         <THead cols={[{ label: "Category" }, { label: "Net Value", right: true }]} />

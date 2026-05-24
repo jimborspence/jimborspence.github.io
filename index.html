@@ -2961,16 +2961,16 @@ function Summary2026Tab() {
             </tr>
           </thead>
           <tbody>
-            {execRows.map(function(r, i) {
+            {execRows.map(function(r) {
               return (
-                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                   <td style={{ padding: "10px 12px", color: STYLE.textSub, fontWeight: "500" }}>{r.label}</td>
                   {fmtCell(r.val)}
                 </tr>
               );
             })}
             <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
-              <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
+              <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
               <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal2026), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal2026)}</td>
             </tr>
           </tbody>
@@ -2991,64 +2991,64 @@ function Summary2026Tab() {
         <tbody>
 
           <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax</td></tr>
-          {taxRows2026.map(function(r, i) {
+          {taxRows2026.map(function(r) {
             return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
               </tr>
             );
           })}
-          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Tax Total</td>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Tax Total</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026), fontWeight: "bold" }}>{fmtN(taxNet2026)}</td>
           </tr>
 
           <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Cash</td></tr>
-          {cashRows.map(function(r, i) {
+          {cashRows.map(function(r) {
             return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
               </tr>
             );
           })}
-          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Cash Total</td>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Cash Total</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
           </tr>
 
           <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Deferred Share Payments</td></tr>
-          {DEFERRED_SHARES_DATA.map(function(item, i) {
+          {DEFERRED_SHARES_DATA.map(function(item) {
             var v = item.values.y2026 || 0;
             return (
-              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: v ? colN(v) : "#3a4a5a" }}>{fmtN(v)}</td>
               </tr>
             );
           })}
-          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Deferred Total (net)</td>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Deferred Total (net)</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(deferred2026), fontWeight: "bold" }}>{fmtN(deferred2026)}</td>
           </tr>
 
           <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisions</td></tr>
-          {provRows.map(function(r, i) {
+          {provRows.map(function(r) {
             return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: r.val ? colN(r.val) : "#3a4a5a" }}>{fmtN(r.val)}</td>
               </tr>
             );
           })}
-          <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Provisions Total</td>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Provisions Total</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(provTotal2026), fontWeight: "bold" }}>{fmtN(provTotal2026)}</td>
           </tr>
 
           <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
-            <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
             <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal2026), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal2026)}</td>
           </tr>
 

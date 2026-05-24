@@ -986,9 +986,10 @@ const TAX_WAREHOUSE = [
 ];
 
 const INVESTMENT_DATA = [
-  { category: "Properties", value: 695000 },
+  { category: "Bearsted Flat", value: 325000 },
+  { category: "Shooters Hill Flat", value: 375000 },
   { category: "Traf Shares - Holding (inc Tax)", value: 1488889, taxOffset: -357333 },
-  { category: "Downsize House", value: 1000000 },
+  { category: "Downsize Family Home", value: 1000000 },
   { category: "Current Property", value: 0 },
   { category: "Pension", value: 72219 },
   { category: "SIP", value: 533727 },
@@ -1004,9 +1005,9 @@ const MONTHLY_INVESTMENTS = [
     month: "Dec-25", mk: "2025-12",
     lines: [
       // Standard Life
-      { company: "Standard Life", type: "Pension",   owner: "James", group: "Standard Life", value: 27219 },
+      { company: "Standard Life", type: "Standard Life Pension", owner: "James", group: "Standard Life", value: 27219 },
       // Fidelity US
-      { company: "Fidelity US",   type: "Pension",   owner: "James", group: "Fidelity US",   value: 45000 },
+      { company: "Fidelity US",   type: "Fidelity US Pension",  owner: "James", group: "Fidelity US",   value: 45000 },
       // Fidelity UK
       { company: "Fidelity",      type: "SIP",       owner: "James", group: "Fidelity UK",   value: 159088 },
       { company: "Fidelity",      type: "ISA",       owner: "James", group: "Fidelity UK",   value: 144734 },
@@ -1025,23 +1026,23 @@ const MONTHLY_INVESTMENTS = [
       { company: "AJ Bell",       type: "GIA",       owner: "Joint", group: "AJ Bell",       value: 221989 },
       { company: "AJ Bell",       type: "JISA",      owner: "Gracie", group: "AJ Bell",      value: 9030 },
       { company: "AJ Bell",       type: "JISA",      owner: "Monte",  group: "AJ Bell",      value: 9030 },
-      // Traf Shares
-      { company: "Trafigura",     type: "Shares",    owner: "James", group: "Traf Shares",   value: 1131556 },
       // Properties
-      { company: "Properties",    type: "Property",  owner: "Joint", group: "Properties",    value: 695000 },
-      { company: "Downsize",      type: "Property",  owner: "Joint", group: "Properties",    value: 1000000 },
-      // Cash
-      { company: "Cash Provision",   type: "Cash",   owner: "Joint", group: "Cash",          value: 200000 },
-      { company: "Pending Investment", type: "Cash", owner: "Joint", group: "Cash",          value: 819000 },
+      { company: "Properties",    type: "Bearsted Flat",        owner: "Joint", group: "Properties", value: 325000 },
+      { company: "Properties",    type: "Shooters Hill Flat",   owner: "Joint", group: "Properties", value: 375000 },
+      { company: "Downsize",      type: "Downsize Family Home", owner: "Joint", group: "Properties", value: 1000000 },
+      // Other Assets
+      { company: "Trafigura",     type: "Traf Shares",          owner: "James", group: "Traf Shares",  value: 1131556 },
+      { company: "Cash Provision",   type: "Cash Provision",    owner: "Joint", group: "Cash",         value: 191400 },
+      { company: "Pending Investment", type: "Cash - Pending Investment", owner: "Joint", group: "Cash", value: 819000 },
     ]
   },
   {
     month: "May-26", mk: "2026-05",
     lines: [
       // Standard Life
-      { company: "Standard Life", type: "Pension",   owner: "James", group: "Standard Life", value: 38621 },
+      { company: "Standard Life", type: "Standard Life Pension", owner: "James", group: "Standard Life", value: 38621 },
       // Fidelity US
-      { company: "Fidelity US",   type: "Pension",   owner: "James", group: "Fidelity US",   value: 45000 },
+      { company: "Fidelity US",   type: "Fidelity US Pension",  owner: "James", group: "Fidelity US",   value: 45000 },
       // Fidelity UK
       { company: "Fidelity",      type: "SIP",       owner: "James", group: "Fidelity UK",   value: 166463 },
       { company: "Fidelity",      type: "ISA",       owner: "James", group: "Fidelity UK",   value: 152692 },
@@ -1060,14 +1061,14 @@ const MONTHLY_INVESTMENTS = [
       { company: "AJ Bell",       type: "GIA",       owner: "Joint", group: "AJ Bell",       value: 245270 },
       { company: "AJ Bell",       type: "JISA",      owner: "Gracie", group: "AJ Bell",      value: 9969 },
       { company: "AJ Bell",       type: "JISA",      owner: "Monte",  group: "AJ Bell",      value: 9969 },
-      // Traf Shares
-      { company: "Trafigura",     type: "Shares",    owner: "James", group: "Traf Shares",   value: 1131556 },
       // Properties
-      { company: "Properties",    type: "Property",  owner: "Joint", group: "Properties",    value: 695000 },
-      { company: "Downsize",      type: "Property",  owner: "Joint", group: "Properties",    value: 1000000 },
-      // Cash
-      { company: "Cash Provision",   type: "Cash",   owner: "Joint", group: "Cash",          value: 195000 },
-      { company: "Pending Investment", type: "Cash", owner: "Joint", group: "Cash",          value: 819000 },
+      { company: "Properties",    type: "Bearsted Flat",        owner: "Joint", group: "Properties", value: 325000 },
+      { company: "Properties",    type: "Shooters Hill Flat",   owner: "Joint", group: "Properties", value: 375000 },
+      { company: "Downsize",      type: "Downsize Family Home", owner: "Joint", group: "Properties", value: 1000000 },
+      // Other Assets
+      { company: "Trafigura",     type: "Traf Shares",          owner: "James", group: "Traf Shares",  value: 1131556 },
+      { company: "Cash Provision",   type: "Cash Provision",    owner: "Joint", group: "Cash",         value: 183200 },
+      { company: "Pending Investment", type: "Cash - Pending Investment", owner: "Joint", group: "Cash", value: 819000 },
     ]
   },
 ];

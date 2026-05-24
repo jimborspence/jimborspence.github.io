@@ -1003,51 +1003,71 @@ const MONTHLY_INVESTMENTS = [
   {
     month: "Dec-25", mk: "2025-12",
     lines: [
-      { company: "Standard Life", type: "Pension",   owner: "James", value: 27219 },
-      { company: "Fidelity US",   type: "Pension",   owner: "James", value: 45000 },
-      { company: "AJ Bell",       type: "SIP",       owner: "James", value: 374639 },
-      { company: "Fidelity",      type: "SIP",       owner: "James", value: 159088 },
-      { company: "AJ Bell",       type: "ISA",       owner: "James", value: 20801 },
-      { company: "AJ Bell",       type: "ISA",       owner: "Jemma", value: 20000 },
-      { company: "Fidelity",      type: "ISA",       owner: "James", value: 144734 },
-      { company: "Fidelity",      type: "ISA",       owner: "Jemma", value: 51910 },
-      { company: "HL",            type: "ISA",       owner: "James", value: 21414 },
-      { company: "HL",            type: "ISA",       owner: "Jemma", value: 22632 },
-      { company: "AJ Bell",       type: "GIA",       owner: "Joint", value: 221989 },
-      { company: "Fidelity",      type: "GIA",       owner: "James", value: 349356 },
-      { company: "Fidelity",      type: "GIA Tax",   owner: "James", value: -20000 },
-      { company: "AJ Bell",       type: "JISA",      owner: "Gracie", value: 9030 },
-      { company: "AJ Bell",       type: "JISA",      owner: "Monte",  value: 9030 },
-      { company: "Fidelity",      type: "JISA",      owner: "Gracie", value: 34798 },
-      { company: "Fidelity",      type: "JISA",      owner: "Monte",  value: 5568 },
-      { company: "Trafigura",     type: "Shares",    owner: "James", value: 1131556 },
-      { company: "Properties",    type: "Property",  owner: "Joint", value: 695000 },
-      { company: "Downsize",      type: "Property",  owner: "Joint", value: 1000000 },
+      // Standard Life
+      { company: "Standard Life", type: "Pension",   owner: "James", group: "Standard Life", value: 27219 },
+      // Fidelity US
+      { company: "Fidelity US",   type: "Pension",   owner: "James", group: "Fidelity US",   value: 45000 },
+      // Fidelity UK
+      { company: "Fidelity",      type: "SIP",       owner: "James", group: "Fidelity UK",   value: 159088 },
+      { company: "Fidelity",      type: "ISA",       owner: "James", group: "Fidelity UK",   value: 144734 },
+      { company: "Fidelity",      type: "ISA",       owner: "Jemma", group: "Fidelity UK",   value: 51910 },
+      { company: "Fidelity",      type: "GIA",       owner: "James", group: "Fidelity UK",   value: 349356 },
+      { company: "Fidelity",      type: "GIA Tax",   owner: "James", group: "Fidelity UK",   value: -20000 },
+      { company: "Fidelity",      type: "JISA",      owner: "Gracie", group: "Fidelity UK",  value: 34798 },
+      { company: "Fidelity",      type: "JISA",      owner: "Monte",  group: "Fidelity UK",  value: 5568 },
+      // Hargreaves Lansdown
+      { company: "HL",            type: "ISA",       owner: "James", group: "Hargreaves Lansdown", value: 21414 },
+      { company: "HL",            type: "ISA",       owner: "Jemma", group: "Hargreaves Lansdown", value: 22632 },
+      // AJ Bell
+      { company: "AJ Bell",       type: "SIP",       owner: "James", group: "AJ Bell",       value: 374639 },
+      { company: "AJ Bell",       type: "ISA",       owner: "James", group: "AJ Bell",       value: 20801 },
+      { company: "AJ Bell",       type: "ISA",       owner: "Jemma", group: "AJ Bell",       value: 20000 },
+      { company: "AJ Bell",       type: "GIA",       owner: "Joint", group: "AJ Bell",       value: 221989 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Gracie", group: "AJ Bell",      value: 9030 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Monte",  group: "AJ Bell",      value: 9030 },
+      // Traf Shares
+      { company: "Trafigura",     type: "Shares",    owner: "James", group: "Traf Shares",   value: 1131556 },
+      // Properties
+      { company: "Properties",    type: "Property",  owner: "Joint", group: "Properties",    value: 695000 },
+      { company: "Downsize",      type: "Property",  owner: "Joint", group: "Properties",    value: 1000000 },
+      // Cash
+      { company: "Cash Provision",   type: "Cash",   owner: "Joint", group: "Cash",          value: 200000 },
+      { company: "Pending Investment", type: "Cash", owner: "Joint", group: "Cash",          value: 819000 },
     ]
   },
   {
     month: "May-26", mk: "2026-05",
     lines: [
-      { company: "Standard Life", type: "Pension",   owner: "James", value: 38621 },
-      { company: "Fidelity US",   type: "Pension",   owner: "James", value: 45000 },
-      { company: "AJ Bell",       type: "SIP",       owner: "James", value: 400568 },
-      { company: "Fidelity",      type: "SIP",       owner: "James", value: 166463 },
-      { company: "AJ Bell",       type: "ISA",       owner: "James", value: 22327 },
-      { company: "AJ Bell",       type: "ISA",       owner: "Jemma", value: 22192 },
-      { company: "Fidelity",      type: "ISA",       owner: "James", value: 152692 },
-      { company: "Fidelity",      type: "ISA",       owner: "Jemma", value: 53694 },
-      { company: "HL",            type: "ISA",       owner: "James", value: 22993 },
-      { company: "HL",            type: "ISA",       owner: "Jemma", value: 23886 },
-      { company: "AJ Bell",       type: "GIA",       owner: "Joint", value: 245270 },
-      { company: "Fidelity",      type: "GIA",       owner: "James", value: 361363 },
-      { company: "Fidelity",      type: "GIA Tax",   owner: "James", value: -20000 },
-      { company: "AJ Bell",       type: "JISA",      owner: "Gracie", value: 9969 },
-      { company: "AJ Bell",       type: "JISA",      owner: "Monte",  value: 9969 },
-      { company: "Fidelity",      type: "JISA",      owner: "Gracie", value: 36472 },
-      { company: "Fidelity",      type: "JISA",      owner: "Monte",  value: 5851 },
-      { company: "Trafigura",     type: "Shares",    owner: "James", value: 1131556 },
-      { company: "Properties",    type: "Property",  owner: "Joint", value: 695000 },
-      { company: "Downsize",      type: "Property",  owner: "Joint", value: 1000000 },
+      // Standard Life
+      { company: "Standard Life", type: "Pension",   owner: "James", group: "Standard Life", value: 38621 },
+      // Fidelity US
+      { company: "Fidelity US",   type: "Pension",   owner: "James", group: "Fidelity US",   value: 45000 },
+      // Fidelity UK
+      { company: "Fidelity",      type: "SIP",       owner: "James", group: "Fidelity UK",   value: 166463 },
+      { company: "Fidelity",      type: "ISA",       owner: "James", group: "Fidelity UK",   value: 152692 },
+      { company: "Fidelity",      type: "ISA",       owner: "Jemma", group: "Fidelity UK",   value: 53694 },
+      { company: "Fidelity",      type: "GIA",       owner: "James", group: "Fidelity UK",   value: 361363 },
+      { company: "Fidelity",      type: "GIA Tax",   owner: "James", group: "Fidelity UK",   value: -20000 },
+      { company: "Fidelity",      type: "JISA",      owner: "Gracie", group: "Fidelity UK",  value: 36472 },
+      { company: "Fidelity",      type: "JISA",      owner: "Monte",  group: "Fidelity UK",  value: 5851 },
+      // Hargreaves Lansdown
+      { company: "HL",            type: "ISA",       owner: "James", group: "Hargreaves Lansdown", value: 22993 },
+      { company: "HL",            type: "ISA",       owner: "Jemma", group: "Hargreaves Lansdown", value: 23886 },
+      // AJ Bell
+      { company: "AJ Bell",       type: "SIP",       owner: "James", group: "AJ Bell",       value: 400568 },
+      { company: "AJ Bell",       type: "ISA",       owner: "James", group: "AJ Bell",       value: 22327 },
+      { company: "AJ Bell",       type: "ISA",       owner: "Jemma", group: "AJ Bell",       value: 22192 },
+      { company: "AJ Bell",       type: "GIA",       owner: "Joint", group: "AJ Bell",       value: 245270 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Gracie", group: "AJ Bell",      value: 9969 },
+      { company: "AJ Bell",       type: "JISA",      owner: "Monte",  group: "AJ Bell",      value: 9969 },
+      // Traf Shares
+      { company: "Trafigura",     type: "Shares",    owner: "James", group: "Traf Shares",   value: 1131556 },
+      // Properties
+      { company: "Properties",    type: "Property",  owner: "Joint", group: "Properties",    value: 695000 },
+      { company: "Downsize",      type: "Property",  owner: "Joint", group: "Properties",    value: 1000000 },
+      // Cash
+      { company: "Cash Provision",   type: "Cash",   owner: "Joint", group: "Cash",          value: 195000 },
+      { company: "Pending Investment", type: "Cash", owner: "Joint", group: "Cash",          value: 819000 },
     ]
   },
 ];
@@ -1158,7 +1178,9 @@ const PROVISIONS_DATA = [
     { date: "Mar 2026", desc: "Apple Claude subscription", amount: 214.99, cat: "One Off Costs" },
     { date: "Apr 2026", desc: "SP Stanley", amount: 38.70, cat: "Shopping" },
   ]},
-  { name: "1k - Jemma", opening: 1000, drawdowns: [] },
+  { name: "1k - Jemma", opening: 1000, drawdowns: [
+    { date: "May 2026", desc: "GHD Wand", amount: 133.96, cat: "General" },
+  ] },
   { name: "Annual Costs", opening: 13568, drawdowns: [
     { date: "Dec 2025", desc: "Presents", amount: 2808.85, cat: "Presents" },
     { date: "Dec 2025", desc: "Family Tech", amount: 32.40, cat: "Annual Costs" },
@@ -1177,7 +1199,7 @@ const PROVISIONS_DATA = [
     { label: "Gardener",                      amount: 1250 },
     { label: "Amex Card Fee",                 amount: 195 },
   ]},
-  { name: "Cash Provision", opening: 200000, drawdowns: [
+  { name: "Cash Provision", opening: 195000, drawdowns: [
     { date: "Feb 2026", desc: "ADHD Health Clinic (Health)", amount: 995, cat: "One Off Costs" },
     { date: "Mar 2026", desc: "Private Psychiatry Expert (Health)", amount: 805, cat: "One Off Costs" },
     { date: "Mar 2026", desc: "The Royal Parks - GaGa bench", amount: 10000, cat: "One Off Costs" },
@@ -1279,6 +1301,10 @@ const PROVISIONS_DATA = [
     { date: "Apr 2026", desc: "Christy's Hen Do", amount: 398.24, cat: "Holidays" },
     { date: "Apr 2026", desc: "Center Parcs", amount: 103.50, cat: "Holidays" },
     { date: "Apr 2026", desc: "Center Parcs", amount: 758.80, cat: "Holidays" },
+  ]},
+  { name: "School Holidays", opening: 5000, drawdowns: [
+    { date: "May 2026", desc: "Eventbrite", amount: 349.00, cat: "Entertainment" },
+    { date: "May 2026", desc: "SP The Hive", amount: 139.00, cat: "Entertainment" },
   ]},
   { name: "Home & Family", opening: 132171, drawdowns: [
     // Master Bedroom
@@ -1505,7 +1531,7 @@ const INCOME_CATS = new Set(["Salary"]);
 const EXCLUDE_CATS = new Set(["Internal Transfers", "Finances", "Savings Deposits", "Cash", "Work Expenses", "Shopping", "Travel"]);
 const NON_OP_CATS = new Set(["Interest", "Income"]);
 const DAY_TO_DAY_CATS = ["Coco","Eating Out","Entertainment","General","Groceries","Health & Beauty","Household Bills","Household Maintenance","School Costs","Subscriptions","Transport"];
-const PROVISION_DISPLAY_CATS = ["1k - James","1k - Jemma","Annual Costs","Cash Provision","Charity","Clothing & Shoes","Flats","Holidays","Home & Family","Range Rover","School Fees"];
+const PROVISION_DISPLAY_CATS = ["1k - James","1k - Jemma","Annual Costs","Cash Provision","Charity","Clothing & Shoes","Flats","Holidays","Home & Family","Range Rover","School Fees","School Holidays"];
 
 function getMonthKey(d) { return d.substring(0, 7); }
 
@@ -2340,33 +2366,49 @@ function InvestmentsTab() {
 
   return (
     <div>
-      <SectionHeader>Portfolio Tracker</SectionHeader>
+      <SectionHeader>Investment Portfolio</SectionHeader>
       <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "16px", fontStyle: "italic" }}>
-        Monthly snapshots by investment line. Change column shows movement from prior snapshot.
+        Monthly snapshots by platform. Most recent month shown first. Change column shows movement from prior snapshot.
       </p>
       {(function() {
+        var months = MONTHLY_INVESTMENTS.slice().reverse(); // Most recent first (May-26, Dec-25)
+        var latest = months[0];
+        var prior  = months[months.length - 1];
+
         var GROUPS = [
-          { key: "Pension",   label: "Pension",    types: ["Pension"] },
-          { key: "SIP",       label: "SIP",        types: ["SIP"] },
-          { key: "ISA",       label: "ISA",        types: ["ISA"] },
-          { key: "GIA",       label: "GIA",        types: ["GIA", "GIA Tax"] },
-          { key: "JISA",      label: "Junior ISA", types: ["JISA"] },
-          { key: "Shares",    label: "Trafigura",  types: ["Shares"] },
-          { key: "Property",  label: "Properties", types: ["Property"] },
+          { key: "Standard Life",       label: "Standard Life" },
+          { key: "Fidelity US",         label: "Fidelity US" },
+          { key: "Fidelity UK",         label: "Fidelity UK" },
+          { key: "Hargreaves Lansdown", label: "Hargreaves Lansdown" },
+          { key: "AJ Bell",             label: "AJ Bell" },
+          { key: "Traf Shares",         label: "Traf Shares" },
+          { key: "Properties",          label: "Properties" },
+          { key: "Cash",                label: "Cash" },
         ];
-        var months = MONTHLY_INVESTMENTS;
+
+        function groupLines(snapshot, groupKey) {
+          return snapshot.lines.filter(function(l){ return l.group === groupKey; });
+        }
+        function groupTotal(snapshot, groupKey) {
+          return groupLines(snapshot, groupKey).reduce(function(s,l){ return s+l.value; }, 0);
+        }
+        function lineVal(snapshot, line) {
+          var match = snapshot.lines.find(function(l){ return l.company === line.company && l.type === line.type && l.owner === line.owner; });
+          return match ? match.value : null;
+        }
+
         var expandedGroup = React.useState(null);
         var expandedKey = expandedGroup[0];
         var setExpandedKey = expandedGroup[1];
-        function groupTotal(snapshot, types) {
-          return snapshot.lines.filter(function(l){ return types.indexOf(l.type) !== -1; })
-            .reduce(function(s,l){ return s+l.value; }, 0);
-        }
+
+        var grandTotals = months.map(function(m){ return m.lines.reduce(function(s,l){ return s+l.value; },0); });
+        var grandChange = grandTotals[0] - grandTotals[grandTotals.length-1];
+
         return (
-          <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
+          <table style={{ width: "75%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
             <thead>
               <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
-                <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Group</th>
+                <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Platform / Line</th>
                 {months.map(function(m) {
                   return <th key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m.month}</th>;
                 })}
@@ -2376,88 +2418,63 @@ function InvestmentsTab() {
             <tbody>
               {GROUPS.map(function(g) {
                 var isOpen = expandedKey === g.key;
-                var totals = months.map(function(m){ return groupTotal(m, g.types); });
-                var change = totals.length >= 2 ? totals[totals.length-1] - totals[0] : null;
-                var detailLines = months[0].lines.filter(function(l){ return g.types.indexOf(l.type) !== -1; });
+                var totals = months.map(function(m){ return groupTotal(m, g.key); });
+                var change = totals[0] - totals[totals.length-1];
+                var detailLines = latest.lines.filter(function(l){ return l.group === g.key; });
+
                 return [
-                  <tr key={g.key}
-                    onClick={function(){ setExpandedKey(isOpen ? null : g.key); }}
-                    style={{ borderBottom: "1px solid #1a1e28", background: isOpen ? "#1e2c40" : STYLE.card, cursor: "pointer" }}>
-                    <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold" }}>
+                  // Group header row
+                  <tr key={g.key + "-hdr"} style={{ background: "#181e28", borderTop: "1px solid " + STYLE.border }}>
+                    <td colSpan={months.length + 2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" }}>
                       {g.label}
-                      <span style={{ fontSize: "10px", color: STYLE.blue, marginLeft: "8px" }}>{isOpen ? "▲" : "▼"}</span>
-                    </td>
-                    {totals.map(function(v, i) {
-                      return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(v)}</td>;
-                    })}
-                    <td style={{ textAlign: "right", padding: "10px 12px", color: change === null ? STYLE.textMuted : colN(change), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
-                      {change === null ? "—" : (change >= 0 ? "+" : "") + fmtN(change)}
                     </td>
                   </tr>,
-                  isOpen && detailLines.map(function(line, i) {
-                    var lineVals = months.map(function(m){
-                      var match = m.lines.find(function(l){ return l.company === line.company && l.type === line.type && l.owner === line.owner; });
-                      return match ? match.value : null;
-                    });
-                    var lineChange = lineVals.length >= 2 && lineVals[0] !== null && lineVals[lineVals.length-1] !== null
-                      ? lineVals[lineVals.length-1] - lineVals[0] : null;
+                  // Detail lines
+                  detailLines.map(function(line, i) {
+                    var vals = months.map(function(m){ return lineVal(m, line); });
+                    var lineChange = vals[0] !== null && vals[vals.length-1] !== null ? vals[0] - vals[vals.length-1] : null;
                     return (
-                      <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: "#111827" }}>
-                        <td style={{ padding: "7px 12px 7px 24px", color: STYLE.textMuted, fontSize: "11px" }}>
-                          {line.company} {line.type} <span style={{ color: "#4a5a6a", fontSize: "10px" }}>({line.owner})</span>
+                      <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                        <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub, fontSize: "12px" }}>
+                          {line.type} <span style={{ color: STYLE.textMuted, fontSize: "10px" }}>({line.owner})</span>
                         </td>
-                        {lineVals.map(function(v, i) {
-                          return <td key={i} style={{ textAlign: "right", padding: "7px 12px", color: v === null ? "#3a4a5a" : v < 0 ? STYLE.red : STYLE.textSub, fontSize: "11px" }}>
+                        {vals.map(function(v, vi) {
+                          return <td key={vi} style={{ textAlign: "right", padding: "8px 12px", color: v === null ? "#3a4a5a" : v < 0 ? STYLE.red : STYLE.textSub }}>
                             {v === null ? "—" : fmtN(v)}
                           </td>;
                         })}
-                        <td style={{ textAlign: "right", padding: "7px 12px", color: lineChange === null ? "#3a4a5a" : colN(lineChange), fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>
+                        <td style={{ textAlign: "right", padding: "8px 12px", color: lineChange === null ? "#3a4a5a" : colN(lineChange), borderLeft: "1px solid " + STYLE.border, fontSize: "11px" }}>
                           {lineChange === null ? "—" : (lineChange >= 0 ? "+" : "") + fmtN(lineChange)}
                         </td>
                       </tr>
                     );
-                  })
-                ];
-              })}
-              {(function(){
-                var grandTotals = months.map(function(m){ return m.lines.reduce(function(s,l){ return s+l.value; }, 0); });
-                var grandChange = grandTotals.length >= 2 ? grandTotals[grandTotals.length-1] - grandTotals[0] : null;
-                return (
-                  <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
-                    <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
-                    {grandTotals.map(function(v, i){
-                      return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(v)}</td>;
+                  }),
+                  // Group subtotal row
+                  <tr key={g.key + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+                    <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{g.label} Total</td>
+                    {totals.map(function(v, i) {
+                      return <td key={i} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(v)}</td>;
                     })}
-                    <td style={{ textAlign: "right", padding: "10px 12px", color: grandChange === null ? STYLE.textMuted : colN(grandChange), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
-                      {grandChange === null ? "—" : (grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
+                    <td style={{ textAlign: "right", padding: "8px 12px", color: colN(change), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
+                      {(change >= 0 ? "+" : "") + fmtN(change)}
                     </td>
                   </tr>
-                );
-              })()}
+                ];
+              })}
+              {/* Grand Total */}
+              <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Total</td>
+                {grandTotals.map(function(v, i){
+                  return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>{fmtN(v)}</td>;
+                })}
+                <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandChange), fontWeight: "bold", fontSize: "13px", borderLeft: "1px solid " + STYLE.border }}>
+                  {(grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
+                </td>
+              </tr>
             </tbody>
           </table>
         );
       })()}
-
-      <SectionHeader>Investment Portfolio</SectionHeader>
-      <table style={{ width: "45%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
-        <THead cols={[{ label: "Category" }, { label: "Net Value", right: true }]} />
-        <tbody>
-          {investmentRows.map(function(inv, i) {
-            var net = inv.value + (inv.taxOffset || 0);
-            return (
-              <tr key={inv.category} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{inv.category}</td>
-                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(net)}</td>
-              </tr>
-            );
-          })}
-          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
-            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
-            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(netTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
 
       <SectionHeader>Interest Income - updated Apr 2026</SectionHeader>
       <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
@@ -2649,6 +2666,7 @@ function OurMoneyTab({ monthlyData }) {
 
   var FRIENDLY = {
     "Holidays":         { label: "Holidays",              emoji: "✈️",  group: "Family Life" },
+    "School Holidays":  { label: "School Holidays",       emoji: "🎒",  group: "Family Life" },
     "Clothing & Shoes": { label: "Clothing & Shoes",      emoji: "👗",  group: "Family Life" },
     "Home & Family":    { label: "House Projects",        emoji: "🏠",  group: "Family Life" },
     "Annual Costs":     { label: "Big Annual Bills",      emoji: "📅",  group: "Family Life" },

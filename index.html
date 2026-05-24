@@ -2549,67 +2549,29 @@ function InvestmentsTab() {
 
 function CashTab() {
   var accounts = CASH_DATA.currentAccounts.reduce(function(s,a){return s+a.value;},0);
-  var cards = CASH_DATA.creditCards.reduce(function(s,a){return s+a.value;},0);
-  var savings = CASH_DATA.savings.reduce(function(s,a){return s+a.value;},0);
-  var gross = accounts + cards + savings;
-  var net = gross + CASH_DATA.pendingInvestment;
+  var cards    = CASH_DATA.creditCards.reduce(function(s,a){return s+a.value;},0);
+  var savings  = CASH_DATA.savings.reduce(function(s,a){return s+a.value;},0);
+  var gross    = accounts + cards + savings;
+  var net      = gross + CASH_DATA.pendingInvestment;
 
   function ownerColor(o) { return o === "James" ? STYLE.blue : o === "Jemma" ? STYLE.purple : STYLE.textMuted; }
 
-  function AccountTable({ title, rows }) {
-    var subtotal = rows.reduce(function(s,r){return s+r.value;},0);
-    return (
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>{title}</div>
-        <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px" }}>
-          <THead cols={[{ label: "Account" }, { label: "Owner" }, { label: "Balance", right: true }]} />
-          <tbody>
-            {rows.map(function(r, i) {
-              return (
-                <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                  <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{r.name}</td>
-                  <td style={{ padding: "8px 12px", color: ownerColor(r.owner), fontSize: "11px" }}>{r.owner}</td>
-                  <td style={{ textAlign: "right", padding: "8px 12px", color: r.value < 0 ? STYLE.red : STYLE.green }}>{fmtN(r.value)}</td>
-                </tr>
-              );
-            })}
-            <tr style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
-              <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Subtotal</td>
-              <td style={{ textAlign: "right", padding: "8px 12px", color: colN(subtotal), fontWeight: "bold" }}>{fmtN(subtotal)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+  var GROUPS = [
+    {
+      key: "currentAccounts", label: "Current Accounts",
+      rows: CASH_DATA.currentAccounts.map(function(r){ return { name: r.name, owner: r.owner, rate: 0, value: r.value }; }),
+    },
+    {
+      key: "creditCards", label: "Credit Cards",
+      rows: CASH_DATA.creditCards.map(function(r){ return { name: r.name, owner: r.owner, rate: null, value: r.value }; }),
+    },
+    {
+      key: "savings", label: "Savings",
+      rows: CASH_DATA.savings.map(function(r){ return { name: r.name, owner: r.owner, rate: r.rate, value: r.value }; }),
+    },
+  ];
 
-  function SavingsTable({ title, rows }) {
-    var subtotal = rows.reduce(function(s,r){return s+r.value;},0);
-    return (
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "8px" }}>{title}</div>
-        <table style={{ width: "60%", borderCollapse: "collapse", fontSize: "12px" }}>
-          <THead cols={[{ label: "Account" }, { label: "Owner" }, { label: "Rate", right: true }, { label: "Balance", right: true }]} />
-          <tbody>
-            {rows.map(function(r, i) {
-              return (
-                <tr key={r.name+i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                  <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{r.name}</td>
-                  <td style={{ padding: "8px 12px", color: ownerColor(r.owner), fontSize: "11px" }}>{r.owner}</td>
-                  <td style={{ textAlign: "right", padding: "8px 12px", color: r.rate != null ? STYLE.gold : STYLE.textMuted, fontSize: "11px" }}>{r.rate != null ? r.rate.toFixed(2) + "%" : "—"}</td>
-                  <td style={{ textAlign: "right", padding: "8px 12px", color: r.value < 0 ? STYLE.red : STYLE.green }}>{fmtN(r.value)}</td>
-                </tr>
-              );
-            })}
-            <tr style={{ borderTop: "1px solid " + STYLE.border, background: "#1e2838" }}>
-              <td colSpan={3} style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Subtotal</td>
-              <td style={{ textAlign: "right", padding: "8px 12px", color: colN(subtotal), fontWeight: "bold" }}>{fmtN(subtotal)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+  var grandTotal = accounts + cards + savings;
 
   return (
     <div>
@@ -2617,12 +2579,12 @@ function CashTab() {
       <table style={{ width: "40%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
         <tbody>
           {[
-            { label: "Current Accounts", value: accounts },
+            { label: "Current Accounts",  value: accounts },
             { label: "Credit Cards (net)", value: cards },
-            { label: "Savings", value: savings },
-            { label: "Gross Cash", value: gross, bold: true },
+            { label: "Savings",            value: savings },
+            { label: "Gross Cash",         value: gross, bold: true },
             { label: "Pending Investment", value: CASH_DATA.pendingInvestment },
-            { label: "Net Cash Position", value: net, bold: true, highlight: true },
+            { label: "Net Cash Position",  value: net, bold: true, highlight: true },
           ].map(function(r) {
             return (
               <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: r.highlight ? "#1a2030" : "transparent" }}>
@@ -2634,9 +2596,52 @@ function CashTab() {
         </tbody>
       </table>
 
-      <AccountTable title="Current Accounts" rows={CASH_DATA.currentAccounts} />
-      <AccountTable title="Credit Cards" rows={CASH_DATA.creditCards} />
-      <SavingsTable title="Savings" rows={CASH_DATA.savings} />
+      <SectionHeader>Accounts</SectionHeader>
+      <table style={{ width: "65%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
+        <thead>
+          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+            <th style={{ textAlign: "left",  padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Account</th>
+            <th style={{ textAlign: "left",  padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Owner</th>
+            <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Rate</th>
+            <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text,      fontWeight: "bold",   fontSize: "11px" }}>Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {GROUPS.map(function(g) {
+            var subtotal = g.rows.reduce(function(s,r){ return s+r.value; }, 0);
+            return [
+              <tr key={g.key + "-hdr"} style={{ background: "#181e28", borderTop: "1px solid " + STYLE.border }}>
+                <td colSpan={4} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" }}>
+                  {g.label}
+                </td>
+              </tr>,
+              g.rows.map(function(r, i) {
+                var rateDisplay = r.rate === null ? "—" : r.rate === 0 ? "0.00%" : r.rate.toFixed(2) + "%";
+                var rateColor   = r.rate === null ? STYLE.textMuted : r.rate === 0 ? STYLE.textMuted : STYLE.gold;
+                return (
+                  <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
+                    <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
+                    <td style={{ padding: "8px 12px", color: ownerColor(r.owner), fontSize: "11px" }}>{r.owner}</td>
+                    <td style={{ textAlign: "right", padding: "8px 12px", color: rateColor, fontSize: "11px" }}>{rateDisplay}</td>
+                    <td style={{ textAlign: "right", padding: "8px 12px", color: r.value < 0 ? STYLE.red : STYLE.green }}>{fmtN(r.value)}</td>
+                  </tr>
+                );
+              }),
+              <tr key={g.key + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+                <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{g.label} Total</td>
+                <td></td>
+                <td></td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(subtotal), fontWeight: "bold" }}>{fmtN(subtotal)}</td>
+              </tr>
+            ];
+          })}
+          <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Total</td>
+            <td></td><td></td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }

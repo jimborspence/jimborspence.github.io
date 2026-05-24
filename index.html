@@ -2371,41 +2371,33 @@ function InvestmentsTab() {
         Monthly snapshots by platform. Most recent month shown first. Change column shows movement from prior snapshot.
       </p>
       {(function() {
-        var months = MONTHLY_INVESTMENTS.slice().reverse(); // Most recent first (May-26, Dec-25)
+        var months = MONTHLY_INVESTMENTS.slice().reverse();
         var latest = months[0];
-        var prior  = months[months.length - 1];
 
         var GROUPS = [
-          { key: "Standard Life",       label: "Standard Life" },
-          { key: "Fidelity US",         label: "Fidelity US" },
-          { key: "Fidelity UK",         label: "Fidelity UK" },
-          { key: "Hargreaves Lansdown", label: "Hargreaves Lansdown" },
-          { key: "AJ Bell",             label: "AJ Bell" },
-          { key: "Traf Shares",         label: "Traf Shares" },
-          { key: "Properties",          label: "Properties" },
-          { key: "Cash",                label: "Cash" },
+          { key: "Fidelity UK",         label: "Fidelity UK",         keys: ["Fidelity UK"] },
+          { key: "Hargreaves Lansdown", label: "Hargreaves Lansdown", keys: ["Hargreaves Lansdown"] },
+          { key: "AJ Bell",             label: "AJ Bell",             keys: ["AJ Bell"] },
+          { key: "Properties",          label: "Properties",          keys: ["Properties"] },
+          { key: "Other Assets",        label: "Other Assets",        keys: ["Standard Life", "Fidelity US", "Traf Shares", "Cash"] },
         ];
 
-        function groupLines(snapshot, groupKey) {
-          return snapshot.lines.filter(function(l){ return l.group === groupKey; });
+        function groupLines(snapshot, g) {
+          return snapshot.lines.filter(function(l){ return g.keys.indexOf(l.group) !== -1; });
         }
-        function groupTotal(snapshot, groupKey) {
-          return groupLines(snapshot, groupKey).reduce(function(s,l){ return s+l.value; }, 0);
+        function groupTotal(snapshot, g) {
+          return groupLines(snapshot, g).reduce(function(s,l){ return s+l.value; }, 0);
         }
         function lineVal(snapshot, line) {
           var match = snapshot.lines.find(function(l){ return l.company === line.company && l.type === line.type && l.owner === line.owner; });
           return match ? match.value : null;
         }
 
-        var expandedGroup = React.useState(null);
-        var expandedKey = expandedGroup[0];
-        var setExpandedKey = expandedGroup[1];
-
         var grandTotals = months.map(function(m){ return m.lines.reduce(function(s,l){ return s+l.value; },0); });
         var grandChange = grandTotals[0] - grandTotals[grandTotals.length-1];
 
         return (
-          <table style={{ width: "75%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
+          <table style={{ width: "82%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
             <thead>
               <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
                 <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Platform / Line</th>
@@ -2413,31 +2405,26 @@ function InvestmentsTab() {
                   return <th key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m.month}</th>;
                 })}
                 <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>Change</th>
+                <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Owner</th>
               </tr>
             </thead>
             <tbody>
               {GROUPS.map(function(g) {
-                var isOpen = expandedKey === g.key;
-                var totals = months.map(function(m){ return groupTotal(m, g.key); });
+                var totals = months.map(function(m){ return groupTotal(m, g); });
                 var change = totals[0] - totals[totals.length-1];
-                var detailLines = latest.lines.filter(function(l){ return l.group === g.key; });
-
+                var detailLines = groupLines(latest, g);
                 return [
-                  // Group header row
                   <tr key={g.key + "-hdr"} style={{ background: "#181e28", borderTop: "1px solid " + STYLE.border }}>
-                    <td colSpan={months.length + 2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" }}>
+                    <td colSpan={months.length + 3} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" }}>
                       {g.label}
                     </td>
                   </tr>,
-                  // Detail lines
                   detailLines.map(function(line, i) {
                     var vals = months.map(function(m){ return lineVal(m, line); });
                     var lineChange = vals[0] !== null && vals[vals.length-1] !== null ? vals[0] - vals[vals.length-1] : null;
                     return (
-                      <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                        <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub, fontSize: "12px" }}>
-                          {line.type} <span style={{ color: STYLE.textMuted, fontSize: "10px" }}>({line.owner})</span>
-                        </td>
+                      <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
+                        <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub, fontSize: "12px" }}>{line.type}</td>
                         {vals.map(function(v, vi) {
                           return <td key={vi} style={{ textAlign: "right", padding: "8px 12px", color: v === null ? "#3a4a5a" : v < 0 ? STYLE.red : STYLE.textSub }}>
                             {v === null ? "—" : fmtN(v)}
@@ -2446,10 +2433,10 @@ function InvestmentsTab() {
                         <td style={{ textAlign: "right", padding: "8px 12px", color: lineChange === null ? "#3a4a5a" : colN(lineChange), borderLeft: "1px solid " + STYLE.border, fontSize: "11px" }}>
                           {lineChange === null ? "—" : (lineChange >= 0 ? "+" : "") + fmtN(lineChange)}
                         </td>
+                        <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{line.owner}</td>
                       </tr>
                     );
                   }),
-                  // Group subtotal row
                   <tr key={g.key + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
                     <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{g.label} Total</td>
                     {totals.map(function(v, i) {
@@ -2458,10 +2445,10 @@ function InvestmentsTab() {
                     <td style={{ textAlign: "right", padding: "8px 12px", color: colN(change), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
                       {(change >= 0 ? "+" : "") + fmtN(change)}
                     </td>
+                    <td></td>
                   </tr>
                 ];
               })}
-              {/* Grand Total */}
               <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
                 <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Total</td>
                 {grandTotals.map(function(v, i){
@@ -2470,6 +2457,7 @@ function InvestmentsTab() {
                 <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandChange), fontWeight: "bold", fontSize: "13px", borderLeft: "1px solid " + STYLE.border }}>
                   {(grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
                 </td>
+                <td></td>
               </tr>
             </tbody>
           </table>

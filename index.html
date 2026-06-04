@@ -981,23 +981,20 @@ function getTaxAmount(t) {
 }
 
 const TAX_WAREHOUSE = [
-  { name: "Investec 90 Day Saver - James", value: 97644, owner: "James", notes: "52,356 in transit to another account (90 day notice)" },
-  { name: "Investec 90 Day Saver - Jemma", value: 145000, owner: "Jemma", notes: "" },
+  { name: "Investec 90 Day Saver - James", value: 150100, owner: "James", notes: "" },
+  { name: "Investec 90 Day Saver - Jemma", value: 145100, owner: "Jemma", notes: "" },
 ];
 
 const INVESTMENT_DATA = [
-  { category: "Bearsted Flat", value: 325000 },
-  { category: "Shooters Hill Flat", value: 375000 },
+  { category: "Flats",                          value: 700000 },
   { category: "Traf Shares - Holding (inc Tax)", value: 1488889, taxOffset: -357333 },
-  { category: "Downsize Family Home", value: 1000000 },
-  { category: "Current Property", value: 0 },
-  { category: "Pension", value: 72219 },
-  { category: "SIP", value: 533727 },
-  { category: "ISA", value: 281491 },
-  { category: "GIA", value: 571345, taxOffset: -20000 },
-  { category: "Junior ISA", value: 58426 },
-  { category: "Pending Investment allocation", value: 819000 },
-  { category: "Cash Provision", value: 196400 },
+  { category: "Pension",                        value: 72219 },
+  { category: "SIP",                            value: 533727 },
+  { category: "ISA",                            value: 281491 },
+  { category: "GIA",                            value: 571345, taxOffset: -20000 },
+  { category: "Junior ISA",                     value: 58426 },
+  { category: "Pending Investment allocation",  value: 819000 },
+  // Cash Provision: computed dynamically from PROVISIONS_DATA
 ];
 
 const MONTHLY_INVESTMENTS = [
@@ -1005,9 +1002,9 @@ const MONTHLY_INVESTMENTS = [
     month: "Dec-25", mk: "2025-12",
     lines: [
       // Standard Life
-      { company: "Standard Life", type: "Standard Life Pension", owner: "James", group: "Standard Life", value: 27219 },
+      { company: "Standard Life", type: "Work Place Pension",     owner: "James", group: "Pensions", value: 27219 },
       // Fidelity US
-      { company: "Fidelity US",   type: "Fidelity US Pension",  owner: "James", group: "Fidelity US",   value: 45000 },
+      { company: "Fidelity US",   type: "Fidelity US Pension",  owner: "James", group: "Fidelity UK",   value: 45000 },
       // Fidelity UK
       { company: "Fidelity",      type: "SIP",       owner: "James", group: "Fidelity UK",   value: 159088 },
       { company: "Fidelity",      type: "ISA",       owner: "James", group: "Fidelity UK",   value: 144734 },
@@ -1029,7 +1026,6 @@ const MONTHLY_INVESTMENTS = [
       // Properties
       { company: "Properties",    type: "Bearsted Flat",        owner: "Joint", group: "Properties", value: 325000 },
       { company: "Properties",    type: "Shooters Hill Flat",   owner: "Joint", group: "Properties", value: 375000 },
-      { company: "Downsize",      type: "Downsize Family Home", owner: "Joint", group: "Properties", value: 1000000 },
       // Other Assets
       { company: "Trafigura",     type: "Traf Shares",          owner: "James", group: "Traf Shares",  value: 1131556 },
       { company: "Cash Provision",   type: "Cash Provision",    owner: "Joint", group: "Cash",         value: 191400 },
@@ -1040,9 +1036,9 @@ const MONTHLY_INVESTMENTS = [
     month: "May-26", mk: "2026-05",
     lines: [
       // Standard Life
-      { company: "Standard Life", type: "Standard Life Pension", owner: "James", group: "Standard Life", value: 38621 },
+      { company: "Standard Life", type: "Work Place Pension",     owner: "James", group: "Pensions", value: 38621 },
       // Fidelity US
-      { company: "Fidelity US",   type: "Fidelity US Pension",  owner: "James", group: "Fidelity US",   value: 45000 },
+      { company: "Fidelity US",   type: "Fidelity US Pension",  owner: "James", group: "Fidelity UK",   value: 45000 },
       // Fidelity UK
       { company: "Fidelity",      type: "SIP",       owner: "James", group: "Fidelity UK",   value: 166463 },
       { company: "Fidelity",      type: "ISA",       owner: "James", group: "Fidelity UK",   value: 152692 },
@@ -1064,10 +1060,9 @@ const MONTHLY_INVESTMENTS = [
       // Properties
       { company: "Properties",    type: "Bearsted Flat",        owner: "Joint", group: "Properties", value: 325000 },
       { company: "Properties",    type: "Shooters Hill Flat",   owner: "Joint", group: "Properties", value: 375000 },
-      { company: "Downsize",      type: "Downsize Family Home", owner: "Joint", group: "Properties", value: 1000000 },
       // Other Assets
       { company: "Trafigura",     type: "Traf Shares",          owner: "James", group: "Traf Shares",  value: 1131556 },
-      { company: "Cash Provision",   type: "Cash Provision",    owner: "Joint", group: "Cash",         value: 183200 },
+      { company: "Cash Provision",   type: "Cash Provision",    owner: "Joint", group: "Cash",         value: 183200 }, // keep in sync with getProvisionRemaining("Cash Provision"),
       { company: "Pending Investment", type: "Cash - Pending Investment", owner: "Joint", group: "Cash", value: 819000 },
     ]
   },
@@ -1079,14 +1074,67 @@ const DEFERRED_SHARES_DATA = [
   { name: "Traf Shares - Tax",             values: { y2026: 0, y2027: -318134, y2028: -183397, y2029: -179936, y2030: -176476 }, isOffset: true },
 ];
 
+// Source data behind the deferred share payment schedule.
+// Amend fxRate, prescribedRate2027, prescribedRate2028plus and vnYears as needed.
+const DEFERRED_SCHEDULE = {
+  fxRate: 1.35,
+  prescribedRate2027: 0.025,
+  prescribedRate2028plus: 0.02,
+  taxRate: 0.24,
+  vnYears: [
+    { year: 2023, buyBack: 3857893, paid: 3156458, outstanding: 701435,  paymentNote: "Full balance paid in 2027" },
+    { year: 2024, buyBack: 3024295, paid: 1077368, outstanding: 1946927, paymentNote: "Equal 1/4 payments 2027-2030" },
+    { year: 2025, buyBack:  740091, paid:       0, outstanding:  740091, paymentNote: "Equal 1/4 payments 2027-2030" },
+    { year: 2026, buyBack: 1205834, paid:       0, outstanding: 1205834, paymentNote: "Equal 1/4 payments 2027-2030" },
+  ],
+};
+
 const DEFERRED_YEARS = ["y2026", "y2027", "y2028", "y2029", "y2030"];
+
+// Returns net deferred share payment for a given year key
+function deferredNet(yk) {
+  return DEFERRED_SHARES_DATA.reduce(function(s,r){ return s+(r.values[yk]||0); }, 0);
+}
+
+// Returns the resolved value for a FORWARD_PROVISIONS row for a given year key
+function fwdValue(item, yk) {
+  if (item.computeFromDeferred) {
+    return -Math.round(deferredNet(yk) * item.deferredRate);
+  }
+  return item.values[yk] || 0;
+}
+
+// Single source of truth for provisions across any set of years.
+// Pass yearKeys = YEAR_2026 for current-year view, ALL_YEARS for grand total.
+// 2026: each provision contributes -getProvisionRemaining (positive remaining = obligation = negative to net worth)
+// 2027-2030: each FORWARD_PROVISIONS entry already stores its value as negative
+function provisionTotal(yearKeys) {
+  var total = 0;
+  yearKeys.forEach(function(yk) {
+    if (yk === "y2026") {
+      PROVISIONS_DATA.forEach(function(p) {
+        total += getProvisionRemaining(p);  // getProvisionRemaining already returns negative for normal provisions
+      });
+    } else {
+      FORWARD_PROVISIONS.forEach(function(p) {
+        total += fwdValue(p, yk);
+      });
+    }
+  });
+  return total;
+}
+
+var ALL_YEARS   = ["y2026","y2027","y2028","y2029","y2030"];
+var YEAR_2026   = ["y2026"];
+var FUTURE_YEARS = ["y2027","y2028","y2029","y2030"];
 
 const FORWARD_PROVISIONS = [
   { name: "Annual Costs",        values: { y2027: -11251, y2028: -11251, y2029: -11251, y2030: -11251 } },
   { name: "School Fees",         values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
-  { name: "Charity",             values: { y2027: -20149, y2028: -11615, y2029: -11396, y2030: -11177 } },
+  { name: "Charity",             values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0 }, computeFromDeferred: true, deferredRate: 0.02 },
   { name: "Flats",               values: { y2027: -2000, y2028: -2000, y2029: -2000, y2030: -2000  } },
   { name: "Holiday",             values: { y2027: -20000, y2028: -20000, y2029: -20000, y2030: -20000 } },
+  { name: "School Holidays",     values: { y2027: -5000,  y2028: -5000,  y2029: -5000,  y2030: -5000  } },
   { name: "£1k - Jemma",        values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
   { name: "£1k - Jimbo",        values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
   { name: "Offset School Fees",  values: { y2027: 0, y2028: 0, y2029: 0, y2030: 0      } },
@@ -1125,10 +1173,20 @@ const INTEREST_DATA = [
   { name: "Whiteaway Laidlaw", interest: 1047.16, owner: "James", taxRate: 0.45, taxYear: "25/26" },
   { name: "Wise", interest: 1590.48, owner: "James", taxRate: 0.45, taxYear: "25/26" },
   // Tax year 2026/27 (6 Apr 2026 - 5 Apr 2027) — feeds Tax - Jan 28 liability (add entries as year progresses)
-  { name: "Cahoot", interest: 779.86, owner: "James", taxRate: 0.45, taxYear: "26/27" },
-  { name: "Marcus by Goldman Sachs", interest: 54.67, owner: "James", taxRate: 0.45, taxYear: "26/27" },
-  { name: "Snoop", interest: 266.93, owner: "James", taxRate: 0.45, taxYear: "26/27" },
-  { name: "Wise", interest: 206.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  // Note: only include interest earned FROM Apr 2026 onwards
+  { name: "Cahoot", interest: 757.26, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Marcus by Goldman Sachs", interest: 53.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Snoop (James)", interest: 258.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Snoop (Jemma)", interest: 121.00, owner: "Jemma", taxRate: 0, taxYear: "26/27" },
+  { name: "Wise", interest: 143.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Whiteaway Laidlaw", interest: 305.54, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Hampshire Trust", interest: 570.36, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Bank of London", interest: 0.01, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Vida Savings", interest: 309.46, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Paragon", interest: 477.45, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Monzo Savings", interest: 282.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Investec 90 Day (James)", interest: 484.84, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Investec 90 Day (Jemma)", interest: 468.37, owner: "Jemma", taxRate: 0, taxYear: "26/27" },
 ];
 
 const CASH_DATA = {
@@ -1146,31 +1204,83 @@ const CASH_DATA = {
   ],
   savings: [
     { name: "Bank of London", value: 2.99, owner: "James", rate: 3.34 },
-    { name: "Cahoot", value: 231681.54, owner: "James", rate: 4.05 },
+    { name: "Cahoot", value: 232438, owner: "James", rate: 4.05 },
     { name: "Chase Bank (Saver)", value: 38.34, owner: "James", rate: 2.5 },
     { name: "Chip", value: 100, owner: "James", rate: 2.49 },
     { name: "Chip", value: 100, owner: "Jemma", rate: 2.49 },
-    { name: "Hampshire Trust Bank", value: 195477, owner: "James", rate: 3.61 },
+    { name: "Hampshire Trust Bank", value: 196047, owner: "James", rate: 3.55 },
     { name: "Investec 90 Day Saver re-allocation", value: 52356, owner: "James", rate: 4.05 },
     { name: "Investec - GBP Access", value: 3726, owner: "James", rate: 2.84 },
-    { name: "Marcus by Goldman Sachs", value: 17489, owner: "James", rate: 3.75 },
+    { name: "Marcus by Goldman Sachs", value: 17542, owner: "James", rate: 3.75 },
     { name: "Monzo Savings", value: 108182, owner: "James", rate: 3.25 },
     { name: "Monzo", value: 995.83, owner: "Jemma", rate: 3.25 },
     { name: "NS&I", value: 5000, owner: "James", rate: null },
     { name: "NS&I", value: 5000, owner: "Jemma", rate: null },
-    { name: "Paragon", value: 168377, owner: "James", rate: 3.51 },
+    { name: "Paragon", value: 168854, owner: "James", rate: 3.45 },
     { name: "Revolut", value: 529.80, owner: "James", rate: 3 },
     { name: "Revolut", value: 383.96, owner: "Jemma", rate: 3.00 },
     { name: "Wise", value: 1475, owner: "Jemma", rate: 3.00 },
-    { name: "Snoop Savings", value: 85847, owner: "James", rate: 4.35 },
-    { name: "Snoop Savings", value: 40100, owner: "Jemma", rate: 4.35 },
-    { name: "Vida Savings", value: 100672, owner: "James", rate: 4 },
-    { name: "Whiteaway Laidlaw", value: 100741, owner: "James", rate: 4.05 },
-    { name: "Wise", value: 60945, owner: "James", rate: 3.32 },
+    { name: "Snoop Savings", value: 86115, owner: "James", rate: 4.35 },
+    { name: "Snoop Savings", value: 40418, owner: "Jemma", rate: 4.35 },
+    { name: "Vida Savings", value: 100982, owner: "James", rate: 3.74 },
+    { name: "Whiteaway Laidlaw", value: 101047, owner: "James", rate: 3.69 },
+    { name: "Wise", value: 40569, owner: "James", rate: 3.32 },
     { name: "Wise (expired)", value: 3024.60, owner: "James", rate: 3.32 },
   ],
   pendingInvestment: -819000,
 };
+
+// ── Monthly Cash Snapshots ──────────────────────────────────
+// Same pattern as MONTHLY_INVESTMENTS — latest entry = current figures.
+// Add a new snapshot each month at EOM. Tabs read from the last entry.
+const MONTHLY_CASH = [
+  {
+    month: "May-26", mk: "2026-05",
+    currentAccounts: [
+      { name: "Barclays",   value: 61.20,  owner: "James" },
+      { name: "Monzo (1)",  value: 10307,  owner: "James" },
+      { name: "Monzo (2)",  value: 52.00,  owner: "James" },
+      { name: "Chase Bank", value: 100.00, owner: "James" },
+    ],
+    creditCards: [
+      { name: "American Express", value: -16987,    owner: "Joint" },
+      { name: "Virgin Money",     value: -4227.21,  owner: "Joint" },
+      { name: "Barclaycard",      value: 68.46,     owner: "Joint" },
+      { name: "M&S Bank",         value: 0,         owner: "Joint" },
+      { name: "M&S Bank (2)",     value: 0,         owner: "Joint" },
+    ],
+    savings: [
+      { name: "Cahoot",                value: 232438,  owner: "James", rate: 4.05 },
+      { name: "Chase Bank (Saver)",    value: 38.48,   owner: "James", rate: 2.5 },
+      { name: "Chip",                  value: 100,     owner: "James", rate: 2.49 },
+      { name: "Chip",                  value: 100,     owner: "Jemma", rate: 2.49 },
+      { name: "Hampshire Trust Bank",  value: 196047,  owner: "James", rate: 3.55 },
+      { name: "Investec - GBP Access", value: 3829,    owner: "James", rate: 2.84 },
+      { name: "Investec — funds in transit (TBC)", value: 36098, owner: "James", rate: null },
+      { name: "Marcus by Goldman Sachs", value: 17542, owner: "James", rate: 3.75 },
+      { name: "Monzo Savings",         value: 108467,  owner: "James", rate: 3.25 },
+      { name: "NS&I",                  value: 5000,    owner: "James", rate: null },
+      { name: "NS&I",                  value: 5000,    owner: "Jemma", rate: null },
+      { name: "Paragon",               value: 168854,  owner: "James", rate: 3.45 },
+      { name: "Revolut",               value: 529,     owner: "James", rate: 3 },
+      { name: "Revolut",               value: 383,     owner: "Jemma", rate: 3 },
+      { name: "Snoop Savings",         value: 86115,   owner: "James", rate: 4.35 },
+      { name: "Snoop Savings",         value: 40418,   owner: "Jemma", rate: 4.35 },
+      { name: "Vida Savings",          value: 100982,  owner: "James", rate: 3.74 },
+      { name: "Whiteaway Laidlaw",     value: 101047,  owner: "James", rate: 3.69 },
+      { name: "Wise",                  value: 40569,   owner: "James", rate: 3.32 },
+      { name: "Wise",                  value: 3616,    owner: "Jemma", rate: 3.32 },
+    ],
+    taxReserve: [
+      { name: "Investec 90 Day",       value: 150100,  owner: "James", rate: 4.05, note: "Ring-fenced for Jan-27 tax bill" },
+      { name: "Investec 90 Day",       value: 145100,  owner: "Jemma", rate: 4.05, note: "Ring-fenced for Jan-27 tax bill" },
+    ],
+    pendingInvestment: -819000,
+  },
+];
+
+// Helper — always returns the latest cash snapshot
+function latestCash() { return MONTHLY_CASH[MONTHLY_CASH.length - 1]; }
 
 const PROVISIONS_DATA = [
   { name: "1k - James", opening: 1000, drawdowns: [
@@ -1183,9 +1293,12 @@ const PROVISIONS_DATA = [
     { date: "May 2026", desc: "GHD Wand", amount: 133.96, cat: "General" },
   ] },
   { name: "Annual Costs", opening: 13568, drawdowns: [
+    { date: "Nov 2025", desc: "Garden", amount: 312.00, cat: "Household Maintenance" },
+    { date: "Nov 2025", desc: "House", amount: 163.20, cat: "Transport" },
     { date: "Dec 2025", desc: "Presents", amount: 2808.85, cat: "Presents" },
     { date: "Dec 2025", desc: "Family Tech", amount: 32.40, cat: "Annual Costs" },
-    { date: "Jan 2026", desc: "Sent Luke Gough (present)", amount: 50.28, cat: "Presents" },    { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
+    { date: "Jan 2026", desc: "Presents", amount: 50.28, cat: "Presents" },
+    { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
   ], notes: [
     { label: "Building & Contents Insurance", amount: 2371 },
     { label: "Car Insurance",                 amount: 1500 },
@@ -1231,6 +1344,11 @@ const PROVISIONS_DATA = [
     { label: "Note: figures from memory — adjust allocated 24/25 as needed", amount: null },
     { label: "Note: one further Mar-26 donation pending — charity TBC", amount: null },
   ], drawdowns: [
+    { date: "Nov 2025", desc: "NSPCC", amount: 100.00, cat: "Charity" },
+    { date: "Nov 2025", desc: "Battersea Dogs", amount: 10.00, cat: "Charity" },
+    { date: "Nov 2025", desc: "Royal British Legion", amount: 9.00, cat: "Charity" },
+    { date: "Nov 2025", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+    { date: "Nov 2025", desc: "Charity refund", amount: -10.00, cat: "Charity" },
     { date: "Dec 2025", desc: "Demelza", amount: 4000, cat: "Charity" },
     { date: "Dec 2025", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
     { date: "Dec 2025", desc: "Battersea Dogs", amount: 10, cat: "Charity" },
@@ -1269,30 +1387,36 @@ const PROVISIONS_DATA = [
     { date: "Dec 2025", desc: "Trip to Lill's", amount: 71.28, cat: "Holidays" },
     { date: "Dec 2025", desc: "Trip to Lill's", amount: 45.52, cat: "Holidays" },
     { date: "Dec 2025", desc: "Trip to Lill's", amount: 45.00, cat: "Holidays" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 83.76, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 75.00, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 36.71, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 36.50, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 20.00, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 23.10, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 9.85, cat: "General" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 5.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 9.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 4.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 6.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 11.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 40.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 12.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 174.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 14.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 15.00, cat: "Eating Out" },
-    { date: "Dec 2025", desc: "Trip to Lill's", amount: 19.00, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 83.76,  cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 75.00,  cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 36.71,  cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 36.50,  cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 20.00,  cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 23.10,  cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 9.85,   cat: "General" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 4.72,   cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 9.01,   cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 4.20,   cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 6.04,   cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 11.28,  cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 40.29,  cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 11.76,  cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 173.51, cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 14.26,  cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 15.00,  cat: "Eating Out" },
+    { date: "Dec 2025", desc: "Trip to Lill's", amount: 18.82,  cat: "Eating Out" },
     { date: "Dec 2025", desc: "Trip to Lill's", amount: 621.52, cat: "Holidays" },
     { date: "Jan 2026", desc: "Abu Dhabi", amount: 7190.00, cat: "Holidays" },
     { date: "Jan 2026", desc: "Dubai", amount: 2618.54, cat: "Holidays" },
     { date: "Jan 2026", desc: "Trip to Lill's", amount: 177.50, cat: "Holidays" },
-    { date: "Jan 2026", desc: "Trip to Lill's", amount: 25.00, cat: "Holidays" },
-    { date: "Jan 2026", desc: "Dubai", amount: 293.75, cat: "Holidays" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 25.00,  cat: "Holidays" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 12.43,  cat: "Eating Out" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 15.91,  cat: "Eating Out" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 2.01,   cat: "Eating Out" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 15.95,  cat: "Eating Out" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 4.19,   cat: "Eating Out" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 9.01,   cat: "Eating Out" },
+    { date: "Jan 2026", desc: "Trip to Lill's", amount: 4.72,   cat: "Eating Out" },
     { date: "Jan 2026", desc: "Dubai", amount: 293.75, cat: "Holidays" },
     { date: "Feb 2026", desc: "Christy's Hen Do", amount: 90.00, cat: "Holidays" },
     { date: "Mar 2026", desc: "Abu Dhabi", amount: -7190.00, cat: "Holidays" },
@@ -1302,6 +1426,9 @@ const PROVISIONS_DATA = [
     { date: "Apr 2026", desc: "Christy's Hen Do", amount: 398.24, cat: "Holidays" },
     { date: "Apr 2026", desc: "Center Parcs", amount: 103.50, cat: "Holidays" },
     { date: "Apr 2026", desc: "Center Parcs", amount: 758.80, cat: "Holidays" },
+    { date: "May 2026", desc: "Spain Holiday", amount: 52.48, cat: "Holidays" },
+    { date: "May 2026", desc: "Spain Holiday", amount: 7349.36, cat: "Holidays" },
+    { date: "May 2026", desc: "Cambridge Trip", amount: 328.20, cat: "Holidays" },
   ]},
   { name: "School Holidays", opening: 5000, drawdowns: [
     { date: "May 2026", desc: "Eventbrite", amount: 349.00, cat: "Entertainment" },
@@ -1315,7 +1442,15 @@ const PROVISIONS_DATA = [
     { date: "Dec 2025", desc: "Master Bedroom", amount: 799.98, cat: "Home & Family" },
     // Car & House Insurance
     { date: "Dec 2025", desc: "Car & House Insurance", amount: 3838.93, cat: "Home & Family" },
+    // Master Bedroom
+    { date: "Nov 2025", desc: "Master Bedroom", amount: 280.00, cat: "Home & Family" },
+    { date: "Nov 2025", desc: "Master Bedroom", amount: 89.40, cat: "Home & Family" },
+    // Playroom
+    { date: "Nov 2025", desc: "Playroom", amount: 205.25, cat: "Home & Family" },
+    // Car & House Insurance
+    { date: "Nov 2025", desc: "Car & House Insurance", amount: 169.06, cat: "Home & Family" },
     // House Blinds
+    { date: "Nov 2025", desc: "House Blinds", amount: 6000.00, cat: "Home & Family" },
     { date: "Jan 2026", desc: "House Blinds", amount: 972.50, cat: "Home & Family" },
     { date: "Jan 2026", desc: "House Blinds", amount: 5625.53, cat: "Home & Family" },
     { date: "Feb 2026", desc: "House Blinds", amount: 972.50, cat: "Home & Family" },
@@ -1343,7 +1478,8 @@ const PROVISIONS_DATA = [
     { date: "Apr 2026", desc: "No1Roofing", amount: 45, cat: "Home & Family" },
   ]},
   { name: "Range Rover", opening: 22811.47, drawdowns: [
-    { date: "Dec 2025", desc: "Lex Autolease (deposit + first month)", amount: 5748.63, cat: "Range Rover" },
+    { date: "Nov 2025", desc: "Lex Autolease", amount: 1276.00, cat: "Transport" },
+    { date: "Dec 2025", desc: "Lex Autolease", amount: 5748.63, cat: "Range Rover" },
     { date: "Jan 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Feb 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Mar 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
@@ -1375,7 +1511,7 @@ function buildAllocationMap() {
   PROVISIONS_DATA.forEach(function(p) {
     var allEntries = (p.drawdowns || []).concat(p.excludes || []);
     allEntries.forEach(function(d) {
-      var mk = d.date === "Sep 2025" ? "2025-09" : d.date === "Jan 2026" ? "2026-01" : d.date === "Feb 2026" ? "2026-02" : d.date === "Mar 2026" ? "2026-03" : d.date === "Apr 2026" ? "2026-04" : null;
+      var mk = d.date === "Sep 2025" ? "2025-09" : d.date === "Oct 2025" ? "2025-10" : d.date === "Nov 2025" ? "2025-11" : d.date === "Dec 2025" ? "2025-12" : d.date === "Jan 2026" ? "2026-01" : d.date === "Feb 2026" ? "2026-02" : d.date === "Mar 2026" ? "2026-03" : d.date === "Apr 2026" ? "2026-04" : d.date === "May 2026" ? "2026-05" : null;
       if (!mk || !d.cat || d.amount < 0) return; // skip refunds and untagged
       var key = mk + "|" + d.cat + "|" + Math.round(d.amount * 100);
       allocCount[key] = (allocCount[key] || 0) + 1;
@@ -1476,7 +1612,7 @@ function WealthTab() {
         <tbody>
           {sections.map(function(sec, si) {
             var isBold = sec.bold;
-            var bg = isBold ? "#141c2c" : si % 2 === 0 ? STYLE.card : "transparent";
+            var bg = isBold ? "#141c2c" : STYLE.card;
             var borderTop = isBold ? "3px solid " + STYLE.blue : "1px solid #1a1e28";
             var first = WEALTH_SNAPSHOTS[0][sec.key];
             var last = WEALTH_SNAPSHOTS[WEALTH_SNAPSHOTS.length - 1][sec.key];
@@ -1506,10 +1642,9 @@ function WealthTab() {
 
 const TABS = [
   { id: "ourmoney",    label: "Our Money" },
-  { id: "2026summary", label: "2026 Summary" },
   { id: "pnl",         label: "Monthly View" },
   { id: "budget",      label: "Budget" },
-  { id: "provisions",  label: "Annual Provisions" },
+  { id: "provisions",  label: "2026 Provisions" },
   { id: "tax",         label: "Tax" },
   { id: "investments", label: "Investments" },
   { id: "cash",        label: "Cash" },
@@ -1517,6 +1652,7 @@ const TABS = [
   { id: "summary",     label: "Summary" },
   { id: "bigpicture",  label: "Big Picture" },
   { id: "wealth",      label: "Wealth Tracker" },
+  { id: "admin",       label: "⚙ Admin" },
 ];
 
 const STYLE = {
@@ -1541,6 +1677,21 @@ function resolveCategory(t) {
   var merchant = (t.merchant || "").toLowerCase().trim();
   if (merchant === "interest" || merchant === "interest earned") return "Interest";
   if (merchant === "daals" && t.amount === -799.98 && t.date === "2025-12-29") return "Home & Family";
+  // Trip to Lill's — recategorise eating out and specific general transactions to Holidays
+  if (t.category === "Eating Out" && t.date >= "2025-12-27" && t.date <= "2025-12-31") return "Holidays";
+  if (t.category === "Eating Out" && t.date === "2026-01-01" &&
+    (t.merchant === "Totalenergies" ||
+     t.merchant === "Société Des Autoroutes DU Nord ET DE L'est" ||
+     t.merchant === "Areas A4 Gevill" ||
+     t.merchant === "Arcos")) return "Holidays";
+  if (t.category === "General" && t.date >= "2025-12-26" && t.date <= "2025-12-31" &&
+    (t.merchant === "France Manche France MA Coquelles" ||
+     t.merchant === "Société Des Autoroutes DU Nord ET DE L'est" ||
+     t.merchant === "SP Gympluscoffeeuk Stratford" ||
+     t.merchant === "Hmshost_Uk" ||
+     t.merchant === "Swiss Science Center" ||
+     t.merchant === "Doodah" ||
+     t.merchant === "Claire's Accessories")) return "Holidays";
   return t.category;
 }
 
@@ -1834,13 +1985,14 @@ function PnLTab({ monthlyData }) {
   var salaryAdj = -6247;
 
   // Live months only for summary boxes
-  var salary3mo = MONTH_KEYS.reduce(function(s, mk) { return s + (monthlyData[mk] ? monthlyData[mk].income : 0); }, 0) + salaryAdj;
+  var LIVE_MKS = ALL_MONTHS.filter(function(m){ return m.live; }).map(function(m){ return m.mk; });
+  var salary3mo = LIVE_MKS.reduce(function(s, mk) { return s + (monthlyData[mk] ? monthlyData[mk].income : 0); }, 0) + salaryAdj;
   var d2dTotal3mo = DAY_TO_DAY_CATS.reduce(function(s, c) {
-    return s + MONTH_KEYS.reduce(function(s2, mk) { return s2 + (monthlyData[mk] ? (monthlyData[mk].categories[c] || 0) : 0); }, 0);
-  }, 0) + SCHOOL_FEES_PRORATA * 3;
+    return s + LIVE_MKS.reduce(function(s2, mk) { return s2 + (monthlyData[mk] ? (monthlyData[mk].categories[c] || 0) : 0); }, 0);
+  }, 0) + SCHOOL_FEES_PRORATA * LIVE_MKS.length;
   var opNet3mo = salary3mo + d2dTotal3mo;
   var provTotal3mo = PROVISION_DISPLAY_CATS.reduce(function(s, c) {
-    return s + MONTH_KEYS.reduce(function(s2, mk) { return s2 + (monthlyData[mk] ? (monthlyData[mk].provisions[c] || 0) : 0); }, 0);
+    return s + LIVE_MKS.reduce(function(s2, mk) { return s2 + (monthlyData[mk] ? (monthlyData[mk].provisions[c] || 0) : 0); }, 0);
   }, 0);
 
   var colCount = ALL_MONTHS.length + 2; // label + all months + 3mo total
@@ -1870,8 +2022,6 @@ function PnLTab({ monthlyData }) {
 
   var summaryBoxes = [
     { label: "Net Operating Total (3mo)", value: opNet3mo, desc: "Salary less day-to-day" },
-    { label: "Income (3mo)", value: salary3mo, desc: "Actual salary received" },
-    { label: "Day-to-Day (3mo)", value: d2dTotal3mo, desc: "Operating costs" },
   ];
 
   // Compute totals for live months only (3mo total column)
@@ -1921,7 +2071,6 @@ function PnLTab({ monthlyData }) {
           </tr>
         </thead>
         <tbody>
-          <tr><td colSpan={colCount} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Revenue</td></tr>
           <Row label="Salary - James"
             mkFn={function(mk){ var v = getIncome(mk); return v === 0 ? null : v; }}
             liveTotal={salary3mo - salaryAdj}
@@ -1931,7 +2080,6 @@ function PnLTab({ monthlyData }) {
             liveTotal={salaryAdj}
             indent={true} muted={true} />
 
-          <tr><td colSpan={colCount} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Day-to-Day Costs</td></tr>
           {DAY_TO_DAY_CATS.map(function(cat) {
             var lt = liveCatTotal(cat);
             return <Row key={cat} label={cat}
@@ -1941,7 +2089,7 @@ function PnLTab({ monthlyData }) {
           })}
           <Row label="School Fees (pro-rata)"
             mkFn={function(mk){ return SCHOOL_FEES_PRORATA; }}
-            liveTotal={SCHOOL_FEES_PRORATA * 3}
+            liveTotal={SCHOOL_FEES_PRORATA * LIVE_MKS.length}
             indent={true} />
           <Row label="Day-to-Day Total"
             mkFn={function(mk){
@@ -1962,7 +2110,6 @@ function PnLTab({ monthlyData }) {
             liveTotal={opNet3mo}
             bold={true} highlight={true} />
 
-          <tr><td colSpan={colCount} style={{ padding: "8px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisioned Spend</td></tr>
           {PROVISION_DISPLAY_CATS.map(function(cat) {
             var lt = liveProvTotal(cat);
             return <Row key={cat} label={cat}
@@ -1972,7 +2119,7 @@ function PnLTab({ monthlyData }) {
           })}
           <Row label="School Fees (pro-rata offset)"
             mkFn={function(mk){ return 3294.60; }}
-            liveTotal={3294.60 * 3}
+            liveTotal={3294.60 * LIVE_MKS.length}
             indent={true} muted={true} />
           <Row label="Provisioned Spend Total"
             mkFn={function(mk){
@@ -2037,7 +2184,7 @@ function ProvisionsTab() {
           {PROVISIONS_DATA.map(function(p, i) {
             var rem = getProvisionRemaining(p);
             return (
-              <tr key={p.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={p.name} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                 <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{p.name}</td>
                 <td style={{ textAlign: "right", padding: "10px 12px", color: colN(rem) }}>{fmtN(rem)}</td>
                 {ALL_PROV_MONTHS.map(function(m) {
@@ -2065,7 +2212,7 @@ function ProvisionsTab() {
             {MONTH_KEYS.map(function(mk) {
               return <td key={mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontSize: "11px" }}>£3,295</td>;
             })}
-            <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px", fontStyle: "italic" }}>Termly fees offset in P&L — not a provision movement</td>
+            <td colSpan={2} style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px", fontStyle: "italic" }}>{"Termly fees offset in P&L \u2014 not a provision movement"}</td>
           </tr>
         </tbody>
       </table>
@@ -2113,7 +2260,7 @@ function ProvisionsTab() {
                       var monthAmts = subCats[desc];
                       var rowTotal = Object.values(monthAmts).reduce(function(s,v){ return s+v; }, 0);
                       return (
-                        <tr key={desc} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                        <tr key={desc} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                           <td style={{ padding: "7px 14px", color: STYLE.textSub }}>{desc}</td>
                           {monthsPresent.map(function(m) {
                             var v = monthAmts[m] || 0;
@@ -2167,7 +2314,7 @@ function ProvisionsTab() {
               <div key={p.name} style={{ marginBottom: "8px", border: "1px solid " + STYLE.border, borderRadius: "4px", overflow: "hidden" }}>
                 <div
                   onClick={function(){ setExpandedNote(isOpen ? null : "txn-" + p.name); }}
-                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: STYLE.card, cursor: "pointer", userSelect: "none" }}
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "transparent", cursor: "pointer", userSelect: "none" }}
                 >
                   <span style={{ fontSize: "12px", color: STYLE.text, fontWeight: "bold" }}>{p.name}</span>
                   <span style={{ fontSize: "11px", color: STYLE.textMuted }}>{isOpen ? "▲ hide" : "▼ show transactions (" + txns.length + ")"}</span>
@@ -2179,7 +2326,7 @@ function ProvisionsTab() {
                       <tbody>
                         {txns.map(function(t, i) {
                           return (
-                            <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                            <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                               <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.date.substring(8)}/{t.date.substring(5,7)}/{t.date.substring(2,4)}</td>
                               <td style={{ padding: "6px 12px", color: STYLE.textSub }}>{t.merchant}</td>
                               <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.category}</td>
@@ -2211,9 +2358,9 @@ function ProvisionsTab() {
 function TaxTab() {
   var totalLiability = TAX_DATA.reduce(function(s,t){return s+getTaxAmount(t);},0);
   var totalWarehouse = TAX_WAREHOUSE.reduce(function(s,t){return s+t.value;},0);
-  var shortfall = totalWarehouse + totalLiability;
+  var ADJUSTMENT = -36098; // Funds being returned to cash (see Admin tab for details)
+  var netPosition = totalWarehouse + ADJUSTMENT + totalLiability;
 
-  // Tax year spending: 6 Apr 2025 - 5 Apr 2026
   var TAX_YEAR_CATS = [
     { key: "Charity", label: "Charity" },
   ];
@@ -2230,54 +2377,100 @@ function TaxTab() {
   var openCat = openState[0];
   var setOpenCat = openState[1];
 
+  var SHARE_BUYBACKS = [
+    { desc: "Share buyback tranche 1", amount: 218285 },
+    { desc: "Share buyback tranche 2", amount: 251388 },
+    { desc: "Share buyback tranche 3", amount: 541345 },
+  ];
+  var buybackTotal = SHARE_BUYBACKS.reduce(function(s,r){ return s+r.amount; }, 0);
+  var buybackTax = Math.round(buybackTotal * 0.24);
+
   return (
     <div>
-      <SectionHeader>Tax Liabilities</SectionHeader>
-      <table style={{ width: "55%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
+      <SectionHeader>Tax Position</SectionHeader>
+      <table style={{ width: "60%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
         <THead cols={[{ label: "Item" }, { label: "Amount", right: true }, { label: "Notes" }]} />
         <tbody>
-          {TAX_DATA.map(function(t, i) {
+          {/* Warehouse — Investec accounts */}
+          {TAX_WAREHOUSE.map(function(t) {
             return (
-              <tr key={t.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{t.name}</td>
-                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.red }}>{fmtN(getTaxAmount(t))}</td>
-                <td style={{ padding: "10px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.notes}</td>
+              <tr key={t.name} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{t.name}</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green }}>{fmtN(t.value)}</td>
+                <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.notes}</td>
               </tr>
             );
           })}
-          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
-            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
-            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.red, fontWeight: "bold" }}>{fmtN(totalLiability)}</td>
+          <tr style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
+            <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textMuted, fontStyle: "italic" }}>Funds returned to cash (see Admin)</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red }}>{fmtN(ADJUSTMENT)}</td>
+            <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>Net of £52,356 withdrawal less £16,258 to return</td>
+          </tr>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Reserve Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(totalWarehouse + ADJUSTMENT)}</td>
             <td></td>
           </tr>
-        </tbody>
-      </table>
 
-      <SectionHeader>Tax Warehouse (Investec 90 Day)</SectionHeader>
-      <table style={{ width: "55%", borderCollapse: "collapse", fontSize: "13px", marginBottom: "32px" }}>
-        <THead cols={[{ label: "Account" }, { label: "Value", right: true }, { label: "Owner" }, { label: "Notes" }]} />
-        <tbody>
-          {TAX_WAREHOUSE.map(function(t, i) {
-            return (
-              <tr key={t.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{t.name}</td>
-                <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green }}>{fmtN(t.value)}</td>
-                <td style={{ padding: "10px 12px", color: t.owner === "James" ? STYLE.blue : STYLE.purple }}>{t.owner}</td>
-                <td style={{ padding: "10px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.notes}</td>
-              </tr>
-            );
+          {/* Liabilities */}
+          {TAX_DATA.map(function(t) {
+            var isHMRC = t.name === "HMRC (Shares)";
+            var isOpen = openCat === t.name;
+            return [
+              <tr key={t.name}
+                onClick={isHMRC ? function(){ setOpenCat(isOpen ? null : t.name); } : null}
+                style={{ borderBottom: "1px solid #1a1e28", background: "transparent", cursor: isHMRC ? "pointer" : "default" }}>
+                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>
+                  {t.name}
+                  {isHMRC && <span style={{ fontSize: "10px", color: STYLE.blue, marginLeft: "8px" }}>{isOpen ? "▲" : "▼"}</span>}
+                </td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red }}>{fmtN(getTaxAmount(t))}</td>
+                <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.notes}</td>
+              </tr>,
+              isHMRC && isOpen && (
+                <tr key="hmrc-detail">
+                  <td colSpan={3} style={{ padding: "0", background: "#111827", borderBottom: "1px solid #1a2030" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                      <tbody>
+                        {SHARE_BUYBACKS.map(function(r) {
+                          return (
+                            <tr key={r.desc} style={{ borderBottom: "1px solid #1a2030" }}>
+                              <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textMuted }}>{r.desc}</td>
+                              <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green }}>{fmtN(r.amount)}</td>
+                              <td style={{ padding: "6px 12px" }}></td>
+                            </tr>
+                          );
+                        })}
+                        <tr style={{ borderBottom: "1px solid #1a2030" }}>
+                          <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textSub, fontWeight: "bold" }}>Total receipts</td>
+                          <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(buybackTotal)}</td>
+                          <td style={{ padding: "6px 12px" }}></td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textSub }}>Tax payable @ 24%</td>
+                          <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.red }}>{fmtN(-buybackTax)}</td>
+                          <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>Rate applicable to share receipts</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              )
+            ];
           })}
-          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
-            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Total Warehouse</td>
-            <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(totalWarehouse)}</td>
-            <td colSpan={2}></td>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Liabilities Total</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red, fontWeight: "bold" }}>{fmtN(totalLiability)}</td>
+            <td></td>
           </tr>
-          <tr style={{ background: "#141c2c" }}>
-            <td style={{ padding: "10px 12px", color: shortfall >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold" }}>
-              {shortfall >= 0 ? "Surplus" : "Shortfall"}
+
+          {/* Net */}
+          <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+            <td style={{ padding: "10px 12px", color: netPosition >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold", fontSize: "13px" }}>
+              {netPosition >= 0 ? "Surplus" : "Shortfall"}
             </td>
-            <td style={{ textAlign: "right", padding: "10px 12px", color: shortfall >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold" }}>{fmtN(shortfall)}</td>
-            <td colSpan={2}></td>
+            <td style={{ textAlign: "right", padding: "10px 12px", color: netPosition >= 0 ? STYLE.green : STYLE.red, fontWeight: "bold", fontSize: "13px" }}>{fmtN(netPosition)}</td>
+            <td></td>
           </tr>
         </tbody>
       </table>
@@ -2293,7 +2486,7 @@ function TaxTab() {
             var isOpen = openCat === cat.label;
             return [
               <tr key={cat.label} onClick={function(){ setOpenCat(isOpen ? null : cat.label); }}
-                style={{ borderBottom: "1px solid #1a1e28", background: isOpen ? "#1a2838" : i % 2 === 0 ? STYLE.card : "transparent", cursor: "pointer" }}>
+                style={{ borderBottom: "1px solid #1a1e28", background: isOpen ? "#1a2838" : STYLE.card, cursor: "pointer" }}>
                 <td style={{ padding: "10px 12px", color: STYLE.textSub }}>{cat.label}</td>
                 <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.textMuted }}>{cat.txns.length}</td>
                 <td style={{ textAlign: "right", padding: "10px 12px", color: STYLE.red, textDecoration: isOpen ? "underline" : "none" }}>{fmtN(cat.total)}</td>
@@ -2394,85 +2587,193 @@ function InvestmentsTab() {
           return match ? match.value : null;
         }
 
+        var USD_RATE = 1.35;
+        var TRAF_USD = 2010000;
+        var TRAF_GBP = Math.round(TRAF_USD / USD_RATE);
+        var TRAF_TAX_USD = TRAF_USD * 0.24;
+        var TRAF_TAX_GBP = Math.round(TRAF_TAX_USD / USD_RATE);
+
+        var expandedLine = React.useState(null);
+        var expandedLineKey = expandedLine[0];
+        var setExpandedLineKey = expandedLine[1];
+
+        var GROUPS = [
+          { key: "Fidelity",            label: "Fidelity",            keys: ["Fidelity UK"] },
+          { key: "Hargreaves Lansdown", label: "Hargreaves Lansdown", keys: ["Hargreaves Lansdown"] },
+          { key: "AJ Bell",             label: "AJ Bell",             keys: ["AJ Bell"] },
+          { key: "Pensions",            label: "Work Place Pension",  keys: ["Pensions"] },
+          { key: "Properties",          label: "Properties",          keys: ["Properties"] },
+          { key: "TrafShares",          label: "Traf Shares",         keys: ["Traf Shares"] },
+          { key: "Cash",                label: "Cash",                keys: ["Cash"] },
+        ];
+
+        function groupLines(snapshot, g) {
+          return snapshot.lines.filter(function(l){ return g.keys.indexOf(l.group) !== -1; });
+        }
+        function groupTotal(snapshot, g) {
+          return groupLines(snapshot, g).reduce(function(s,l){ return s+l.value; }, 0);
+        }
+        function lineVal(snapshot, line) {
+          var match = snapshot.lines.find(function(l){ return l.company === line.company && l.type === line.type && l.owner === line.owner; });
+          return match ? match.value : null;
+        }
+
         var grandTotals = months.map(function(m){ return m.lines.reduce(function(s,l){ return s+l.value; },0); });
         var grandChange = grandTotals[0] - grandTotals[grandTotals.length-1];
 
+        var colCount = months.length + 3;
+
         return (
-          <table style={{ width: "82%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
-            <thead>
-              <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
-                <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Platform / Line</th>
-                {months.map(function(m) {
-                  return <th key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m.month}</th>;
+          <div>
+            {/* Summary table */}
+            <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "12px", fontStyle: "italic" }}>Summary by group</p>
+            <table style={{ width: "82%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "28px" }}>
+              <thead>
+                <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+                  <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Group</th>
+                  {months.map(function(m) {
+                    return <th key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m.month}</th>;
+                  })}
+                  <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>Change</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {GROUPS.map(function(g) {
+                  var totals = months.map(function(m){ return groupTotal(m, g); });
+                  var change = totals[0] - totals[totals.length-1];
+                  return (
+                    <tr key={g.key + "-sum"} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
+                      <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{g.label}</td>
+                      {totals.map(function(v, i) {
+                        return <td key={i} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green }}>{fmtN(v)}</td>;
+                      })}
+                      <td style={{ textAlign: "right", padding: "8px 12px", color: colN(change), borderLeft: "1px solid " + STYLE.border, fontSize: "11px" }}>
+                        {(change >= 0 ? "+" : "") + fmtN(change)}
+                      </td>
+                      <td></td>
+                    </tr>
+                  );
                 })}
-                <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>Change</th>
-                <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {GROUPS.map(function(g) {
-                var totals = months.map(function(m){ return groupTotal(m, g); });
-                var change = totals[0] - totals[totals.length-1];
-                var detailLines = groupLines(latest, g);
-                return [
-                  <tr key={g.key + "-hdr"} style={{ background: "#181e28", borderTop: "1px solid " + STYLE.border }}>
-                    <td colSpan={months.length + 3} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" }}>
-                      {g.label}
-                    </td>
-                  </tr>,
-                  detailLines.map(function(line, i) {
-                    var vals = months.map(function(m){ return lineVal(m, line); });
-                    var lineChange = vals[0] !== null && vals[vals.length-1] !== null ? vals[0] - vals[vals.length-1] : null;
-                    return (
-                      <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
-                        <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub, fontSize: "12px" }}>{line.type}</td>
-                        {vals.map(function(v, vi) {
-                          return <td key={vi} style={{ textAlign: "right", padding: "8px 12px", color: v === null ? "#3a4a5a" : v < 0 ? STYLE.red : STYLE.textSub }}>
-                            {v === null ? "—" : fmtN(v)}
-                          </td>;
-                        })}
-                        <td style={{ textAlign: "right", padding: "8px 12px", color: lineChange === null ? "#3a4a5a" : colN(lineChange), borderLeft: "1px solid " + STYLE.border, fontSize: "11px" }}>
-                          {lineChange === null ? "—" : (lineChange >= 0 ? "+" : "") + fmtN(lineChange)}
-                        </td>
-                        <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{line.owner}</td>
-                      </tr>
-                    );
-                  }),
-                  <tr key={g.key + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
-                    <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{g.label} Total</td>
-                    {totals.map(function(v, i) {
-                      return <td key={i} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(v)}</td>;
-                    })}
-                    <td style={{ textAlign: "right", padding: "8px 12px", color: colN(change), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
-                      {(change >= 0 ? "+" : "") + fmtN(change)}
-                    </td>
-                    <td></td>
-                  </tr>
-                ];
-              })}
-              <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
-                <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Total</td>
-                {grandTotals.map(function(v, i){
-                  return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>{fmtN(v)}</td>;
+                <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+                  <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Total</td>
+                  {grandTotals.map(function(v, i){
+                    return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>{fmtN(v)}</td>;
+                  })}
+                  <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandChange), fontWeight: "bold", fontSize: "13px", borderLeft: "1px solid " + STYLE.border }}>
+                    {(grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
+                  </td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Detail table */}
+            <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "12px", fontStyle: "italic" }}>Detail by line</p>
+            <table style={{ width: "82%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
+              <thead>
+                <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+                  <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Platform / Line</th>
+                  {months.map(function(m) {
+                    return <th key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "11px" }}>{m.month}</th>;
+                  })}
+                  <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {GROUPS.map(function(g) {
+                  var totals = months.map(function(m){ return groupTotal(m, g); });
+                  var change = totals[0] - totals[totals.length-1];
+                  var detailLines = groupLines(latest, g);
+                  return [
+                    detailLines.map(function(line, i) {
+                      var vals = months.map(function(m){ return lineVal(m, line); });
+                      var lineChange = vals[0] !== null && vals[vals.length-1] !== null ? vals[0] - vals[vals.length-1] : null;
+                      var isTraf = line.type === "Traf Shares";
+                      var isOpen = expandedLineKey === (g.key + i);
+                      return [
+                        <tr key={g.key + i}
+                          onClick={isTraf ? function(){ setExpandedLineKey(isOpen ? null : g.key + i); } : null}
+                          style={{ borderBottom: "1px solid #1a1e28", background: "transparent", cursor: isTraf ? "pointer" : "default" }}>
+                          <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub, fontSize: "12px" }}>
+                            {line.type} — {line.owner}
+                            {isTraf && <span style={{ fontSize: "10px", color: STYLE.blue, marginLeft: "8px" }}>{isOpen ? "▲" : "▼"}</span>}
+                          </td>
+                          {vals.map(function(v, vi) {
+                            return <td key={vi} style={{ textAlign: "right", padding: "8px 12px", color: v === null ? "#3a4a5a" : v < 0 ? STYLE.red : STYLE.textSub }}>
+                              {v === null ? "—" : fmtN(v)}
+                            </td>;
+                          })}
+                          <td style={{ textAlign: "right", padding: "8px 12px", color: lineChange === null ? "#3a4a5a" : colN(lineChange), borderLeft: "1px solid " + STYLE.border, fontSize: "11px" }}>
+                            {lineChange === null ? "—" : (lineChange >= 0 ? "+" : "") + fmtN(lineChange)}
+                          </td>
+                        </tr>,
+                        isTraf && isOpen && (
+                          <tr key={g.key + i + "-detail"}>
+                            <td colSpan={months.length + 2} style={{ padding: "0", background: "#111827", borderBottom: "1px solid #1a2030" }}>
+                              <table style={{ width: "60%", borderCollapse: "collapse", fontSize: "12px" }}>
+                                <tbody>
+                                  <tr style={{ borderBottom: "1px solid #1a2030" }}>
+                                    <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textMuted }}>Value ($USD)</td>
+                                    <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textSub }}>${TRAF_USD.toLocaleString()}</td>
+                                  </tr>
+                                  <tr style={{ borderBottom: "1px solid #1a2030" }}>
+                                    <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textMuted }}>FX Rate (USD/GBP)</td>
+                                    <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textSub }}>{USD_RATE.toFixed(2)}</td>
+                                  </tr>
+                                  <tr style={{ borderBottom: "1px solid #1a2030" }}>
+                                    <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textSub, fontWeight: "bold" }}>Value (GBP)</td>
+                                    <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(TRAF_GBP)}</td>
+                                  </tr>
+                                  <tr style={{ borderBottom: "1px solid #1a2030" }}>
+                                    <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textMuted }}>Tax estimate @ 24% ($USD)</td>
+                                    <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.red }}>${TRAF_TAX_USD.toLocaleString()}</td>
+                                  </tr>
+                                  <tr>
+                                    <td style={{ padding: "6px 12px 6px 32px", color: STYLE.textSub, fontWeight: "bold" }}>Tax estimate (GBP)</td>
+                                    <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.red, fontWeight: "bold" }}>{fmtN(-TRAF_TAX_GBP)}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        )
+                      ];
+                    }),
+                    <tr key={g.key + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+                      <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{g.label} Total</td>
+                      {totals.map(function(v, i) {
+                        return <td key={i} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(v)}</td>;
+                      })}
+                      <td style={{ textAlign: "right", padding: "8px 12px", color: colN(change), fontWeight: "bold", borderLeft: "1px solid " + STYLE.border }}>
+                        {(change >= 0 ? "+" : "") + fmtN(change)}
+                      </td>
+                    </tr>
+                  ];
                 })}
-                <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandChange), fontWeight: "bold", fontSize: "13px", borderLeft: "1px solid " + STYLE.border }}>
-                  {(grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
-                </td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
+                <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+                  <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Total</td>
+                  {grandTotals.map(function(v, i){
+                    return <td key={i} style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>{fmtN(v)}</td>;
+                  })}
+                  <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandChange), fontWeight: "bold", fontSize: "13px", borderLeft: "1px solid " + STYLE.border }}>
+                    {(grandChange >= 0 ? "+" : "") + fmtN(grandChange)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         );
       })()}
 
-      <SectionHeader>Interest Income - updated Apr 2026</SectionHeader>
+      <SectionHeader>Interest Income - updated May 2026</SectionHeader>
       <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "32px" }}>
         <THead cols={[{ label: "Account" }, { label: "Owner" }, { label: "Interest", right: true }, { label: "Tax Due", right: true }]} />
         <tbody>
           <tr><td colSpan={4} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax Year 25/26 — Jan 27 liability (pending reconciliation)</td></tr>
           {interest2526.map(function(acc, i) {
             return (
-              <tr key={acc.name + acc.owner} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={acc.name + acc.owner} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                 <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{acc.name}</td>
                 <td style={{ padding: "8px 12px", color: acc.owner === "Jemma" ? STYLE.purple : STYLE.textMuted, fontSize: "11px" }}>{acc.owner}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green }}>{fmtN(acc.interest)}</td>
@@ -2489,7 +2790,7 @@ function InvestmentsTab() {
             <tr key="hy2627"><td colSpan={4} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax Year 26/27 — Jan 28 liability (pending reconciliation)</td></tr>,
             interest2627.map(function(acc, i) {
               return (
-                <tr key={acc.name + acc.owner + "2627"} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <tr key={acc.name + acc.owner + "2627"} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                   <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{acc.name}</td>
                   <td style={{ padding: "8px 12px", color: acc.owner === "Jemma" ? STYLE.purple : STYLE.textMuted, fontSize: "11px" }}>{acc.owner}</td>
                   <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green }}>{fmtN(acc.interest)}</td>
@@ -2508,37 +2809,172 @@ function InvestmentsTab() {
 
       <SectionHeader>Deferred Share Payments</SectionHeader>
       <p style={{ color: STYLE.textMuted, fontSize: "12px", marginBottom: "16px", fontStyle: "italic" }}>
-        Fixed payment schedule net of tax. Dates indicative.
+        Fixed payment schedule net of tax. Dates indicative. Click Deferred or Prescribed Rate rows to see detail.
       </p>
-      <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "12px" }}>
-        <THead cols={[{ label: "Item" }, { label: "2026", right: true }, { label: "2027", right: true }, { label: "2028", right: true }, { label: "2029", right: true }, { label: "2030", right: true }, { label: "Total", right: true }]} />
-        <tbody>
-          {DEFERRED_SHARES_DATA.map(function(item, i) {
-            var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
-            var total = ykeys.reduce(function(s,k){ return s + (item.values[k]||0); }, 0);
-            return (
-              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                <td style={{ padding: "10px 12px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
+      {(function() {
+        var ds = DEFERRED_SCHEDULE;
+        var fx = ds.fxRate;
+        var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
+        var pyears = [2026, 2027, 2028, 2029, 2030];
+
+        // Compute payment per VN year per payment year
+        function vnPayment(vn, payYear) {
+          if (payYear < 2027) return 0;
+          if (vn.year === 2023) return payYear === 2027 ? vn.outstanding : 0;
+          return vn.outstanding / 4;
+        }
+
+        // Outstanding balance at START of each payment year
+        function openingBalance(payYear) {
+          return ds.vnYears.reduce(function(s, vn) {
+            var paid = 0;
+            for (var y = 2027; y < payYear; y++) { paid += vnPayment(vn, y); }
+            return s + Math.max(0, vn.outstanding - paid);
+          }, 0);
+        }
+
+        // Prescribed rate for year
+        function prescRate(payYear) {
+          return payYear === 2027 ? ds.prescribedRate2027 : ds.prescribedRate2028plus;
+        }
+
+        var openState = React.useState(null);
+        var openRow = openState[0];
+        var setOpenRow = openState[1];
+
+        return (
+          <table style={{ width: "75%", borderCollapse: "collapse", fontSize: "12px" }}>
+            <THead cols={[{ label: "Item" }, { label: "2026", right: true }, { label: "2027", right: true }, { label: "2028", right: true }, { label: "2029", right: true }, { label: "2030", right: true }, { label: "Total", right: true }]} />
+            <tbody>
+              {DEFERRED_SHARES_DATA.map(function(item) {
+                var isDeferred = item.name === "Traf Shares - Deferred";
+                var isPresc    = item.name === "Traf Shares - Prescribed Rate";
+                var isOpen     = openRow === item.name;
+                var total = ykeys.reduce(function(s,k){ return s+(item.values[k]||0); }, 0);
+
+                return [
+                  <tr key={item.name}
+                    onClick={(isDeferred||isPresc) ? function(){ setOpenRow(isOpen ? null : item.name); } : null}
+                    style={{ borderBottom: "1px solid #1a1e28", background: "transparent", cursor: (isDeferred||isPresc) ? "pointer" : "default" }}>
+                    <td style={{ padding: "10px 12px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>
+                      {item.name}
+                      {(isDeferred||isPresc) && <span style={{ fontSize: "10px", color: STYLE.blue, marginLeft: "8px" }}>{isOpen ? "▲" : "▼"}</span>}
+                    </td>
+                    {ykeys.map(function(k) {
+                      var v = item.values[k] || 0;
+                      return <td key={k} style={{ textAlign: "right", padding: "10px 12px", color: colN(v) }}>{fmtN(v)}</td>;
+                    })}
+                    <td style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: colN(total) }}>{fmtN(total)}</td>
+                  </tr>,
+
+                  // Deferred drill-down: VN year breakdown
+                  isDeferred && isOpen && (
+                    <tr key="deferred-detail">
+                      <td colSpan={7} style={{ padding: "0", background: "#111827", borderBottom: "1px solid #1a2030" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                          <thead>
+                            <tr style={{ background: "#1a2030" }}>
+                              <th style={{ textAlign: "left",  padding: "6px 12px 6px 24px", color: STYLE.textMuted, fontWeight: "normal" }}>VN Year</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Buy Back (USD)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Paid (USD)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Outstanding (USD)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>2027 (GBP)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>2028 (GBP)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>2029 (GBP)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>2030 (GBP)</th>
+                              <th style={{ textAlign: "left",  padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Assumption</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ds.vnYears.map(function(vn) {
+                              return (
+                                <tr key={vn.year} style={{ borderBottom: "1px solid #1a2030" }}>
+                                  <td style={{ padding: "6px 12px 6px 24px", color: STYLE.textSub }}>{vn.year}</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textSub }}>${vn.buyBack.toLocaleString()}</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted }}>${vn.paid.toLocaleString()}</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green }}>${vn.outstanding.toLocaleString()}</td>
+                                  {[2027,2028,2029,2030].map(function(py) {
+                                    var usd = vnPayment(vn, py);
+                                    var gbp = Math.round(usd / fx);
+                                    return <td key={py} style={{ textAlign: "right", padding: "6px 12px", color: gbp ? STYLE.textSub : "#3a4a5a" }}>{gbp ? fmtN(gbp) : "—"}</td>;
+                                  })}
+                                  <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "10px" }}>{vn.paymentNote}</td>
+                                </tr>
+                              );
+                            })}
+                            <tr style={{ background: "#1a2030" }}>
+                              <td style={{ padding: "6px 12px 6px 24px", color: STYLE.text, fontWeight: "bold" }}>Total</td>
+                              <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textSub, fontWeight: "bold" }}>${ds.vnYears.reduce(function(s,v){return s+v.buyBack;},0).toLocaleString()}</td>
+                              <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "bold" }}>${ds.vnYears.reduce(function(s,v){return s+v.paid;},0).toLocaleString()}</td>
+                              <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green, fontWeight: "bold" }}>${ds.vnYears.reduce(function(s,v){return s+v.outstanding;},0).toLocaleString()}</td>
+                              {[2027,2028,2029,2030].map(function(py) {
+                                var total = ds.vnYears.reduce(function(s,vn){ return s+Math.round(vnPayment(vn,py)/fx); }, 0);
+                                return <td key={py} style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(total)}</td>;
+                              })}
+                              <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "10px" }}>FX rate: {fx}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  ),
+
+                  // Prescribed Rate drill-down
+                  isPresc && isOpen && (
+                    <tr key="presc-detail">
+                      <td colSpan={7} style={{ padding: "0", background: "#111827", borderBottom: "1px solid #1a2030" }}>
+                        <table style={{ width: "70%", borderCollapse: "collapse", fontSize: "11px" }}>
+                          <thead>
+                            <tr style={{ background: "#1a2030" }}>
+                              <th style={{ textAlign: "left",  padding: "6px 12px 6px 24px", color: STYLE.textMuted, fontWeight: "normal" }}>Year</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Opening Balance (USD)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Rate</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Prescribed (USD)</th>
+                              <th style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textMuted, fontWeight: "normal" }}>Prescribed (GBP)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[2027,2028,2029,2030].map(function(py) {
+                              var bal = openingBalance(py);
+                              var rate = prescRate(py);
+                              var prescUsd = Math.round(bal * rate);
+                              var prescGbp = Math.round(prescUsd / fx);
+                              return (
+                                <tr key={py} style={{ borderBottom: "1px solid #1a2030" }}>
+                                  <td style={{ padding: "6px 12px 6px 24px", color: STYLE.textSub }}>{py}</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textSub }}>${Math.round(bal).toLocaleString()}</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.gold }}>{(rate*100).toFixed(1)}%</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.textSub }}>${prescUsd.toLocaleString()}</td>
+                                  <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.green }}>{fmtN(prescGbp)}</td>
+                                </tr>
+                              );
+                            })}
+                            <tr style={{ background: "#1a2030" }}>
+                              <td style={{ padding: "6px 12px 6px 24px", color: STYLE.textMuted, fontSize: "10px" }} colSpan={5}>
+                                {"FX rate: " + fx + " USD/GBP  |  2027 rate: " + (ds.prescribedRate2027*100).toFixed(1) + "%  |  2028-2030 rate: " + (ds.prescribedRate2028plus*100).toFixed(1) + "%"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  ),
+                ];
+              })}
+              <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
+                <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Net (after tax)</td>
                 {ykeys.map(function(k) {
-                  var v = item.values[k] || 0;
-                  return <td key={k} style={{ textAlign: "right", padding: "10px 12px", color: colN(v) }}>{fmtN(v)}</td>;
+                  var net = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s+(r.values[k]||0); }, 0);
+                  return <td key={k} style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: colN(net) }}>{fmtN(net)}</td>;
                 })}
-                <td style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: colN(total) }}>{fmtN(total)}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: STYLE.blue }}>
+                  {fmtN(DEFERRED_SHARES_DATA.reduce(function(s,r){ return ykeys.reduce(function(ss,k){ return ss+(r.values[k]||0); }, s); }, 0))}
+                </td>
               </tr>
-            );
-          })}
-          <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
-            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold" }}>Net (after tax)</td>
-            {["y2026","y2027","y2028","y2029","y2030"].map(function(k) {
-              var net = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s + (r.values[k]||0); }, 0);
-              return <td key={k} style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: colN(net) }}>{fmtN(net)}</td>;
-            })}
-            <td style={{ textAlign: "right", padding: "10px 12px", fontWeight: "bold", color: STYLE.blue }}>
-              {fmtN(DEFERRED_SHARES_DATA.reduce(function(s,r){ return ["y2026","y2027","y2028","y2029","y2030"].reduce(function(ss,k){ return ss+(r.values[k]||0); }, s); }, 0))}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        );
+      })()}
     </div>
   );
 }
@@ -2548,26 +2984,32 @@ function InvestmentsTab() {
 // ============================================================
 
 function CashTab() {
-  var accounts = CASH_DATA.currentAccounts.reduce(function(s,a){return s+a.value;},0);
-  var cards    = CASH_DATA.creditCards.reduce(function(s,a){return s+a.value;},0);
-  var savings  = CASH_DATA.savings.reduce(function(s,a){return s+a.value;},0);
-  var gross    = accounts + cards + savings;
-  var net      = gross + CASH_DATA.pendingInvestment;
+  var cash = latestCash();
+  var accounts  = cash.currentAccounts.reduce(function(s,a){return s+a.value;},0);
+  var cards     = cash.creditCards.reduce(function(s,a){return s+a.value;},0);
+  var savings   = cash.savings.reduce(function(s,a){return s+a.value;},0);
+  var taxRes    = (cash.taxReserve||[]).reduce(function(s,a){return s+a.value;},0);
+  var gross     = accounts + cards + savings;
+  var net       = gross + cash.pendingInvestment;
 
   function ownerColor(o) { return o === "James" ? STYLE.blue : o === "Jemma" ? STYLE.purple : STYLE.textMuted; }
 
   var GROUPS = [
     {
       key: "currentAccounts", label: "Current Accounts",
-      rows: CASH_DATA.currentAccounts.map(function(r){ return { name: r.name, owner: r.owner, rate: 0, value: r.value }; }),
+      rows: cash.currentAccounts.map(function(r){ return { name: r.name, owner: r.owner, rate: 0, value: r.value }; }),
     },
     {
       key: "creditCards", label: "Credit Cards",
-      rows: CASH_DATA.creditCards.map(function(r){ return { name: r.name, owner: r.owner, rate: null, value: r.value }; }),
+      rows: cash.creditCards.map(function(r){ return { name: r.name, owner: r.owner, rate: null, value: r.value }; }),
     },
     {
       key: "savings", label: "Savings",
-      rows: CASH_DATA.savings.map(function(r){ return { name: r.name, owner: r.owner, rate: r.rate, value: r.value }; }),
+      rows: cash.savings.map(function(r){ return { name: r.name, owner: r.owner, rate: r.rate, value: r.value }; }),
+    },
+    {
+      key: "taxReserve", label: "Tax Reserve (ring-fenced)",
+      rows: (cash.taxReserve||[]).map(function(r){ return { name: r.name, owner: r.owner, rate: r.rate, value: r.value, note: r.note }; }),
     },
   ];
 
@@ -2583,13 +3025,14 @@ function CashTab() {
             { label: "Credit Cards (net)", value: cards },
             { label: "Savings",            value: savings },
             { label: "Gross Cash",         value: gross, bold: true },
-            { label: "Pending Investment", value: CASH_DATA.pendingInvestment },
+            { label: "Pending Investment", value: cash.pendingInvestment },
             { label: "Net Cash Position",  value: net, bold: true, highlight: true },
+            { label: "Tax Reserve (ring-fenced)", value: taxRes, bold: false, muted: true },
           ].map(function(r) {
             return (
               <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: r.highlight ? "#1a2030" : "transparent" }}>
-                <td style={{ padding: "10px 12px", color: r.bold ? STYLE.text : STYLE.textSub, fontWeight: r.bold ? "bold" : "normal" }}>{r.label}</td>
-                <td style={{ textAlign: "right", padding: "10px 12px", color: colN(r.value), fontWeight: r.bold ? "bold" : "normal" }}>{fmtN(r.value)}</td>
+                <td style={{ padding: "10px 12px", color: r.muted ? STYLE.textMuted : r.bold ? STYLE.text : STYLE.textSub, fontWeight: r.bold ? "bold" : "normal" }}>{r.label}</td>
+                <td style={{ textAlign: "right", padding: "10px 12px", color: r.muted ? STYLE.textMuted : colN(r.value), fontWeight: r.bold ? "bold" : "normal" }}>{fmtN(r.value)}</td>
               </tr>
             );
           })}
@@ -2619,7 +3062,7 @@ function CashTab() {
                 var rateDisplay = r.rate === null ? "—" : r.rate === 0 ? "0.00%" : r.rate.toFixed(2) + "%";
                 var rateColor   = r.rate === null ? STYLE.textMuted : r.rate === 0 ? STYLE.textMuted : STYLE.gold;
                 return (
-                  <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
+                  <tr key={g.key + i} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                     <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
                     <td style={{ padding: "8px 12px", color: ownerColor(r.owner), fontSize: "11px" }}>{r.owner}</td>
                     <td style={{ textAlign: "right", padding: "8px 12px", color: rateColor, fontSize: "11px" }}>{rateDisplay}</td>
@@ -2836,6 +3279,7 @@ function OurMoneyTab({ monthlyData }) {
               <td style={{ padding: "8px 12px", color: STYLE.textSub }}>💰 Salary</td>
               {MONTH_KEYS.map(function(mk) {
                 var v = monthlyData[mk] ? monthlyData[mk].income : 0;
+                if (mk === "2026-02") v += -6247; // Adjustment - Share Monies
                 return (
                   <td key={mk} style={{ textAlign: "right", padding: "8px 12px", color: STYLE.green, fontWeight: "bold" }}>
                     {v ? "£" + Math.round(v).toLocaleString() : "—"}
@@ -2848,7 +3292,7 @@ function OurMoneyTab({ monthlyData }) {
               var hasAny = MONTH_KEYS.some(function(mk) { return monthlyData[mk] && monthlyData[mk].categories[cat]; });
               if (!hasAny) return null;
               return (
-                <tr key={cat} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <tr key={cat} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                   <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{FRIENDLY_D2D[cat]}</td>
                   {MONTH_KEYS.map(function(mk) {
                     var v = monthlyData[mk] ? (monthlyData[mk].categories[cat] || 0) : 0;
@@ -2873,6 +3317,7 @@ function OurMoneyTab({ monthlyData }) {
               <td style={{ padding: "10px 12px", color: STYLE.text, fontWeight: "bold" }}>Net (Salary − Spend)</td>
               {MONTH_KEYS.map(function(mk) {
                 var income = monthlyData[mk] ? monthlyData[mk].income : 0;
+                if (mk === "2026-02") income += -6247; // Adjustment - Share Monies
                 var spend = DAY_TO_DAY_CATS.reduce(function(s, c) {
                   return s + (monthlyData[mk] ? (monthlyData[mk].categories[c] || 0) : 0);
                 }, 0) - 3294.60;
@@ -2893,377 +3338,204 @@ function OurMoneyTab({ monthlyData }) {
 // TAB: 2026 SUMMARY
 // ============================================================
 
-function Summary2026Tab() {
-  // Re-use all the same computations as SummaryTab but filtered to 2026 column only
-  var TAX_2026 = ["HMRC (Shares)", "Tax - Jan 27"];
-  var taxLiabilities2026 = TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
-    .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
-  var taxWarehouseTotal = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0);
-  var taxNet2026 = taxLiabilities2026 + taxWarehouseTotal;
-  var taxRows2026 = [
-    ...TAX_WAREHOUSE.map(function(t){ return { name: t.name, val: t.value }; }),
-    ...TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
-      .map(function(t){ return { name: t.name, val: getTaxAmount(t) }; }),
-  ];
-
-  var cashAccounts = CASH_DATA.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashCards    = CASH_DATA.creditCards.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashSavings  = CASH_DATA.savings.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashPending  = CASH_DATA.pendingInvestment;
-  var cashNet2026  = cashAccounts + cashCards + cashSavings + cashPending;
-  var cashRows = [
-    { name: "Current Accounts", val: cashAccounts },
-    { name: "Credit Cards",     val: cashCards },
-    { name: "Savings",          val: cashSavings },
-    { name: "Pending Investment", val: cashPending },
-  ];
-
-  var deferred2026 = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s+(r.values.y2026||0); }, 0);
-
-  var PROV_MAP = {
-    "1k - James": "£1k - Jimbo", "1k - Jemma": "£1k - Jemma",
-    "Annual Costs": "Annual Costs", "Cash Provision": null, "Charity": "Charity",
-    "Clothing & Shoes": null, "Flats": "Flats", "Holidays": "Holiday",
-    "Home & Family": "Home & Family", "Range Rover": "Range Rover", "School Fees": "School Fees",
-  };
-  var provRows = PROVISIONS_DATA.map(function(p) {
-    return { name: p.name, val: getProvisionRemaining(p) };
-  });
-  var provTotal2026 = provRows.reduce(function(s,r){ return s+r.val; }, 0);
-
-  // Investments carry forward to Retirement — zero in 2026
-  var grandTotal2026 = taxNet2026 + cashNet2026 + deferred2026 + provTotal2026;
-
-  // Executive summary rows — Investments shown as retirement item only, not in 2026
-  var execRows = [
-    { label: "Investments (Retirement)", val: null },
-    { label: "Tax",         val: taxNet2026 },
-    { label: "Cash",        val: cashNet2026 },
-    { label: "Deferred",    val: deferred2026 },
-    { label: "Provisions",  val: provTotal2026 },
-  ];
-
-  function fmtCell(v) {
-    if (v === null) return <td style={{ textAlign: "right", padding: "10px 12px", color: "#3a4a5a", fontWeight: "bold" }}>—</td>;
-    return <td style={{ textAlign: "right", padding: "10px 12px", color: colN(v), fontWeight: "bold" }}>{fmtN(v)}</td>;
-  }
-
-  return (
-    <div>
-      {/* Executive Summary — 2026 only */}
-      <div style={{ marginBottom: "36px" }}>
-        <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Executive Summary — 2026</div>
-        <table style={{ width: "50%", borderCollapse: "collapse", fontSize: "12px" }}>
-          <thead>
-            <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
-              <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Section</th>
-              <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2026</th>
-            </tr>
-          </thead>
-          <tbody>
-            {execRows.map(function(r) {
-              return (
-                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
-                  <td style={{ padding: "10px 12px", color: STYLE.textSub, fontWeight: "500" }}>{r.label}</td>
-                  {fmtCell(r.val)}
-                </tr>
-              );
-            })}
-            <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
-              <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
-              <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal2026), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal2026)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Detailed breakdown — 2026 column only */}
-      <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
-        2026 position. Investments carry forward to retirement; tax and cash are current-year items.
-      </p>
-      <table style={{ width: "65%", borderCollapse: "collapse", fontSize: "12px" }}>
-        <thead>
-          <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
-            <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Item</th>
-            <th style={{ textAlign: "right", padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px" }}>2026</th>
-          </tr>
-        </thead>
-        <tbody>
-
-          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax</td></tr>
-          {taxRows2026.map(function(r) {
-            return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
-                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
-              </tr>
-            );
-          })}
-          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Tax Total</td>
-            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026), fontWeight: "bold" }}>{fmtN(taxNet2026)}</td>
-          </tr>
-
-          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Cash</td></tr>
-          {cashRows.map(function(r) {
-            return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
-                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
-              </tr>
-            );
-          })}
-          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Cash Total</td>
-            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
-          </tr>
-
-          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Deferred Share Payments</td></tr>
-          {DEFERRED_SHARES_DATA.map(function(item) {
-            var v = item.values.y2026 || 0;
-            return (
-              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
-                <td style={{ padding: "8px 12px 8px 20px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: v ? colN(v) : "#3a4a5a" }}>{fmtN(v)}</td>
-              </tr>
-            );
-          })}
-          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Deferred Total (net)</td>
-            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(deferred2026), fontWeight: "bold" }}>{fmtN(deferred2026)}</td>
-          </tr>
-
-          <tr><td colSpan={2} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisions</td></tr>
-          {provRows.map(function(r) {
-            return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
-                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: r.val ? colN(r.val) : "#3a4a5a" }}>{fmtN(r.val)}</td>
-              </tr>
-            );
-          })}
-          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
-            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Provisions Total</td>
-            <td style={{ textAlign: "right", padding: "8px 12px", color: colN(provTotal2026), fontWeight: "bold" }}>{fmtN(provTotal2026)}</td>
-          </tr>
-
-          <tr style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
-            <td style={{ padding: "10px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>Grand Total</td>
-            <td style={{ textAlign: "right", padding: "10px 12px", color: colN(grandTotal2026), fontWeight: "bold", fontSize: "13px" }}>{fmtN(grandTotal2026)}</td>
-          </tr>
-
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
+// ============================================================
+// ============================================================
 // ============================================================
 // TAB: BIG PICTURE
 // ============================================================
 
 function BigPictureTab() {
-  var expanded = React.useState(null);
-  var expandedTile = expanded[0];
-  var setExpanded = expanded[1];
-
-  function toggle(key) {
-    setExpanded(expandedTile === key ? null : key);
-  }
-
-  // ── Cash & Savings ──
-  var cashAccounts = CASH_DATA.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashCards    = CASH_DATA.creditCards.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashSavings  = CASH_DATA.savings.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashPending  = CASH_DATA.pendingInvestment;
-  var cashTotal    = cashAccounts + cashCards + cashSavings + cashPending;
-  var cashDetail   = [
-    { label: "Current Accounts", value: cashAccounts },
-    { label: "Credit Cards",     value: cashCards },
-    { label: "Savings",          value: cashSavings },
-    { label: "Pending Investment", value: cashPending },
+  // Same core calculations as SummaryTab
+  var latestInv   = MONTHLY_INVESTMENTS[MONTHLY_INVESTMENTS.length - 1];
+  var invNetTotal = latestInv.lines.reduce(function(s,l){ return s+l.value; }, 0);
+  var INV_GROUPS  = [
+    { key: "Fidelity",  label: "Fidelity",            keys: ["Fidelity UK"] },
+    { key: "HL",        label: "Hargreaves Lansdown",  keys: ["Hargreaves Lansdown"] },
+    { key: "AJ Bell",   label: "AJ Bell",              keys: ["AJ Bell"] },
+    { key: "Pensions",  label: "Work Place Pension",   keys: ["Pensions"] },
+    { key: "Props",     label: "Properties",           keys: ["Properties"] },
+    { key: "Traf",      label: "Traf Shares",          keys: ["Traf Shares"] },
+    { key: "Cash",      label: "Cash",                 keys: ["Cash"] },
   ];
-
-  // ── Investments ──
-  var invTotal  = INVESTMENT_DATA.reduce(function(s,i){ return s + i.value + (i.taxOffset||0); }, 0);
-  var invDetail = INVESTMENT_DATA.map(function(i){ return { label: i.category, value: i.value + (i.taxOffset||0) }; })
-    .filter(function(r){ return r.value !== 0; });
-
-  // ── Tax ──
-  var taxLiabilities = TAX_DATA.reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
-  var taxWarehouse   = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0);
-  var taxTotal       = taxLiabilities + taxWarehouse;
-  var taxDetail      = TAX_WAREHOUSE.map(function(t){ return { label: t.name, value: t.value, positive: true }; })
-    .concat(TAX_DATA.map(function(t){ return { label: t.name, value: getTaxAmount(t) }; }));
-
-  // ── Provisions ──
-  var provTotal  = PROVISIONS_DATA.reduce(function(s,p){ return s + getProvisionRemaining(p); }, 0);
-  var provDetail = PROVISIONS_DATA.map(function(p){ return { label: p.name, value: getProvisionRemaining(p) }; });
-
-  // ── Deferred ──
-  var deferredYears = [
-    { label: "2027", key: "y2027" },
-    { label: "2028", key: "y2028" },
-    { label: "2029", key: "y2029" },
-    { label: "2030", key: "y2030" },
-  ];
-  var deferredTiles = deferredYears.map(function(y) {
-    var grossNet = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s + (r.values[y.key]||0); }, 0);
-    var provLines = FORWARD_PROVISIONS.filter(function(p){ return (p.values[y.key]||0) !== 0; })
-      .map(function(p){ return { label: p.name, value: p.values[y.key] }; });
-    var provTotal = provLines.reduce(function(s,p){ return s+p.value; }, 0);
-    var net = grossNet + provTotal;
-    return { label: y.label, key: y.key, grossNet: grossNet, provLines: provLines, provTotal: provTotal, net: net };
+  var invDetail = INV_GROUPS.map(function(g) {
+    var v = latestInv.lines.filter(function(l){ return g.keys.indexOf(l.group) !== -1; })
+              .reduce(function(s,l){ return s+l.value; }, 0);
+    return { label: g.label, value: v };
   });
-  var deferredGrandTotal = deferredTiles.reduce(function(s,t){ return s+t.net; }, 0);
+  var DOWNSIZE_EST = 1000000;
 
-  var TOP_TILES = [
-    { key: "cash",        emoji: "💰", label: "Cash & Savings",  value: cashTotal,  detail: cashDetail },
-    { key: "investments", emoji: "📈", label: "Investments",     value: invTotal,   detail: invDetail },
-    { key: "tax",         emoji: "🧾", label: "Tax Position",    value: taxTotal,   detail: taxDetail },
-    { key: "provisions",  emoji: "🏠", label: "Provisions",      value: provTotal,  detail: provDetail },
-  ];
-
-  function DetailRow({ label, value }) {
-    return (
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1a2030" }}>
-        <span style={{ fontSize: "11px", color: STYLE.textMuted }}>{label}</span>
-        <span style={{ fontSize: "11px", color: value >= 0 ? STYLE.green : STYLE.red, fontWeight: "500" }}>{fmtN(value)}</span>
-      </div>
-    );
-  }
-
-  function TopTile({ tile }) {
-    var isOpen = expandedTile === tile.key;
-    return (
-      <div style={{ flex: "1", minWidth: "200px" }}>
-        <div
-          onClick={function(){ toggle(tile.key); }}
-          style={{
-            background: isOpen ? "#1e2c40" : STYLE.card,
-            border: "1px solid " + (isOpen ? STYLE.blue : STYLE.border),
-            borderRadius: isOpen ? "8px 8px 0 0" : "8px",
-            padding: "20px", cursor: "pointer",
-            transition: "all 0.2s",
-          }}>
-          <div style={{ fontSize: "22px", marginBottom: "6px" }}>{tile.emoji}</div>
-          <div style={{ fontSize: "11px", color: STYLE.textMuted, marginBottom: "4px", textTransform: "uppercase", letterSpacing: "1px" }}>{tile.label}</div>
-          <div style={{ fontSize: "26px", color: tile.value >= 0 ? STYLE.green : STYLE.red, fontWeight: "300" }}>{fmtN(tile.value)}</div>
-          <div style={{ fontSize: "10px", color: STYLE.blue, marginTop: "8px" }}>{isOpen ? "▲ hide detail" : "▼ tap for detail"}</div>
-        </div>
-        {isOpen && (
-          <div style={{ background: "#111827", border: "1px solid " + STYLE.blue, borderTop: "none", borderRadius: "0 0 8px 8px", padding: "12px 16px" }}>
-            {tile.detail.map(function(r) { return <DetailRow key={r.label} label={r.label} value={r.value} />; })}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  function DeferredTile({ tile }) {
-    var isOpen = expandedTile === tile.key;
-    return (
-      <div style={{ flex: "1", minWidth: "160px" }}>
-        <div
-          onClick={function(){ toggle(tile.key); }}
-          style={{
-            background: isOpen ? "#1e2c40" : STYLE.card,
-            border: "1px solid " + (isOpen ? STYLE.blue : STYLE.border),
-            borderRadius: isOpen ? "8px 8px 0 0" : "8px",
-            padding: "20px", cursor: "pointer", transition: "all 0.2s",
-          }}>
-          <div style={{ fontSize: "11px", color: STYLE.textMuted, marginBottom: "4px", textTransform: "uppercase", letterSpacing: "1px" }}>{tile.label}</div>
-          <div style={{ fontSize: "24px", color: STYLE.green, fontWeight: "300" }}>{fmtN(tile.net)}</div>
-          <div style={{ fontSize: "10px", color: STYLE.textMuted, marginTop: "4px" }}>deferred {fmtN(tile.grossNet)}</div>
-          <div style={{ fontSize: "10px", color: STYLE.blue, marginTop: "8px" }}>{isOpen ? "▲ hide detail" : "▼ provisions"}</div>
-        </div>
-        {isOpen && (
-          <div style={{ background: "#111827", border: "1px solid " + STYLE.blue, borderTop: "none", borderRadius: "0 0 8px 8px", padding: "12px 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0 8px 0", borderBottom: "1px solid #1a2030", marginBottom: "4px" }}>
-              <span style={{ fontSize: "11px", color: STYLE.textMuted }}>Deferred share payments</span>
-              <span style={{ fontSize: "11px", color: STYLE.green, fontWeight: "500" }}>{fmtN(tile.grossNet)}</span>
-            </div>
-            {tile.provLines.map(function(r) { return <DetailRow key={r.label} label={r.label} value={r.value} />; })}
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 4px 0", borderTop: "1px solid #1a2030", marginTop: "4px" }}>
-              <span style={{ fontSize: "11px", color: STYLE.text, fontWeight: "bold" }}>Net</span>
-              <span style={{ fontSize: "11px", color: STYLE.green, fontWeight: "bold" }}>{fmtN(tile.net)}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  var grandTotal = cashTotal + invTotal + taxTotal + provTotal + deferredGrandTotal;
-
-  return (
-    <div>
-      <div style={{ marginBottom: "28px" }}>
-        <div style={{ fontSize: "20px", color: STYLE.text, fontWeight: "300", marginBottom: "4px" }}>Big Picture</div>
-        <div style={{ fontSize: "12px", color: STYLE.textMuted }}>Where we stand today — tap any tile to see the detail</div>
-      </div>
-
-      {/* Grand Total tile */}
-      <div style={{
-        background: "#141c2c", border: "2px solid " + STYLE.blue,
-        borderRadius: "8px", padding: "20px 24px", marginBottom: "24px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div>
-          <div style={{ fontSize: "11px", color: STYLE.blue, textTransform: "uppercase", letterSpacing: "2px", marginBottom: "4px" }}>Total Family Wealth</div>
-          <div style={{ fontSize: "10px", color: STYLE.textMuted }}>Cash + Investments + Tax + Provisions + Deferred</div>
-        </div>
-        <div style={{ fontSize: "32px", color: STYLE.green, fontWeight: "300" }}>{fmtN(grandTotal)}</div>
-      </div>
-
-      {/* Top 4 expandable tiles */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "36px", alignItems: "flex-start" }}>
-        {TOP_TILES.map(function(tile) { return <TopTile key={tile.key} tile={tile} />; })}
-      </div>
-
-      {/* Deferred Share Payments */}
-      <div style={{ marginBottom: "8px" }}>
-        <div style={{ fontSize: "10px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "14px" }}>Deferred Share Payments</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "flex-start" }}>
-          {deferredTiles.map(function(tile) { return <DeferredTile key={tile.label} tile={tile} />; })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// TAB: SUMMARY (Deferred Share Payments only for now)
-// ============================================================
-
-function SummaryTab() {
-  var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
-
-  // Investments
-  var invNetTotal = INVESTMENT_DATA.reduce(function(s,i){ return s + i.value + (i.taxOffset||0); }, 0);
-
-  // Tax — split by when payable
-  // Jan 27 items (HMRC Shares, Tax-Jan27) are 2026 liabilities
-  // Jan 28 items (Tax-Jan28) fall in 2027
+  var TAX_ADJUSTMENT = -36098;
   var TAX_2026 = ["HMRC (Shares)", "Tax - Jan 27"];
   var TAX_2027 = ["Tax - Jan 28"];
   var taxLiabilities2026 = TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
     .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
   var taxLiabilities2027 = TAX_DATA.filter(function(t){ return TAX_2027.includes(t.name); })
     .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
-  var taxWarehouseTotal = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0);
+  var taxWarehouseTotal = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0) + TAX_ADJUSTMENT;
+  var taxTotal = taxLiabilities2026 + taxWarehouseTotal + taxLiabilities2027;
+
+  var cash    = latestCash();
+  var cashNet = cash.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0)
+              + cash.creditCards.reduce(function(s,a){ return s+a.value; }, 0)
+              + cash.savings.reduce(function(s,a){ return s+a.value; }, 0)
+              + cash.pendingInvestment;
+
+  var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
+  var deferredTotal = ykeys.reduce(function(s,k){
+    return s + DEFERRED_SHARES_DATA.reduce(function(ss,r){ return ss+(r.values[k]||0); }, 0);
+  }, 0);
+
+  var provSectionTotal = provisionTotal(ALL_YEARS);
+  var provTotal2026    = provisionTotal(YEAR_2026);
+  var fwdTotal         = provisionTotal(FUTURE_YEARS);
+
+  var grandTotal = invNetTotal + DOWNSIZE_EST + taxTotal + cashNet + deferredTotal + provSectionTotal;
+
+  var openState = React.useState(null);
+  var openKey   = openState[0];
+  var setOpenKey = openState[1];
+
+  var TILES = [
+    { key: "inv",      label: "Investments",     emoji: "📈", value: invNetTotal,   detail: invDetail },
+    { key: "equity",   label: "Equity Release",  emoji: "🏠", value: DOWNSIZE_EST,
+      detail: [
+        { label: "Est. equity on downsizing", value: DOWNSIZE_EST },
+        { label: "Home value (approx)",       value: 3000000 },
+        { label: "Replacement home",          value: -2000000 },
+      ]},
+    { key: "tax",      label: "Tax",             emoji: "🏛",  value: taxTotal,
+      detail: [
+        ...TAX_WAREHOUSE.map(function(t){ return { label: t.name, value: t.value }; }),
+        { label: "Funds returned to cash",    value: TAX_ADJUSTMENT },
+        ...TAX_DATA.map(function(t){ return { label: t.name, value: getTaxAmount(t) }; }),
+      ]},
+    { key: "cash",     label: "Cash",            emoji: "💰", value: cashNet,
+      detail: [
+        { label: "Current Accounts", value: cash.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0) },
+        { label: "Credit Cards",     value: cash.creditCards.reduce(function(s,a){ return s+a.value; }, 0) },
+        { label: "Savings",          value: cash.savings.reduce(function(s,a){ return s+a.value; }, 0) },
+        { label: "Pending Invest.",  value: cash.pendingInvestment },
+      ]},
+    { key: "deferred", label: "Deferred Shares", emoji: "📋", value: deferredTotal,
+      detail: DEFERRED_SHARES_DATA.map(function(r){
+        var v = ykeys.reduce(function(s,k){ return s+(r.values[k]||0); }, 0);
+        return { label: r.name, value: v };
+      })},
+    { key: "prov",     label: "Provisions",      emoji: "🏦", value: provSectionTotal,
+      detail: [
+        { label: "2026 balances",       value: provTotal2026 },
+        { label: "2027-2030 estimates", value: fwdTotal },
+      ]},
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
+        {TILES.map(function(tile) {
+          var isOpen = openKey === tile.key;
+          return (
+            <div key={tile.key} onClick={function(){ setOpenKey(isOpen ? null : tile.key); }}
+              style={{ background: STYLE.card, border: "1px solid " + (isOpen ? STYLE.blue : STYLE.border),
+                borderRadius: "8px", padding: "20px", cursor: "pointer" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "20px" }}>{tile.emoji}</span>
+                  <span style={{ fontSize: "14px", color: STYLE.text, fontWeight: "500" }}>{tile.label}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <span style={{ fontSize: "18px", fontWeight: "bold", color: colN(tile.value) }}>{fmtN(tile.value)}</span>
+                  <span style={{ fontSize: "10px", color: STYLE.blue }}>{isOpen ? "▲" : "▼"}</span>
+                </div>
+              </div>
+              {isOpen && (
+                <div style={{ marginTop: "16px", borderTop: "1px solid " + STYLE.border, paddingTop: "12px" }}>
+                  {tile.detail.map(function(d) {
+                    return (
+                      <div key={d.label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #1a1e28" }}>
+                        <span style={{ fontSize: "12px", color: STYLE.textMuted }}>{d.label}</span>
+                        <span style={{ fontSize: "12px", color: colN(d.value) }}>{fmtN(d.value)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>Deferred Share Payments — by Year</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px", marginBottom: "24px" }}>
+        {["y2027","y2028","y2029","y2030"].map(function(k) {
+          var yr     = k.replace("y", "20");
+          var shares = DEFERRED_SHARES_DATA.reduce(function(s,r){ return s+(r.values[k]||0); }, 0);
+          var prov   = FORWARD_PROVISIONS.reduce(function(s,p){ return s+fwdValue(p,k); }, 0);
+          var net    = shares + prov;
+          var isOpen = openKey === k;
+          return (
+            <div key={k} onClick={function(){ setOpenKey(isOpen ? null : k); }}
+              style={{ background: STYLE.card, border: "1px solid " + (isOpen ? STYLE.blue : STYLE.border),
+                borderRadius: "8px", padding: "16px", cursor: "pointer" }}>
+              <div style={{ fontSize: "12px", color: STYLE.textMuted, marginBottom: "4px" }}>{yr}</div>
+              <div style={{ fontSize: "16px", fontWeight: "bold", color: colN(net) }}>{fmtN(net)}</div>
+              {isOpen && (
+                <div style={{ marginTop: "12px", borderTop: "1px solid " + STYLE.border, paddingTop: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}>
+                    <span style={{ fontSize: "11px", color: STYLE.textMuted }}>Shares (net)</span>
+                    <span style={{ fontSize: "11px", color: colN(shares) }}>{fmtN(shares)}</span>
+                  </div>
+                  {FORWARD_PROVISIONS.filter(function(p){ return fwdValue(p,k) !== 0; }).map(function(p) {
+                    return (
+                      <div key={p.name} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}>
+                        <span style={{ fontSize: "11px", color: STYLE.textMuted }}>{p.name}</span>
+                        <span style={{ fontSize: "11px", color: colN(fwdValue(p,k)) }}>{fmtN(fwdValue(p,k))}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ background: "#1a2838", border: "2px solid " + STYLE.blue, borderRadius: "8px", padding: "20px",
+        display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: "16px", color: STYLE.blue, fontWeight: "bold" }}>Total Net Position</span>
+        <span style={{ fontSize: "24px", color: colN(grandTotal), fontWeight: "bold" }}>{fmtN(grandTotal)}</span>
+      </div>
+    </div>
+  );
+}
+
+function SummaryTab() {
+  var ykeys = ["y2026","y2027","y2028","y2029","y2030"];
+
+  // Investments — read from latest MONTHLY_INVESTMENTS snapshot
+  var latestInv = MONTHLY_INVESTMENTS[MONTHLY_INVESTMENTS.length - 1];
+  var invNetTotal = latestInv.lines.reduce(function(s,l){ return s+l.value; }, 0);
+
+  // Tax — split by when payable
+  var TAX_ADJUSTMENT = -36098; // Funds returned to cash (see Admin tab)
+  var TAX_2026 = ["HMRC (Shares)", "Tax - Jan 27"];
+  var TAX_2027 = ["Tax - Jan 28"];
+  var taxLiabilities2026 = TAX_DATA.filter(function(t){ return TAX_2026.includes(t.name); })
+    .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
+  var taxLiabilities2027 = TAX_DATA.filter(function(t){ return TAX_2027.includes(t.name); })
+    .reduce(function(s,t){ return s+getTaxAmount(t); }, 0);
+  var taxWarehouseTotal = TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0) + TAX_ADJUSTMENT;
   var taxNet2026 = taxLiabilities2026 + taxWarehouseTotal;
   var taxNet2027 = taxLiabilities2027;
   var taxRows = [
-    ...TAX_WAREHOUSE.map(function(t){ return { name: t.name, val: t.value, isAsset: true, year: "2026" }; }),
+    { name: "Investec 90 Day accounts", val: TAX_WAREHOUSE.reduce(function(s,t){ return s+t.value; }, 0) + TAX_ADJUSTMENT, isAsset: true, year: "2026" },
     ...TAX_DATA.map(function(t){ return { name: t.name, val: getTaxAmount(t), isAsset: false, year: TAX_2027.includes(t.name) ? "2027" : "2026" }; }),
   ];
 
   // Cash (2026)
-  var cashAccounts = CASH_DATA.currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashCards = CASH_DATA.creditCards.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashSavings = CASH_DATA.savings.reduce(function(s,a){ return s+a.value; }, 0);
-  var cashPending = CASH_DATA.pendingInvestment;
+  var cashAccounts = latestCash().currentAccounts.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashCards = latestCash().creditCards.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashSavings = latestCash().savings.reduce(function(s,a){ return s+a.value; }, 0);
+  var cashPending = latestCash().pendingInvestment;
   var cashRows = [
     { name: "Current Accounts", val: cashAccounts },
     { name: "Credit Cards", val: cashCards },
@@ -3298,10 +3570,14 @@ function SummaryTab() {
   var FWDONLY = ["Offset School Fees", "Tax - Interest"];
 
   var fwdMap = {};
-  FORWARD_PROVISIONS.forEach(function(p){ fwdMap[p.name] = p.values; });
+  FORWARD_PROVISIONS.forEach(function(p){
+    var computed = {};
+    ["y2026","y2027","y2028","y2029","y2030"].forEach(function(yk){ computed[yk] = fwdValue(p, yk); });
+    fwdMap[p.name] = computed;
+  });
 
   var provRows = PROVISIONS_DATA.map(function(p) {
-    var val2026 = getProvisionRemaining(p);
+    var val2026 = getProvisionRemaining(p);  // getProvisionRemaining already returns negative
     var fwdKey = PROV_MAP[p.name];
     var fwd = fwdKey ? (fwdMap[fwdKey] || {}) : {};
     return { name: p.name, val2026: val2026, fwd: fwd };
@@ -3314,14 +3590,13 @@ function SummaryTab() {
     }
   });
 
-  var provTotal2026 = provRows.reduce(function(s,r){ return s+r.val2026; }, 0);
-  var fwdByYear = {};
-  ["y2027","y2028","y2029","y2030"].forEach(function(k){
-    fwdByYear[k] = provRows.reduce(function(s,r){ return s+(r.fwd[k]||0); }, 0);
-  });
-  var provSectionTotal = provTotal2026 + ["y2027","y2028","y2029","y2030"].reduce(function(s,k){ return s+fwdByYear[k]; }, 0);
+  var provTotal2026    = provisionTotal(YEAR_2026);
+  var fwdByYear        = {};
+  FUTURE_YEARS.forEach(function(k){ fwdByYear[k] = provisionTotal([k]); });
+  var provSectionTotal = provisionTotal(ALL_YEARS);
 
-  var grandTotal = invNetTotal + deferredTotal + provSectionTotal + taxNet2026 + taxNet2027 + cashNet2026;
+  var DOWNSIZE_EST = 1000000;
+  var grandTotal = invNetTotal + DOWNSIZE_EST + deferredTotal + provSectionTotal + taxNet2026 + taxNet2027 + cashNet2026;
   var grandByYear = ykeys.reduce(function(o,k){
     o[k] = deferredByYear[k] + (k === "y2026" ? provTotal2026 + taxNet2026 + cashNet2026 : (fwdByYear[k]||0))
          + (k === "y2027" ? taxNet2027 : 0);
@@ -3356,7 +3631,7 @@ function SummaryTab() {
               { label: "Provisions",   total: provSectionTotal, y2026: provTotal2026, y2027: fwdByYear.y2027,      y2028: fwdByYear.y2028,      y2029: fwdByYear.y2029,      y2030: fwdByYear.y2030,      ret: 0 },
             ].map(function(r, i) {
               return (
-                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                <tr key={r.label} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                   <td style={{ padding: "10px 12px", color: STYLE.textSub, fontWeight: "500" }}>{r.label}</td>
                   <td style={{ textAlign: "right", padding: "10px 12px", color: colN(r.total), fontWeight: "bold" }}>{fmtN(r.total)}</td>
                   {[r.y2026, r.y2027, r.y2028, r.y2029, r.y2030].map(function(v, j) {
@@ -3396,30 +3671,47 @@ function SummaryTab() {
           </tr>
         </thead>
         <tbody>
-          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Investments</td></tr>
-          {INVESTMENT_DATA.map(function(inv, i) {
-            var net = inv.value + (inv.taxOffset || 0);
-            return (
-              <tr key={inv.category} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
-                <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{inv.category}</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: net === 0 ? "#3a4a5a" : STYLE.green, fontWeight: "bold" }}>{fmtN(net)}</td>
-                <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
-                <td style={{ textAlign: "right", padding: "8px 12px", color: net === 0 ? "#3a4a5a" : STYLE.purple }}>{fmtN(net)}</td>
-              </tr>
-            );
-          })}
+          {(function() {
+            var latest = MONTHLY_INVESTMENTS[MONTHLY_INVESTMENTS.length - 1];
+            var GROUPS = [
+              { key: "Fidelity",            label: "Fidelity",            keys: ["Fidelity UK"] },
+              { key: "HL",                  label: "Hargreaves Lansdown", keys: ["Hargreaves Lansdown"] },
+              { key: "AJ Bell",             label: "AJ Bell",             keys: ["AJ Bell"] },
+              { key: "Pensions",            label: "Work Place Pension",  keys: ["Pensions"] },
+              { key: "Properties",          label: "Properties",          keys: ["Properties"] },
+              { key: "TrafShares",          label: "Traf Shares",         keys: ["Traf Shares"] },
+              { key: "Cash",                label: "Cash",                keys: ["Cash"] },
+            ];
+            return GROUPS.map(function(g) {
+              var v = latest.lines.filter(function(l){ return g.keys.indexOf(l.group) !== -1; })
+                        .reduce(function(s,l){ return s+l.value; }, 0);
+              return (
+                <tr key={g.key} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
+                  <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{g.label}</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: v < 0 ? STYLE.red : STYLE.purple }}>{fmtN(v)}</td>
+                </tr>
+              );
+            });
+          })()}
           <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
             <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Investments Total</td>
-            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(invNetTotal)}</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
             <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.purple, fontWeight: "bold" }}>{fmtN(invNetTotal)}</td>
           </tr>
+          <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+            <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Equity Release — Downsize Family Home</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.purple, fontWeight: "bold" }}>{fmtN(DOWNSIZE_EST)}</td>
+          </tr>
 
-          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Tax</td></tr>
           {taxRows.map(function(r, i) {
             var is2027 = r.year === "2027";
             return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: is2027 ? "#3a4a5a" : colN(r.val) }}>{is2027 ? "-" : fmtN(r.val)}</td>
@@ -3438,10 +3730,9 @@ function SummaryTab() {
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
           </tr>
 
-          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Cash</td></tr>
           {cashRows.map(function(r, i) {
             return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
@@ -3458,11 +3749,10 @@ function SummaryTab() {
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
           </tr>
 
-          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Deferred Share Payments</td></tr>
           {DEFERRED_SHARES_DATA.map(function(item, i) {
             var total = ykeys.reduce(function(s,k){ return s+(item.values[k]||0); }, 0);
             return (
-              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={item.name} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: item.isOffset ? STYLE.red : STYLE.textSub }}>{item.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(total), fontWeight: "bold" }}>{fmtN(total)}</td>
                 {ykeys.map(function(k) {
@@ -3483,11 +3773,10 @@ function SummaryTab() {
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
           </tr>
 
-          <tr><td colSpan={8} style={{ padding: "6px 12px", color: STYLE.gold, fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "#181e28" }}>Provisions</td></tr>
           {provRows.map(function(r, i) {
             var rowTotal = r.val2026 + ["y2027","y2028","y2029","y2030"].reduce(function(s,k){ return s+(r.fwd[k]||0); }, 0);
             return (
-              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+              <tr key={r.name} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(rowTotal), fontWeight: "bold" }}>{fmtN(rowTotal)}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: r.val2026 ? colN(r.val2026) : "#3a4a5a" }}>{fmtN(r.val2026)}</td>
@@ -3557,7 +3846,7 @@ function CandidatesTab({ candidates }) {
             <tbody>
               {MANUAL_NOTIFICATIONS.map(function(n, i) {
                 return (
-                  <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? "#1a2030" : "transparent" }}>
+                  <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: "#1a2030" }}>
                     <td style={{ padding: "8px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{n.date.substring(8)}-{n.date.substring(5,7)}-{n.date.substring(0,4)}</td>
                     <td style={{ padding: "8px 12px", color: STYLE.textSub }}>{n.merchant}</td>
                     <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.red }}>{fmtN(-n.amount)}</td>
@@ -3589,7 +3878,7 @@ function CandidatesTab({ candidates }) {
               <tbody>
                 {items.map(function(t, i) {
                   return (
-                    <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: i % 2 === 0 ? STYLE.card : "transparent" }}>
+                    <tr key={i} style={{ borderBottom: "1px solid #1a1e28", background: STYLE.card }}>
                       <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.date.substring(8)}-{t.date.substring(5,7)}-{t.date.substring(0,4)}</td>
                       <td style={{ padding: "6px 12px", color: STYLE.textSub }}>{t.merchant}</td>
                       <td style={{ padding: "6px 12px", color: STYLE.textMuted, fontSize: "11px" }}>{t.category}</td>
@@ -3613,6 +3902,94 @@ function CandidatesTab({ candidates }) {
 // ============================================================
 // MAIN APP
 // ============================================================
+
+// ============================================================
+// TAB: ADMIN
+// ============================================================
+
+function AdminTab() {
+  var RULES = [
+    {
+      title: "Investec 90 Day Accounts — Tax Reserve",
+      category: "Cash",
+      detail: "Investec 90 Day (James) and Investec 90 Day (Jemma) are ring-fenced to pay the Jan-27 tax bill on 25/26 interest income. They are stored in MONTHLY_CASH under 'taxReserve' (not 'savings') and are excluded from the Cash gross total. They appear as a separate line in the Cash Summary.",
+    },
+    {
+      title: "Pending Investment (−£819,000)",
+      category: "Cash / Investments",
+      detail: "The −£819,000 appears in MONTHLY_CASH as 'pendingInvestment' (reduces net cash position) and also in MONTHLY_INVESTMENTS as 'Cash - Pending Investment' (included in investment totals). This is intentional — the money is earmarked for investment and sits in both views. Do not remove from either location.",
+    },
+    {
+      title: "School Fees — Pro-Rata Treatment",
+      category: "P&L / Budget",
+      detail: "Term payments (Sep, Jan, Apr) sit in 'excludes' in PROVISIONS_DATA — excluded from P&L but do NOT reduce the provision balance. A monthly pro-rata of £3,294.60 is shown as a fixed day-to-day cost every month, with a matching +£3,294.60 offset in Provisioned Spend to net it out.",
+    },
+    {
+      title: "Trafigura Shares — Tax Offset",
+      category: "Investments",
+      detail: "Traf Shares are held gross (£1,488,889 approx) with a separate tax offset line (approx −£357,333) in MONTHLY_INVESTMENTS. Always show both lines so the net is transparent. The net figure is used in Big Picture and Summary totals.",
+    },
+    {
+      title: "Jemma's Interest — Tax Free",
+      category: "Tax",
+      detail: "All interest income attributed to Jemma has taxRate: 0 in INTEREST_DATA because she is within her £12,570 personal allowance. Do not apply a tax rate to Jemma's accounts.",
+    },
+    {
+      title: "26/27 Interest Data — Apr-26 Onwards Only",
+      category: "Tax",
+      detail: "INTEREST_DATA entries for taxYear '26/27' should only include interest earned from 6 Apr 2026 onwards. Interest earned before that date belongs to the 25/26 tax year. When adding cumulative totals, strip out any pre-Apr-26 months.",
+    },
+    {
+      title: "Charity Provision (2027 onwards) — Computed from Deferred Shares",
+      category: "Provisions",
+      detail: "From 2027, the annual charity provision is 2% of the net deferred share payment for that year (shares + prescribed rate, after 24% tax). This is computed automatically from DEFERRED_SHARES_DATA — do not hardcode charity values in FORWARD_PROVISIONS. Example: 2027 net deferred = £1,007,425 × 2% = £20,149. The actual donation amounts will be confirmed around Nov/Dec 2026 once Trafigura confirms the payment schedule, at which point FORWARD_PROVISIONS charity can be updated with confirmed figures.",
+    },
+    {
+      title: "Equity Release — Downsize Family Home",
+      category: "Investments",
+      detail: "The family home is worth approximately 3m but is not included as an investment since it will be used to buy a smaller home. The estimated equity release on downsizing is 1m, shown as its own section in Summary and Big Picture, separate from investments. Included in the grand total as a future cash event. The 2m balance funds the replacement property. Value stored in DOWNSIZE_EST constant.",
+    },
+    {
+      title: "Cash Provision — Net Zero Between Investments and Provisions",
+      category: "Provisions",
+      detail: "Cash Provision appears in two places: as a positive value in MONTHLY_INVESTMENTS and as a negative value in PROVISIONS_DATA. These must always net to zero. The investments value is computed live from getProvisionRemaining — do NOT hardcode it in MONTHLY_INVESTMENTS snapshots. Opening 195,000. Drawdowns reduce both sides equally.",
+    },
+    {
+      title: "Investec 90 Day — Withdrawal & Rebalance",
+      category: "Cash",
+      detail: "£52,356 has been withdrawn from Investec 90 Day (James) and is due to arrive in early June 2026. Once received: transfer £16,258 back into the Investec accounts so that the ring-fenced tax reserve (£295,200 − £52,356 + £16,258 = £259,102) closely matches the total tax liability (~£259k). The net adjustment in the Tax tab is shown as −£36,098 (= £52,356 − £16,258). Update Investec funds in transit in MONTHLY_CASH once the cash lands in its destination account.",
+    },
+  ];
+
+  var CATEGORY_COLORS = {
+    "Cash": STYLE.blue,
+    "Cash / Investments": STYLE.purple,
+    "Investments": STYLE.green,
+    "Tax": STYLE.amber,
+    "P&L / Budget": STYLE.gold,
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ fontSize: "20px", color: STYLE.text, fontWeight: "300", marginBottom: "4px" }}>{"Admin \u0026 Rules"}</div>
+        <div style={{ fontSize: "12px", color: STYLE.textMuted }}>Documented rules and conventions for the dashboard. Add new rules here to avoid overwriting important logic.</div>
+      </div>
+
+      {RULES.map(function(rule, i) {
+        return (
+          <div key={i} style={{ marginBottom: "16px", background: STYLE.card, border: "1px solid " + STYLE.border, borderRadius: "6px", padding: "16px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "3px", background: "#1a2030", color: CATEGORY_COLORS[rule.category] || STYLE.textMuted, fontWeight: "bold", letterSpacing: "1px", textTransform: "uppercase" }}>{rule.category}</span>
+              <span style={{ fontSize: "13px", color: STYLE.text, fontWeight: "500" }}>{rule.title}</span>
+            </div>
+            <div style={{ fontSize: "12px", color: STYLE.textMuted, lineHeight: "1.6" }}>{rule.detail}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function Dashboard() {
   var [activeTab, setActiveTab] = useState("ourmoney");
@@ -3707,7 +4084,6 @@ function Dashboard() {
       </div>
       <div style={{ padding: "28px 32px" }}>
         {activeTab === "ourmoney" && <OurMoneyTab monthlyData={monthlyData} />}
-        {activeTab === "2026summary" && <Summary2026Tab />}
         {activeTab === "pnl" && <PnLTab monthlyData={monthlyData} />}
         {activeTab === "budget" && <BudgetTab monthlyData={monthlyData} isAllocated={ALLOCATION_MAP} />}
         {activeTab === "provisions" && <ProvisionsTab />}
@@ -3718,19 +4094,15 @@ function Dashboard() {
         {activeTab === "bigpicture" && <BigPictureTab />}
         {activeTab === "candidates" && <CandidatesTab candidates={candidates} />}
         {activeTab === "wealth" && <WealthTab />}
+        {activeTab === "admin" && <AdminTab />}
       </div>
     </div>
   );
 }
 
 window.__mountDashboard = function() {
-  const root = ReactDOM.createRoot(document.getElementById('root'));
+  const root = ReactDOM.createRoot(document.getElementById("root"));
   root.render(React.createElement(Dashboard));
 };
-
-if (sessionStorage.getItem('auth')) {
-  window.__mountDashboard();
-}
-</script>
-</body>
-</html>
+if (sessionStorage.getItem("auth")) { window.__mountDashboard(); }
+</script></body></html>

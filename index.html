@@ -236,7 +236,7 @@ const RAW_TRANSACTIONS = [
   { date: "2026-05-19", merchant: "TFL", amount: -7.4, category: "Transport" },
   { date: "2026-05-19", merchant: "", amount: -70.0, category: "Health & Beauty" },
   { date: "2026-05-19", merchant: "Amazon", amount: -14.99, category: "Clothing & Shoes" },
-  { date: "2026-05-19", merchant: "", amount: -140.0, category: "Health & Beauty" },
+  { date: "2026-05-19", merchant: "Nikki - Haircut", amount: -140.0, category: "Health & Beauty" },
   { date: "2026-05-19", merchant: "", amount: 9.24, category: "Income" },
   { date: "2026-05-19", merchant: "Amazon", amount: -7.98, category: "General" },
   { date: "2026-05-19", merchant: "Amazon", amount: -5.94, category: "General" },
@@ -1593,7 +1593,7 @@ const INTEREST_DATA = [
   { name: "Bank of London", interest: 0.01, owner: "James", taxRate: 0.45, taxYear: "26/27" },
   { name: "Vida Savings", interest: 309.46, owner: "James", taxRate: 0.45, taxYear: "26/27" },
   { name: "Paragon", interest: 477.45, owner: "James", taxRate: 0.45, taxYear: "26/27" },
-  { name: "Monzo Savings", interest: 282.00, owner: "James", taxRate: 0.45, taxYear: "26/27" },
+  { name: "Monzo Savings", interest: 282.00 + 294.79, owner: "James", taxRate: 0.45, taxYear: "26/27" },
   { name: "Investec 90 Day (James)", interest: 484.84, owner: "James", taxRate: 0.45, taxYear: "26/27" },
   { name: "Investec 90 Day (Jemma)", interest: 468.37, owner: "Jemma", taxRate: 0, taxYear: "26/27" },
 ];
@@ -1708,6 +1708,9 @@ const PROVISIONS_DATA = [
     { date: "Dec 2025", desc: "Presents", amount: 2808.85, cat: "Presents" },
     { date: "Dec 2025", desc: "Family Tech", amount: 32.40, cat: "Annual Costs" },
     { date: "Jan 2026", desc: "Presents", amount: 50.28, cat: "Presents" },
+    { date: "Oct 2025", desc: "Family Tech", amount: 199.00, cat: "General" },
+    { date: "Oct 2025", desc: "Presents", amount: 95.00, cat: "General" },
+    { date: "Oct 2025", desc: "Flats", amount: 804.00, cat: "Household Bills" },
     { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
     { date: "May 2026", desc: "Presents", amount: 348.50, cat: "Entertainment" },
     { date: "May 2026", desc: "Family Tech", amount: 700.00, cat: "Annual Costs" },
@@ -1758,7 +1761,10 @@ const PROVISIONS_DATA = [
     { label: "Note: figures from memory — adjust allocated 24/25 as needed", amount: null },
     { label: "Note: one further Mar-26 donation pending — charity TBC", amount: null },
   ], drawdowns: [
-    { date: "Nov 2025", desc: "NSPCC", amount: 100.00, cat: "Charity" },
+    { date: "Oct 2025", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+      { date: "Oct 2025", desc: "Battersea Dogs", amount: 10.00, cat: "Charity" },
+      { date: "Oct 2025", desc: "NSPCC", amount: 100.00, cat: "Charity" },
+      { date: "Nov 2025", desc: "NSPCC", amount: 100.00, cat: "Charity" },
     { date: "Nov 2025", desc: "Battersea Dogs", amount: 10.00, cat: "Charity" },
     { date: "Nov 2025", desc: "Royal British Legion", amount: 9.00, cat: "Charity" },
     { date: "Nov 2025", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
@@ -1917,6 +1923,7 @@ const PROVISIONS_DATA = [
   { name: "School Fees", opening: 13178.40, isIncome: true, drawdowns: [
     { date: "Jan 2026", desc: "School fees refund", amount: -108, cat: "School Fees" },
   ], excludes: [
+      { date: "Oct 2025", desc: "GBP/AED transfer to Wise (one side only — AED spent in Dubai on Wise card, not double-counted)", amount: 800, cat: "Holidays" },
     { date: "Sep 2025", desc: "Blackheath Prep - autumn term", amount: 5644, cat: "School Fees" },
     { date: "Sep 2025", desc: "Blackheath Prep - autumn term", amount: 7534.40, cat: "School Fees" },
     { date: "Jan 2026", desc: "Blackheath Prep - spring term", amount: 5644, cat: "School Fees" },
@@ -2002,6 +2009,15 @@ const WEALTH_SNAPSHOTS = [
     deferred:     2716821,
     provisions:   -691662,
     total:        7747687,
+  },
+  {
+    month: "May-26",
+    investments:  5431086,
+    tax:          0,
+    cash:         333805,
+    deferred:     2716821,
+    provisions:   -711852,
+    total:        7769860,
   },
 ];
 
@@ -2197,7 +2213,7 @@ function BudgetTab({ monthlyData, isAllocated }) {
 
   function getTransactions(mk, cat) {
     return RAW_TRANSACTIONS.filter(function(t) {
-      return getMonthKey(t.date) === mk && resolveCategory(t) === cat && t.amount < 0 && !isAllocatedFn(mk, t.amount);
+      return getMonthKey(t.date) === mk && resolveCategory(t) === cat && !isAllocatedFn(mk, t.amount);
     }).sort(function(a,b){ return a.date.localeCompare(b.date); });
   }
 
@@ -2434,6 +2450,13 @@ function PnLTab({ monthlyData }) {
   function Row({ label, mkFn, liveTotal, indent, bold, highlight, muted }) {
     var baseColor = muted ? STYLE.textMuted : bold ? STYLE.text : STYLE.textSub;
     var bg = highlight ? "#1a2030" : "transparent";
+    // Sum all months that have a value
+    var allTotal = ALL_MONTHS.reduce(function(s, col) {
+      var v = mkFn(col.mk, col.live);
+      return v !== null ? s + v : s;
+    }, 0);
+    var hasAny = ALL_MONTHS.some(function(col){ return mkFn(col.mk, col.live) !== null; });
+    var displayTotal = hasAny ? allTotal : null;
     return (
       <tr style={{ borderBottom: "1px solid #1a1e28", background: bg }}>
         <td style={{ padding: "7px 12px 7px " + (indent ? "24px" : "12px"), color: baseColor, fontSize: "12px", fontWeight: bold ? "bold" : "normal" }}>{label}</td>
@@ -2447,8 +2470,8 @@ function PnLTab({ monthlyData }) {
             </td>
           );
         })}
-        <td style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: liveTotal === null ? "#3a4a5a" : colN(liveTotal), fontWeight: bold ? "bold" : "normal", borderLeft: "1px solid " + STYLE.border }}>
-          {liveTotal === null ? "-" : fmtN(liveTotal)}
+        <td style={{ textAlign: "right", padding: "7px 12px", fontSize: "12px", color: displayTotal === null ? "#3a4a5a" : colN(displayTotal), fontWeight: bold ? "bold" : "normal", borderLeft: "1px solid " + STYLE.border }}>
+          {displayTotal === null ? "-" : fmtN(displayTotal)}
         </td>
       </tr>
     );
@@ -2468,7 +2491,7 @@ function PnLTab({ monthlyData }) {
 
   var tHeadCols = [{ label: "Item" }]
     .concat(ALL_MONTHS.map(function(col) { return { label: col.label, right: true }; }))
-    .concat([{ label: "3mo Total", right: true }]);
+    .concat([{ label: "Total", right: true }]);
 
   return (
     <div>
@@ -2501,7 +2524,7 @@ function PnLTab({ monthlyData }) {
                 </th>
               );
             })}
-            <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>3mo Total</th>
+            <th style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "11px", borderLeft: "1px solid " + STYLE.border }}>Total</th>
           </tr>
         </thead>
         <tbody>
@@ -2564,7 +2587,7 @@ function PnLTab({ monthlyData }) {
         </tbody>
       </table>
       <p style={{ marginTop: "8px", fontSize: "11px", color: STYLE.textMuted, fontStyle: "italic" }}>
-        3mo Total covers the live transaction window only (Feb–Apr 26). Greyed columns are pending historical data.
+        Total covers all months shown in the table (Feb–Apr 26). Greyed columns are pending historical data.
       </p>
     </div>
   );
@@ -2681,11 +2704,7 @@ function ProvisionsTab() {
                 var grandTotal = drawdownRows.reduce(function(s,d){ return s+d.amount; }, 0);
 
                 return [
-                  // Provision name as section header row
-                  <tr key={p.name + "-hdr"} style={{ background: "#181e28", borderTop: "2px solid #1a2030" }}>
-                    <td colSpan={ALL_PROV_MONTHS.length + 2} style={{ padding: "6px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{p.name}</td>
-                  </tr>,
-                  // Sub-category rows
+                  // Sub-category rows (no provision header)
                   Object.keys(subCats).map(function(desc) {
                     var monthAmts = subCats[desc];
                     var rowTotal = Object.values(monthAmts).reduce(function(s,v){ return s+v; }, 0);
@@ -2706,9 +2725,9 @@ function ProvisionsTab() {
                       </tr>
                     );
                   }),
-                  // Provision total row
+                  // Provision total row with name
                   <tr key={p.name + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
-                    <td style={{ padding: "6px 12px 6px 20px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+                    <td style={{ padding: "6px 12px 6px 20px", color: STYLE.blue, fontWeight: "bold" }}>{p.name + " Total"}</td>
                     {ALL_PROV_MONTHS.map(function(m) {
                       var mTotal = drawdownRows.filter(function(d){ return d.date === m.prefix; }).reduce(function(s,d){ return s+d.amount; }, 0);
                       return <td key={m.mk} style={{ textAlign: "right", padding: "6px 12px", color: mTotal ? STYLE.amber : "#3a4a5a", fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "—"}</td>;
@@ -2717,6 +2736,24 @@ function ProvisionsTab() {
                   </tr>,
                 ];
               })}
+              {/* Grand total row across all provisions */}
+              {(function() {
+                var allMonthPrefixes = ALL_PROV_MONTHS.map(function(m){ return m.prefix; });
+                var allDrawdowns = detailProvisions.reduce(function(acc, p) {
+                  return acc.concat((p.drawdowns||[]).filter(function(d){ return allMonthPrefixes.indexOf(d.date) !== -1; }));
+                }, []);
+                var overallTotal = allDrawdowns.reduce(function(s,d){ return s+d.amount; }, 0);
+                return (
+                  <tr key="grand-total" style={{ borderTop: "3px solid " + STYLE.blue, background: "#141c2c" }}>
+                    <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>All Provisions Total</td>
+                    {ALL_PROV_MONTHS.map(function(m) {
+                      var mTotal = allDrawdowns.filter(function(d){ return d.date === m.prefix; }).reduce(function(s,d){ return s+d.amount; }, 0);
+                      return <td key={m.mk} style={{ textAlign: "right", padding: "8px 12px", color: mTotal ? STYLE.blue : "#3a4a5a", fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "—"}</td>;
+                    })}
+                    <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.blue, fontWeight: "bold", fontSize: "13px" }}>{fmtN(-overallTotal)}</td>
+                  </tr>
+                );
+              })()}
             </tbody>
           </table>
         </div>
@@ -3565,8 +3602,23 @@ function OurMoneyTab({ monthlyData }) {
     var drawn = (p.drawdowns || []).reduce(function(s, d) { return s + d.amount; }, 0);
     var remaining = p.opening - drawn;
     var pct = Math.min(100, Math.round((drawn / p.opening) * 100));
-    var drawdownLines = (p.drawdowns || []).filter(function(d){ return d.amount > 0; })
-      .map(function(d){ return { label: d.desc + " (" + (d.date||"") + ")", value: -d.amount }; });
+    // Group drawdowns by desc (sub-category) and sum amounts
+    var descMap = {};
+    (p.drawdowns || []).forEach(function(d) {
+      if (d.amount <= 0) return; // skip refunds in total (they still net in remaining)
+      if (!descMap[d.desc]) descMap[d.desc] = 0;
+      descMap[d.desc] += d.amount;
+    });
+    // Include refunds (negative amounts) as their own lines
+    (p.drawdowns || []).forEach(function(d) {
+      if (d.amount >= 0) return;
+      var label = d.desc + " (refund)";
+      if (!descMap[label]) descMap[label] = 0;
+      descMap[label] += d.amount;
+    });
+    var drawdownLines = Object.keys(descMap).map(function(desc) {
+      return { label: desc, value: -descMap[desc] };
+    });
     potsByName[p.name] = {
       key: p.name,
       label: FRIENDLY[p.name].label,
@@ -3693,7 +3745,17 @@ function OurMoneyTab({ monthlyData }) {
       {/* Monthly Spending — rolling 3 months */}
       <div style={{ marginBottom: "16px" }}>
         <div style={{ fontSize: "10px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "14px" }}>Monthly Spending</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: "12px" }}>
+        <colgroup>
+          <col style={{ width: "18%" }} />
+          <col style={{ width: "11%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "11%" }} />
+        </colgroup>
           <thead>
             <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
               <th style={{ textAlign: "left", padding: "8px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Category</th>
@@ -4038,7 +4100,17 @@ function SummaryTab() {
       {/* Executive Summary */}
       <div style={{ marginBottom: "36px" }}>
         <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Executive Summary</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: "12px" }}>
+          <colgroup>
+            <col style={{ width: "18%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "11%" }} />
+          </colgroup>
           <thead>
             <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
               <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Section</th>
@@ -4086,7 +4158,17 @@ function SummaryTab() {
       <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
         Multi-year view. Total is the first number to the right of each item.
       </p>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+      <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: "12px" }}>
+      <colgroup>
+        <col style={{ width: "18%" }} />
+        <col style={{ width: "11%" }} />
+        <col style={{ width: "8%" }} />
+        <col style={{ width: "8%" }} />
+        <col style={{ width: "8%" }} />
+        <col style={{ width: "8%" }} />
+        <col style={{ width: "8%" }} />
+        <col style={{ width: "11%" }} />
+      </colgroup>
         <thead>
           <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
             <th style={{ textAlign: "left", padding: "10px 12px", color: STYLE.textMuted, fontWeight: "normal", fontSize: "11px" }}>Item</th>
@@ -4118,7 +4200,7 @@ function SummaryTab() {
                 <tr key={g.key} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
                   <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{g.label}</td>
                   <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
-                  <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                  <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
                   <td style={{ textAlign: "right", padding: "8px 12px", color: v < 0 ? STYLE.red : STYLE.purple }}>{fmtN(v)}</td>
                 </tr>
               );
@@ -4127,13 +4209,13 @@ function SummaryTab() {
           <tr style={{ borderTop: "1px solid #3a4a5a", background: "#1e2838" }}>
             <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Investments Total</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
-            <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.purple, fontWeight: "bold" }}>{fmtN(invNetTotal)}</td>
           </tr>
           <tr style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
             <td style={{ padding: "8px 12px", color: STYLE.text, fontWeight: "bold" }}>Equity Release — Downsize Family Home</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
-            <td colSpan={5} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: STYLE.purple, fontWeight: "bold" }}>{fmtN(DOWNSIZE_EST)}</td>
           </tr>
 
@@ -4145,7 +4227,7 @@ function SummaryTab() {
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: is2027 ? "#3a4a5a" : colN(r.val) }}>{is2027 ? "-" : fmtN(r.val)}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: is2027 ? colN(r.val) : "#3a4a5a" }}>{is2027 ? fmtN(r.val) : "-"}</td>
-                <td colSpan={3} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
               </tr>
             );
@@ -4155,7 +4237,7 @@ function SummaryTab() {
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026 + taxNet2027), fontWeight: "bold" }}>{fmtN(taxNet2026 + taxNet2027)}</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2026), fontWeight: "bold" }}>{fmtN(taxNet2026)}</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(taxNet2027), fontWeight: "bold" }}>{fmtN(taxNet2027)}</td>
-            <td colSpan={3} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
           </tr>
 
@@ -4165,7 +4247,7 @@ function SummaryTab() {
                 <td style={{ padding: "8px 12px 8px 20px", color: STYLE.textSub }}>{r.name}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val), fontWeight: "bold" }}>{fmtN(r.val)}</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: colN(r.val) }}>{fmtN(r.val)}</td>
-                <td colSpan={4} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+                <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
                 <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
               </tr>
             );
@@ -4174,7 +4256,7 @@ function SummaryTab() {
             <td style={{ padding: "8px 12px", color: STYLE.blue, fontWeight: "bold" }}>Cash Total</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: colN(cashNet2026), fontWeight: "bold" }}>{fmtN(cashNet2026)}</td>
-            <td colSpan={4} style={{ textAlign: "center", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
+            <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td><td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>—</td>
             <td style={{ textAlign: "right", padding: "8px 12px", color: "#3a4a5a" }}>-</td>
           </tr>
 

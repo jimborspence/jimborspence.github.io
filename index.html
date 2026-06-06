@@ -70,6 +70,415 @@ const { useState, useMemo } = React;
 // RAW TRANSACTION DATA
 // ============================================================
 const RAW_TRANSACTIONS = [
+  // ── May-26 transactions ──
+  { date: "2026-05-31", merchant: "", amount: 27.74, category: "Income" },
+  { date: "2026-05-31", merchant: "Starbucks Coffee", amount: -4.8, category: "Eating Out" },
+  { date: "2026-05-31", merchant: "Amazon", amount: -11.48, category: "Health & Beauty" },
+  { date: "2026-05-31", merchant: "Royal Borough of Greenwich", amount: -5.08, category: "Transport" },
+  { date: "2026-05-31", merchant: "Planet Pancake", amount: -5.0, category: "General" },
+  { date: "2026-05-31", merchant: "Pets Corner", amount: -17.83, category: "Coco" },
+  { date: "2026-05-31", merchant: "Peyton And Byrne", amount: -8.9, category: "Eating Out" },
+  { date: "2026-05-31", merchant: "Amazon", amount: 19.53, category: "General" },
+  { date: "2026-05-31", merchant: "Amazon", amount: -7.99, category: "Presents" },
+  { date: "2026-05-31", merchant: "Space Safari City OF London", amount: -75.48, category: "Entertainment" },
+  { date: "2026-05-31", merchant: "Amazon", amount: -8.99, category: "Presents" },
+  { date: "2026-05-31", merchant: "Amazon", amount: -18.86, category: "Health & Beauty" },
+  { date: "2026-05-31", merchant: "Montpeliers Montpeliers", amount: -16.1, category: "Eating Out" },
+  { date: "2026-05-31", merchant: "Peyton And Byrne", amount: -31.5, category: "Eating Out" },
+  { date: "2026-05-31", merchant: "Amazon", amount: -19.53, category: "Coco" },
+  { date: "2026-05-31", merchant: "Amazon", amount: -75.5, category: "Health & Beauty" },
+  { date: "2026-05-30", merchant: "Polhill Farm Shop", amount: -4.18, category: "Groceries" },
+  { date: "2026-05-30", merchant: "Gemini Parking Sol Lon", amount: -3.5, category: "Transport" },
+  { date: "2026-05-30", merchant: "Blackheath Standard Pha", amount: -23.89, category: "Health & Beauty" },
+  { date: "2026-05-30", merchant: "Eventbrite", amount: -349.0, category: "Entertainment" },
+  { date: "2026-05-30", merchant: "S.O.S Coffee", amount: -8.9, category: "Eating Out" },
+  { date: "2026-05-30", merchant: "Marks & Spencer", amount: -8.0, category: "Groceries" },
+  { date: "2026-05-30", merchant: "Polhill Garden Centre", amount: -6.45, category: "Eating Out" },
+  { date: "2026-05-30", merchant: "Polhill Garden Centre", amount: -45.2, category: "Presents" },
+  { date: "2026-05-30", merchant: "SP The Hive", amount: -70.0, category: "Entertainment" },
+  { date: "2026-05-30", merchant: "S.O.S Coffee", amount: -44.7, category: "Eating Out" },
+  { date: "2026-05-30", merchant: "Lime*Prime", amount: -6.99, category: "General" },
+  { date: "2026-05-30", merchant: "Eventbrite", amount: -349.0, category: "Entertainment" },
+  { date: "2026-05-30", merchant: "Amazon", amount: -74.99, category: "General" },
+  { date: "2026-05-30", merchant: "Amazon", amount: -86.84, category: "Presents" },
+  { date: "2026-05-29", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-29", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-29", merchant: "Amazon", amount: -10.68, category: "Presents" },
+  { date: "2026-05-29", merchant: "Better", amount: -63.17, category: "Entertainment" },
+  { date: "2026-05-29", merchant: "Amazon", amount: -8.71, category: "Presents" },
+  { date: "2026-05-29", merchant: "Sainsbury's", amount: -108.79, category: "Groceries" },
+  { date: "2026-05-29", merchant: "Amazon", amount: -11.35, category: "Health & Beauty" },
+  { date: "2026-05-29", merchant: "Ruxley Manor Garden Cen Sidcup", amount: -2.49, category: "Eating Out" },
+  { date: "2026-05-29", merchant: "Mighty Kids", amount: -27.49, category: "Health & Beauty" },
+  { date: "2026-05-29", merchant: "Amazon", amount: -17.99, category: "Health & Beauty" },
+  { date: "2026-05-29", merchant: "Ruxley Manor Garden Cen Sidcup", amount: -5.98, category: "Eating Out" },
+  { date: "2026-05-29", merchant: "Starbucks Coffee", amount: -30.0, category: "Eating Out" },
+  { date: "2026-05-29", merchant: "Perks", amount: -7.0, category: "Finances" },
+  { date: "2026-05-29", merchant: "Lex Autolease", amount: -1437.16, category: "Range Rover" },
+  { date: "2026-05-28", merchant: "McDonalds", amount: -10.0, category: "Eating Out" },
+  { date: "2026-05-28", merchant: "The Works", amount: -15.0, category: "General" },
+  { date: "2026-05-28", merchant: "Showcase Cinemas", amount: -6.0, category: "Entertainment" },
+  { date: "2026-05-28", merchant: "A J Rogers Sons", amount: -1696.72, category: "Home & Family" },
+  { date: "2026-05-28", merchant: "Tortilla", amount: -17.35, category: "Eating Out" },
+  { date: "2026-05-28", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-28", merchant: "Cko*Temu", amount: -27.78, category: "General" },
+  { date: "2026-05-28", merchant: "Paymy.Vet* Blackheath", amount: -22.59, category: "General" },
+  { date: "2026-05-28", merchant: "Apple", amount: -2297.0, category: "Home & Family" },
+  { date: "2026-05-28", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-28", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-28", merchant: "Boots", amount: -25.63, category: "Health & Beauty" },
+  { date: "2026-05-28", merchant: "Marks & Spencer", amount: -19.4, category: "Groceries" },
+  { date: "2026-05-28", merchant: "Tesco", amount: -4.57, category: "Groceries" },
+  { date: "2026-05-28", merchant: "Amazon", amount: -19.77, category: "Health & Beauty" },
+  { date: "2026-05-28", merchant: "Showcase Cinemas", amount: -14.97, category: "Entertainment" },
+  { date: "2026-05-28", merchant: "Apple", amount: -12.99, category: "Subscriptions" },
+  { date: "2026-05-28", merchant: "Apple", amount: -0.99, category: "Subscriptions" },
+  { date: "2026-05-28", merchant: "", amount: 9.25, category: "Income" },
+  { date: "2026-05-27", merchant: "Pets at Home", amount: -41.36, category: "Coco" },
+  { date: "2026-05-27", merchant: "Home Bargains", amount: -30.73, category: "General" },
+  { date: "2026-05-27", merchant: "SP Happy Candy UK Pontefract", amount: -6.39, category: "Groceries" },
+  { date: "2026-05-27", merchant: "Amazon", amount: -3.85, category: "Health & Beauty" },
+  { date: "2026-05-27", merchant: "Center Parcs", amount: 1084.0, category: "Holidays" },
+  { date: "2026-05-27", merchant: "Apple", amount: -19.99, category: "Subscriptions" },
+  { date: "2026-05-27", merchant: "Sainsbury's", amount: -3.24, category: "Groceries" },
+  { date: "2026-05-27", merchant: "", amount: -65.0, category: "Health & Beauty" },
+  { date: "2026-05-27", merchant: "", amount: 9.25, category: "Income" },
+  { date: "2026-05-26", merchant: "Sky", amount: -107.99, category: "Household Bills" },
+  { date: "2026-05-26", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-26", merchant: "Sainsbury's", amount: -150.11, category: "Groceries" },
+  { date: "2026-05-26", merchant: "Starbucks Coffee", amount: -30.0, category: "Eating Out" },
+  { date: "2026-05-26", merchant: "Danson Park - Hand", amount: -14.0, category: "Eating Out" },
+  { date: "2026-05-26", merchant: "", amount: -52.48, category: "Holidays" },
+  { date: "2026-05-26", merchant: "", amount: 9.24, category: "Income" },
+  { date: "2026-05-26", merchant: "Peloton", amount: -45.0, category: "Subscriptions" },
+  { date: "2026-05-26", merchant: "Digitec", amount: -37.89, category: "Presents" },
+  { date: "2026-05-26", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-25", merchant: "Amazon", amount: -42.63, category: "Health & Beauty" },
+  { date: "2026-05-25", merchant: "Bedgebury", amount: -11.9, category: "Eating Out" },
+  { date: "2026-05-25", merchant: "Center Parcs", amount: 92.0, category: "Holidays" },
+  { date: "2026-05-25", merchant: "Bedgebury", amount: -9.1, category: "Eating Out" },
+  { date: "2026-05-25", merchant: "Marks & Spencer", amount: -29.25, category: "Groceries" },
+  { date: "2026-05-25", merchant: "Dart Charge", amount: -3.5, category: "Transport" },
+  { date: "2026-05-25", merchant: "Starbucks Coffee", amount: -4.8, category: "Eating Out" },
+  { date: "2026-05-25", merchant: "Forestry England", amount: -8.0, category: "Transport" },
+  { date: "2026-05-25", merchant: "Amazon", amount: -33.0, category: "Health & Beauty" },
+  { date: "2026-05-25", merchant: "Bedgebury", amount: -1.2, category: "Eating Out" },
+  { date: "2026-05-25", merchant: "Amazon", amount: -19.18, category: "Health & Beauty" },
+  { date: "2026-05-25", merchant: "Jet2", amount: -7349.36, category: "Holidays" },
+  { date: "2026-05-25", merchant: "Amazon", amount: -11.99, category: "Health & Beauty" },
+  { date: "2026-05-25", merchant: "Center Parcs", amount: 11.5, category: "Holidays" },
+  { date: "2026-05-25", merchant: "Hobbycraft", amount: -31.7, category: "General" },
+  { date: "2026-05-25", merchant: "Amazon", amount: -9.99, category: "Health & Beauty" },
+  { date: "2026-05-25", merchant: "Lidl", amount: -5.43, category: "Groceries" },
+  { date: "2026-05-25", merchant: "", amount: 8.99, category: "General" },
+  { date: "2026-05-25", merchant: "", amount: 4.99, category: "Entertainment" },
+  { date: "2026-05-25", merchant: "", amount: 36.97, category: "Income" },
+  { date: "2026-05-24", merchant: "Cdl Hbt Cambridge City", amount: -328.2, category: "Holidays" },
+  { date: "2026-05-24", merchant: "Dart Charge", amount: -3.5, category: "Transport" },
+  { date: "2026-05-24", merchant: "Barehams Kennels Grays", amount: -79.5, category: "Holidays" },
+  { date: "2026-05-24", merchant: "Amazon", amount: -13.95, category: "Clothing & Shoes" },
+  { date: "2026-05-24", merchant: "Marks & Spencer", amount: -10.95, category: "Groceries" },
+  { date: "2026-05-23", merchant: "The Patch D&D", amount: -15.95, category: "General" },
+  { date: "2026-05-23", merchant: "McDonalds", amount: -5.0, category: "Eating Out" },
+  { date: "2026-05-23", merchant: "Grand Arcade Car Park", amount: -29.7, category: "Transport" },
+  { date: "2026-05-23", merchant: "Shell", amount: -100.65, category: "Transport" },
+  { date: "2026-05-23", merchant: "Itsu", amount: -44.08, category: "Eating Out" },
+  { date: "2026-05-23", merchant: "Amazon", amount: -15.99, category: "General" },
+  { date: "2026-05-23", merchant: "The Patch D&D", amount: -4.0, category: "General" },
+  { date: "2026-05-23", merchant: "Scudamores", amount: -115.0, category: "Holidays" },
+  { date: "2026-05-23", merchant: "discovery+", amount: -30.99, category: "Household Bills" },
+  { date: "2026-05-23", merchant: "Starbucks Coffee", amount: -4.8, category: "Eating Out" },
+  { date: "2026-05-23", merchant: "S.O.S Coffee", amount: -8.8, category: "Eating Out" },
+  { date: "2026-05-23", merchant: "S.O.S Coffee", amount: -45.7, category: "Eating Out" },
+  { date: "2026-05-23", merchant: "Dojo*The Millworks", amount: -169.13, category: "Holidays" },
+  { date: "2026-05-22", merchant: "Prezola", amount: -200.74, category: "Presents" },
+  { date: "2026-05-22", merchant: "Waterstones", amount: -8.99, category: "Entertainment" },
+  { date: "2026-05-22", merchant: "Marks & Spencer", amount: -4.9, category: "Groceries" },
+  { date: "2026-05-22", merchant: "Blackheath Prep P", amount: -2.0, category: "General" },
+  { date: "2026-05-22", merchant: "Blackheath Prep P", amount: -2.0, category: "General" },
+  { date: "2026-05-22", merchant: "Smyths Toys Superstores", amount: -57.99, category: "Presents" },
+  { date: "2026-05-22", merchant: "JD Sports", amount: 20.0, category: "Clothing & Shoes" },
+  { date: "2026-05-22", merchant: "Zara", amount: 29.99, category: "Clothing & Shoes" },
+  { date: "2026-05-22", merchant: "Blackheath Prep P", amount: -2.0, category: "General" },
+  { date: "2026-05-22", merchant: "Zara", amount: 35.99, category: "Clothing & Shoes" },
+  { date: "2026-05-22", merchant: "Sainsbury's", amount: -3.56, category: "Groceries" },
+  { date: "2026-05-22", merchant: "Musical Instrument Hir Holwell", amount: -25.0, category: "School Costs" },
+  { date: "2026-05-22", merchant: "Amazon", amount: -6.43, category: "Presents" },
+  { date: "2026-05-22", merchant: "", amount: 1070.0, category: "Internal Transfers" },
+  { date: "2026-05-22", merchant: "Musical Instrument Hir", amount: -24.0, category: "School Costs" },
+  { date: "2026-05-22", merchant: "", amount: 8735.86, category: "Salary" },
+  { date: "2026-05-22", merchant: "James Spence", amount: -1070.0, category: "Internal Transfers" },
+  { date: "2026-05-22", merchant: "Boots", amount: -15.78, category: "Groceries" },
+  { date: "2026-05-21", merchant: "Sainsbury's", amount: -3.0, category: "Groceries" },
+  { date: "2026-05-21", merchant: "Dart Charge", amount: -7.0, category: "Transport" },
+  { date: "2026-05-21", merchant: "James Gough", amount: 1000.0, category: "General" },
+  { date: "2026-05-21", merchant: "The Night Yard", amount: -3.5, category: "Eating Out" },
+  { date: "2026-05-21", merchant: "", amount: 9.24, category: "Income" },
+  { date: "2026-05-20", merchant: "GO West Hair Salon", amount: -35.0, category: "Health & Beauty" },
+  { date: "2026-05-20", merchant: "Spotify", amount: 35.77, category: "Subscriptions" },
+  { date: "2026-05-20", merchant: "GO West Hair S", amount: -5.0, category: "Health & Beauty" },
+  { date: "2026-05-20", merchant: "Marks & Spencer", amount: -10.65, category: "Groceries" },
+  { date: "2026-05-20", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-20", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-20", merchant: "", amount: 9.24, category: "Income" },
+  { date: "2026-05-20", merchant: "Marks & Spencer", amount: -42.0, category: "Groceries" },
+  { date: "2026-05-20", merchant: "Cut Price Wholesaler", amount: -275.3, category: "Work Expenses" },
+  { date: "2026-05-20", merchant: "Sainsbury's", amount: 11.24, category: "Groceries" },
+  { date: "2026-05-20", merchant: "Sainsbury's", amount: -153.51, category: "Groceries" },
+  { date: "2026-05-20", merchant: "Pets at Home", amount: -37.89, category: "Coco" },
+  { date: "2026-05-19", merchant: "Amazon", amount: -8.99, category: "Health & Beauty" },
+  { date: "2026-05-19", merchant: "eduFOCUS", amount: -9.9, category: "School Costs" },
+  { date: "2026-05-19", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-19", merchant: "Amazon", amount: -133.96, category: "General" },
+  { date: "2026-05-19", merchant: "Marks & Spencer", amount: -24.92, category: "Groceries" },
+  { date: "2026-05-19", merchant: "PF Pharma Ltd", amount: -7.99, category: "Health & Beauty" },
+  { date: "2026-05-19", merchant: "Amazon", amount: -3.99, category: "Clothing & Shoes" },
+  { date: "2026-05-19", merchant: "TFL", amount: -7.4, category: "Transport" },
+  { date: "2026-05-19", merchant: "", amount: -70.0, category: "Health & Beauty" },
+  { date: "2026-05-19", merchant: "Amazon", amount: -14.99, category: "Clothing & Shoes" },
+  { date: "2026-05-19", merchant: "", amount: -140.0, category: "Health & Beauty" },
+  { date: "2026-05-19", merchant: "", amount: 9.24, category: "Income" },
+  { date: "2026-05-19", merchant: "Amazon", amount: -7.98, category: "General" },
+  { date: "2026-05-19", merchant: "Amazon", amount: -5.94, category: "General" },
+  { date: "2026-05-19", merchant: "Charing Cross Station", amount: -1.1, category: "Groceries" },
+  { date: "2026-05-18", merchant: "", amount: 9.24, category: "Income" },
+  { date: "2026-05-18", merchant: "Starbucks Coffee", amount: -4.5, category: "Eating Out" },
+  { date: "2026-05-18", merchant: "eduFOCUS", amount: -19.8, category: "School Costs" },
+  { date: "2026-05-18", merchant: "Eventbrite", amount: -349.0, category: "Entertainment" },
+  { date: "2026-05-18", merchant: "Amazon", amount: -12.1, category: "Clothing & Shoes" },
+  { date: "2026-05-18", merchant: "Sainsbury's", amount: -5.9, category: "Groceries" },
+  { date: "2026-05-18", merchant: "SP The Hive", amount: -139.0, category: "Entertainment" },
+  { date: "2026-05-17", merchant: "Starbucks Coffee", amount: -30.0, category: "Eating Out" },
+  { date: "2026-05-17", merchant: "Yankee Store", amount: -22.49, category: "Presents" },
+  { date: "2026-05-17", merchant: "Marks & Spencer", amount: -24.6, category: "Groceries" },
+  { date: "2026-05-17", merchant: "The Works", amount: -2.0, category: "General" },
+  { date: "2026-05-17", merchant: "Boots", amount: -5.75, category: "Health & Beauty" },
+  { date: "2026-05-17", merchant: "Tortilla", amount: -12.05, category: "Eating Out" },
+  { date: "2026-05-17", merchant: "Zara", amount: -60.08, category: "Clothing & Shoes" },
+  { date: "2026-05-17", merchant: "Tortilla", amount: -7.5, category: "Eating Out" },
+  { date: "2026-05-17", merchant: "Charles Tyrwhitt", amount: -149.0, category: "Clothing & Shoes" },
+  { date: "2026-05-17", merchant: "McDonalds", amount: -4.29, category: "Eating Out" },
+  { date: "2026-05-17", merchant: "4306 Ryman Design Bluew Dartford", amount: -2.0, category: "General" },
+  { date: "2026-05-17", merchant: "Starbucks Coffee", amount: -4.25, category: "Eating Out" },
+  { date: "2026-05-17", merchant: "Monte Birthday Party", amount: -348.5, category: "Entertainment" },
+  { date: "2026-05-17", merchant: "", amount: 27.7, category: "Income" },
+  { date: "2026-05-17", merchant: "4306 Ryman Design Bluew Dartford", amount: -3.99, category: "General" },
+  { date: "2026-05-16", merchant: "S.O.S Coffee", amount: -13.2, category: "Eating Out" },
+  { date: "2026-05-16", merchant: "London Borough Lewisha", amount: -6.92, category: "Transport" },
+  { date: "2026-05-16", merchant: "LS Onesixsix Velo Lim Blackheath", amount: -141.0, category: "General" },
+  { date: "2026-05-16", merchant: "The Big Cat Sanctuary", amount: -87.5, category: "Entertainment" },
+  { date: "2026-05-16", merchant: "Marks & Spencer", amount: -3.57, category: "Groceries" },
+  { date: "2026-05-16", merchant: "Pets Corner", amount: -7.96, category: "Coco" },
+  { date: "2026-05-16", merchant: "Etsy", amount: -42.2, category: "General" },
+  { date: "2026-05-16", merchant: "44874 Blackheath", amount: -17.9, category: "General" },
+  { date: "2026-05-16", merchant: "Côte", amount: -129.58, category: "Eating Out" },
+  { date: "2026-05-16", merchant: "Blackheath Standard Pha", amount: -3.99, category: "Health & Beauty" },
+  { date: "2026-05-16", merchant: "S.O.S Coffee", amount: -45.7, category: "Eating Out" },
+  { date: "2026-05-16", merchant: "", amount: 70.0, category: "Presents" },
+  { date: "2026-05-15", merchant: "Cewe Boots Greenwich", amount: -1.77, category: "Health & Beauty" },
+  { date: "2026-05-15", merchant: "Poundland", amount: -9.5, category: "General" },
+  { date: "2026-05-15", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-15", merchant: "Blackheath Standard Pha", amount: -59.9, category: "Health & Beauty" },
+  { date: "2026-05-15", merchant: "Hobbycraft", amount: -5.5, category: "General" },
+  { date: "2026-05-15", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-15", merchant: "JD Sports", amount: -20.0, category: "Clothing & Shoes" },
+  { date: "2026-05-15", merchant: "Monzo", amount: -59.0, category: "Entertainment" },
+  { date: "2026-05-15", merchant: "eduFOCUS", amount: -9.9, category: "School Costs" },
+  { date: "2026-05-15", merchant: "James Spence", amount: 484.84, category: "Interest" },
+  { date: "2026-05-15", merchant: "", amount: 468.37, category: "Interest" },
+  { date: "2026-05-15", merchant: "Aviva Life Insurance", amount: -27.26, category: "Household Bills" },
+  { date: "2026-05-15", merchant: "Thames Water", amount: -102.0, category: "Household Bills" },
+  { date: "2026-05-15", merchant: "Royal Borough Of Greenwich", amount: -351.0, category: "Household Bills" },
+  { date: "2026-05-15", merchant: "Eventbrite", amount: -349.0, category: "Entertainment" },
+  { date: "2026-05-14", merchant: "Pets at Home", amount: -20.01, category: "Coco" },
+  { date: "2026-05-14", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-14", merchant: "Sainsbury's", amount: -78.46, category: "Groceries" },
+  { date: "2026-05-14", merchant: "Sainsbury's", amount: -7.95, category: "Groceries" },
+  { date: "2026-05-14", merchant: "TK Maxx", amount: -25.96, category: "General" },
+  { date: "2026-05-14", merchant: "Sainsbury's", amount: -4.0, category: "Groceries" },
+  { date: "2026-05-14", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-14", merchant: "Google Nest", amount: -8.0, category: "Subscriptions" },
+  { date: "2026-05-14", merchant: "ATM", amount: -20.0, category: "General" },
+  { date: "2026-05-14", merchant: "", amount: 9.24, category: "Income" },
+  { date: "2026-05-13", merchant: "Marks & Spencer", amount: -18.35, category: "Groceries" },
+  { date: "2026-05-13", merchant: "Marks & Spencer", amount: -12.5, category: "Groceries" },
+  { date: "2026-05-13", merchant: "Marks & Spencer", amount: -4.89, category: "Groceries" },
+  { date: "2026-05-13", merchant: "Amazon", amount: 57.77, category: "Health & Beauty" },
+  { date: "2026-05-13", merchant: "Amazon", amount: -57.77, category: "Health & Beauty" },
+  { date: "2026-05-13", merchant: "Bluewater(Optical Lab) Greenhithe", amount: -14.99, category: "Health & Beauty" },
+  { date: "2026-05-13", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-13", merchant: "Zara", amount: -35.99, category: "Clothing & Shoes" },
+  { date: "2026-05-13", merchant: "", amount: 9.23, category: "Income" },
+  { date: "2026-05-13", merchant: "0209 - Bluewater Park? Greenhithe Kent", amount: -13.0, category: "General" },
+  { date: "2026-05-13", merchant: "Superdry", amount: -55.09, category: "Presents" },
+  { date: "2026-05-13", merchant: "Majestic Wine", amount: -139.5, category: "Groceries" },
+  { date: "2026-05-13", merchant: "Virgin Media", amount: -45.0, category: "Household Bills" },
+  { date: "2026-05-13", merchant: "Adaro Optics", amount: -23.44, category: "Health & Beauty" },
+  { date: "2026-05-13", merchant: "Jim Gough - Loan", amount: -1000.0, category: "General" },
+  { date: "2026-05-13", merchant: "Spotify", amount: -12.99, category: "Subscriptions" },
+  { date: "2026-05-12", merchant: "Twinkl", amount: -7.99, category: "School Costs" },
+  { date: "2026-05-12", merchant: "Everyday Cashback", amount: 0.46, category: "Finances" },
+  { date: "2026-05-12", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-12", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-12", merchant: "Charing Cross Station", amount: -4.85, category: "Groceries" },
+  { date: "2026-05-12", merchant: "Blackheath Veterinary S", amount: -80.69, category: "Coco" },
+  { date: "2026-05-12", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-12", merchant: "Starbucks Coffee", amount: -3.85, category: "Eating Out" },
+  { date: "2026-05-12", merchant: "eduFOCUS", amount: -9.9, category: "School Costs" },
+  { date: "2026-05-12", merchant: "Nspcc", amount: -100.0, category: "Charity" },
+  { date: "2026-05-12", merchant: "", amount: 9.23, category: "Income" },
+  { date: "2026-05-12", merchant: "Sainsbury's", amount: -148.88, category: "Groceries" },
+  { date: "2026-05-11", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-11", merchant: "Starbucks Coffee", amount: -30.0, category: "Eating Out" },
+  { date: "2026-05-11", merchant: "Amazon", amount: -35.0, category: "Presents" },
+  { date: "2026-05-11", merchant: "Bromley Bouncy Cas", amount: -217.35, category: "Work Expenses" },
+  { date: "2026-05-11", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-11", merchant: "Superdry", amount: -29.99, category: "Presents" },
+  { date: "2026-05-11", merchant: "Magic Words Therapy Newport Pagnell", amount: -109.95, category: "Health & Beauty" },
+  { date: "2026-05-11", merchant: "Nike", amount: -56.25, category: "Presents" },
+  { date: "2026-05-11", merchant: "", amount: 9.23, category: "Income" },
+  { date: "2026-05-11", merchant: "Tesco", amount: -10.0, category: "Groceries" },
+  { date: "2026-05-10", merchant: "Polhill Garden Centre", amount: -96.08, category: "Home & Family" },
+  { date: "2026-05-10", merchant: "Cottage Farm Butchers", amount: -8.63, category: "Groceries" },
+  { date: "2026-05-10", merchant: "Polhill Garden Centre", amount: -13.49, category: "Eating Out" },
+  { date: "2026-05-10", merchant: "Dojo*Polhill Farm Shop", amount: -9.29, category: "General" },
+  { date: "2026-05-10", merchant: "John Lewis", amount: -299.99, category: "General" },
+  { date: "2026-05-10", merchant: "Montpeliers Montpeliers", amount: -31.1, category: "Eating Out" },
+  { date: "2026-05-10", merchant: "192.Com", amount: -38.34, category: "Subscriptions" },
+  { date: "2026-05-10", merchant: "", amount: 27.68, category: "Income" },
+  { date: "2026-05-09", merchant: "Marks & Spencer", amount: -9.86, category: "Groceries" },
+  { date: "2026-05-09", merchant: "Pets Corner", amount: -19.82, category: "Coco" },
+  { date: "2026-05-09", merchant: "John Lewis", amount: -87.0, category: "General" },
+  { date: "2026-05-09", merchant: "Lindex", amount: -9.99, category: "Clothing & Shoes" },
+  { date: "2026-05-09", merchant: "Amazon", amount: -19.97, category: "Health & Beauty" },
+  { date: "2026-05-09", merchant: "Unitedartsgmbh Köln", amount: -42.0, category: "General" },
+  { date: "2026-05-09", merchant: "Optibac", amount: -121.99, category: "Health & Beauty" },
+  { date: "2026-05-09", merchant: "Moonpig", amount: -5.89, category: "Presents" },
+  { date: "2026-05-09", merchant: "Boots", amount: -10.0, category: "Health & Beauty" },
+  { date: "2026-05-09", merchant: "S.O.S Coffee", amount: -38.1, category: "Eating Out" },
+  { date: "2026-05-09", merchant: "S.O.S Coffee", amount: -14.3, category: "Eating Out" },
+  { date: "2026-05-09", merchant: "Flying Tiger", amount: -11.5, category: "General" },
+  { date: "2026-05-09", merchant: "Marks & Spencer", amount: -11.85, category: "Groceries" },
+  { date: "2026-05-09", merchant: "McDonalds", amount: -5.0, category: "Eating Out" },
+  { date: "2026-05-09", merchant: "44874 Blackheath", amount: -18.05, category: "General" },
+  { date: "2026-05-09", merchant: "Amazon", amount: -54.99, category: "Health & Beauty" },
+  { date: "2026-05-08", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-08", merchant: "Home Bargains", amount: -19.81, category: "General" },
+  { date: "2026-05-08", merchant: "Sainsbury's", amount: -97.66, category: "Groceries" },
+  { date: "2026-05-08", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-08", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-08", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-08", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-08", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-08", merchant: "Virgin Atlantic", amount: 58.89, category: "Transport" },
+  { date: "2026-05-08", merchant: "James Spence", amount: -400.0, category: "Internal Transfers" },
+  { date: "2026-05-08", merchant: "", amount: 400.0, category: "Internal Transfers" },
+  { date: "2026-05-08", merchant: "", amount: -200.0, category: "Presents" },
+  { date: "2026-05-08", merchant: "", amount: -100.0, category: "Presents" },
+  { date: "2026-05-07", merchant: "Marks & Spencer", amount: -21.15, category: "Groceries" },
+  { date: "2026-05-07", merchant: "Starbucks Coffee", amount: -30.0, category: "Eating Out" },
+  { date: "2026-05-07", merchant: "eduFOCUS", amount: -9.9, category: "School Costs" },
+  { date: "2026-05-07", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-07", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-07", merchant: "Virgin Atlantic", amount: 2080.0, category: "Holidays" },
+  { date: "2026-05-07", merchant: "James Gough", amount: 200.0, category: "Presents" },
+  { date: "2026-05-07", merchant: "C G Barrett (Dog Walker)", amount: -245.0, category: "Coco" },
+  { date: "2026-05-07", merchant: "", amount: -108.0, category: "Home & Family" },
+  { date: "2026-05-07", merchant: "", amount: 9.23, category: "Income" },
+  { date: "2026-05-07", merchant: "Doordash Dashpass", amount: -7.39, category: "Holidays" },
+  { date: "2026-05-07", merchant: "American Express", amount: -17229.08, category: "Internal Transfers" },
+  { date: "2026-05-06", merchant: "Pets at Home", amount: -34.06, category: "Coco" },
+  { date: "2026-05-06", merchant: "Poundland", amount: -10.0, category: "General" },
+  { date: "2026-05-06", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-06", merchant: "SP The Hive", amount: -118.15, category: "Entertainment" },
+  { date: "2026-05-06", merchant: "eduFOCUS", amount: -16.0, category: "School Costs" },
+  { date: "2026-05-06", merchant: "Amazon", amount: -9.34, category: "Health & Beauty" },
+  { date: "2026-05-06", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-06", merchant: "Boots", amount: -11.38, category: "Groceries" },
+  { date: "2026-05-06", merchant: "Matalan", amount: -27.5, category: "General" },
+  { date: "2026-05-06", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-06", merchant: "TK Maxx", amount: -5.98, category: "General" },
+  { date: "2026-05-06", merchant: "Charing Cross Station", amount: -3.9, category: "Groceries" },
+  { date: "2026-05-06", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-06", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-06", merchant: "", amount: 9.23, category: "Income" },
+  { date: "2026-05-06", merchant: "Next Nextdirectory United Kingdom", amount: -30.0, category: "Clothing & Shoes" },
+  { date: "2026-05-06", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-06", merchant: "Sainsbury's", amount: -3.05, category: "Groceries" },
+  { date: "2026-05-05", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-05", merchant: "WillPowders", amount: -17.49, category: "Health & Beauty" },
+  { date: "2026-05-05", merchant: "Next Nextdirectory United Kingdom", amount: -12.0, category: "General" },
+  { date: "2026-05-05", merchant: "Dart Charge", amount: -3.5, category: "Transport" },
+  { date: "2026-05-05", merchant: "Amazon", amount: -13.98, category: "Health & Beauty" },
+  { date: "2026-05-05", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-05", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-05", merchant: "Payment DD - Thank You", amount: 1401.0, category: "Internal Transfers" },
+  { date: "2026-05-05", merchant: "Spotify", amount: -12.99, category: "Subscriptions" },
+  { date: "2026-05-05", merchant: "Payment Received - Thank You", amount: 17229.08, category: "Internal Transfers" },
+  { date: "2026-05-05", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-05", merchant: "National Lottery", amount: -8.0, category: "Subscriptions" },
+  { date: "2026-05-05", merchant: "Virgin Money Credit Card", amount: -1401.0, category: "Internal Transfers" },
+  { date: "2026-05-05", merchant: "Window Cleaner", amount: -110.0, category: "General" },
+  { date: "2026-05-05", merchant: "", amount: -24.99, category: "Finances" },
+  { date: "2026-05-05", merchant: "", amount: -0.7, category: "Finances" },
+  { date: "2026-05-05", merchant: "", amount: 9.22, category: "Income" },
+  { date: "2026-05-04", merchant: "Southend ON Sea Counci", amount: -4.16, category: "Transport" },
+  { date: "2026-05-04", merchant: "Starbucks Coffee", amount: -5.05, category: "Eating Out" },
+  { date: "2026-05-04", merchant: "Sara's Tea Garden", amount: -53.96, category: "Eating Out" },
+  { date: "2026-05-04", merchant: "Sainsbury's", amount: -177.92, category: "Groceries" },
+  { date: "2026-05-04", merchant: "Frederick's AT Dansk Benfleet", amount: -55.33, category: "Eating Out" },
+  { date: "2026-05-04", merchant: "Sainsbury's", amount: 1.5, category: "Groceries" },
+  { date: "2026-05-04", merchant: "SP Otherletters Leigh ON Sea", amount: -12.0, category: "General" },
+  { date: "2026-05-04", merchant: "Barehamskennels.Co.Uk Orsett", amount: -27.5, category: "Coco" },
+  { date: "2026-05-04", merchant: "Anthropic San Francisco", amount: -40.5, category: "General" },
+  { date: "2026-05-04", merchant: "", amount: 36.88, category: "Income" },
+  { date: "2026-05-04", merchant: "Amazon", amount: -10.18, category: "General" },
+  { date: "2026-05-03", merchant: "Zara", amount: -0.1, category: "Clothing & Shoes" },
+  { date: "2026-05-03", merchant: "The Works", amount: -3.0, category: "General" },
+  { date: "2026-05-03", merchant: "Starbucks Coffee", amount: -30.0, category: "Eating Out" },
+  { date: "2026-05-03", merchant: "Apple", amount: -8.99, category: "Subscriptions" },
+  { date: "2026-05-03", merchant: "Run For Charity", amount: -19.76, category: "Charity" },
+  { date: "2026-05-03", merchant: "Amazon", amount: -24.5, category: "General" },
+  { date: "2026-05-03", merchant: "John Lewis", amount: -3.9, category: "General" },
+  { date: "2026-05-03", merchant: "Zara", amount: -45.99, category: "Clothing & Shoes" },
+  { date: "2026-05-03", merchant: "Amazon", amount: -17.98, category: "Health & Beauty" },
+  { date: "2026-05-03", merchant: "Octopus Energy", amount: -247.18, category: "Household Bills" },
+  { date: "2026-05-03", merchant: "Waitrose & Partners", amount: -1.88, category: "Groceries" },
+  { date: "2026-05-02", merchant: "S.O.S Coffee", amount: -13.3, category: "Eating Out" },
+  { date: "2026-05-02", merchant: "Arts Kitchen Blackhea", amount: -7.0, category: "Eating Out" },
+  { date: "2026-05-02", merchant: "Bloomberg*", amount: -235.0, category: "Subscriptions" },
+  { date: "2026-05-02", merchant: "Boulangerie Jade", amount: -3.2, category: "Eating Out" },
+  { date: "2026-05-02", merchant: "Amazon", amount: 5.95, category: "Clothing & Shoes" },
+  { date: "2026-05-02", merchant: "Bubbleology", amount: -5.19, category: "Eating Out" },
+  { date: "2026-05-02", merchant: "Amazon", amount: 12.97, category: "Health & Beauty" },
+  { date: "2026-05-02", merchant: "Amazon", amount: 5.99, category: "Clothing & Shoes" },
+  { date: "2026-05-02", merchant: "Amazon Prime", amount: -8.99, category: "Subscriptions" },
+  { date: "2026-05-02", merchant: "S.O.S Coffee", amount: -34.2, category: "Eating Out" },
+  { date: "2026-05-02", merchant: "Anthropic San Francisco", amount: -40.5, category: "Subscriptions" },
+  { date: "2026-05-02", merchant: "Marks & Spencer", amount: -10.0, category: "Groceries" },
+  { date: "2026-05-02", merchant: "", amount: -30.0, category: "Entertainment" },
+  { date: "2026-05-02", merchant: "Montpeliers Montpeliers", amount: -17.8, category: "Eating Out" },
+  { date: "2026-05-01", merchant: "Tesco", amount: -4.02, category: "Groceries" },
+  { date: "2026-05-01", merchant: "TFL", amount: -8.3, category: "Transport" },
+  { date: "2026-05-01", merchant: "Weight Watchers", amount: -5.65, category: "Health & Beauty" },
+  { date: "2026-05-01", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-01", merchant: "Weight Watchers", amount: -5.65, category: "Health & Beauty" },
+  { date: "2026-05-01", merchant: "Marks & Spencer", amount: -23.95, category: "Groceries" },
+  { date: "2026-05-01", merchant: "Lime", amount: -1.0, category: "Transport" },
+  { date: "2026-05-01", merchant: "The Post Office", amount: -7.2, category: "General" },
+  { date: "2026-05-01", merchant: "Make Mine", amount: -11.4, category: "Groceries" },
+  { date: "2026-05-01", merchant: "Lime", amount: -1.7, category: "Transport" },
+  { date: "2026-05-01", merchant: "EE", amount: -69.41, category: "Household Bills" },
+  { date: "2026-05-01", merchant: "Battersea Dogs & Cats", amount: -10.0, category: "Charity" },
+  { date: "2026-05-01", merchant: "Aviva Life Insurance", amount: -28.28, category: "Household Bills" },
+  { date: "2026-05-01", merchant: "Royal Borough Of Greenwich", amount: -351.0, category: "Household Bills" },
+  { date: "2026-05-01", merchant: "Pet Plan", amount: -34.27, category: "Coco" },
+  { date: "2026-05-01", merchant: "Verisure Alarms", amount: -53.26, category: "Household Bills" },
+  { date: "2026-05-01", merchant: "G&Bhospice Lottery", amount: -4.34, category: "Charity" },
+  { date: "2026-05-01", merchant: "", amount: -10.0, category: "Charity" },
+  { date: "2026-05-01", merchant: "Moonpig", amount: -6.73, category: "Presents" },
+  { date: "2026-05-01", merchant: "ATM", amount: -40.0, category: "Transport" },
+  { date: "2026-05-01", merchant: "", amount: 0.07, category: "Income" },
   {date:"2026-04-25",merchant:"TFL",amount:-10.6,category:"Transport"},
   {date:"2026-04-24",merchant:"Amazon",amount:-18.45,category:"Health & Beauty"},
   {date:"2026-04-24",merchant:"New Balance",amount:-15.0,category:"Shopping"},
@@ -1149,10 +1558,10 @@ const SUMMARY_YEARS = ["y2026", "y2027", "y2028", "y2029", "y2030"];
 // Keys match DAY_TO_DAY_CATS and PROVISION_DISPLAY_CATS.
 // Blank (null) until populated via the local rec process.
 const HISTORICAL_MONTHLY = [
-  { month: "Oct-25", mk: "2025-10", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
-  { month: "Nov-25", mk: "2025-11", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
-  { month: "Dec-25", mk: "2025-12", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
-  { month: "Jan-26", mk: "2026-01", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "Household Maintenance": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Oct-25", mk: "2025-10", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Nov-25", mk: "2025-11", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Dec-25", mk: "2025-12", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
+  { month: "Jan-26", mk: "2026-01", income: null, categories: { "Coco": null, "Eating Out": null, "Entertainment": null, "General": null, "Groceries": null, "Health & Beauty": null, "Household Bills": null, "School Costs": null, "Subscriptions": null, "Transport": null }, provisions: { "1k - James": null, "1k - Jemma": null, "Annual Costs": null, "Cash Provision": null, "Charity": null, "Clothing & Shoes": null, "Flats": null, "Holidays": null, "Home & Family": null, "Range Rover": null, "School Fees": null } },
 ];
 
 const INTEREST_DATA = [
@@ -1290,15 +1699,19 @@ const PROVISIONS_DATA = [
     { date: "Apr 2026", desc: "SP Stanley", amount: 38.70, cat: "Shopping" },
   ]},
   { name: "1k - Jemma", opening: 1000, drawdowns: [
-    { date: "May 2026", desc: "GHD Wand", amount: 133.96, cat: "General" },
+    { date: "May 2026", desc: "GHD Wand (Amazon)", amount: 133.96, cat: "General" },
+    { date: "May 2026", desc: "Face Mask - John Lewis", amount: 299.99, cat: "General" },
   ] },
   { name: "Annual Costs", opening: 13568, drawdowns: [
-    { date: "Nov 2025", desc: "Garden", amount: 312.00, cat: "Household Maintenance" },
+    { date: "Nov 2025", desc: "Garden", amount: 312.00, cat: "Annual Costs" },
     { date: "Nov 2025", desc: "House", amount: 163.20, cat: "Transport" },
     { date: "Dec 2025", desc: "Presents", amount: 2808.85, cat: "Presents" },
     { date: "Dec 2025", desc: "Family Tech", amount: 32.40, cat: "Annual Costs" },
     { date: "Jan 2026", desc: "Presents", amount: 50.28, cat: "Presents" },
     { date: "Mar 2026", desc: "Garden", amount: 443, cat: "Annual Costs" },
+    { date: "May 2026", desc: "Presents", amount: 348.50, cat: "Entertainment" },
+    { date: "May 2026", desc: "Family Tech", amount: 700.00, cat: "Annual Costs" },
+    { date: "May 2026", desc: "Family Tech", amount: 1597.00, cat: "Annual Costs" },
   ], notes: [
     { label: "Building & Contents Insurance", amount: 2371 },
     { label: "Car Insurance",                 amount: 1500 },
@@ -1314,9 +1727,10 @@ const PROVISIONS_DATA = [
     { label: "Amex Card Fee",                 amount: 195 },
   ]},
   { name: "Cash Provision", opening: 195000, drawdowns: [
-    { date: "Feb 2026", desc: "ADHD Health Clinic (Health)", amount: 995, cat: "One Off Costs" },
-    { date: "Mar 2026", desc: "Private Psychiatry Expert (Health)", amount: 805, cat: "One Off Costs" },
+    { date: "Feb 2026", desc: "ADHD Health Clinic (Health)", amount: 995, cat: "Health & Beauty" },
+    { date: "Mar 2026", desc: "Private Psychiatry Expert (Health)", amount: 805, cat: "Health & Beauty" },
     { date: "Mar 2026", desc: "The Royal Parks - GaGa bench", amount: 10000, cat: "One Off Costs" },
+    { date: "May 2026", desc: "Jim Gough - Loan", amount: 1000, cat: "General" },
     // Transfer to Clothing & Shoes provision (£5,000) is an internal balance movement
     // not recorded as spend — Clothing & Shoes opening balance funded from Cash Provision
   ]},
@@ -1372,6 +1786,10 @@ const PROVISIONS_DATA = [
     { date: "Apr 2026", desc: "NSPCC", amount: 100, cat: "Charity" },
     { date: "Apr 2026", desc: "Trussell Trust", amount: 5100, cat: "Charity" },
     { date: "Apr 2026", desc: "Jemma (Joanne Bridgeman)", amount: 10, cat: "Charity" },
+      { date: "May 2026", desc: "G&B Hospice Lottery", amount: 4.34, cat: "Charity" },
+      { date: "May 2026", desc: "Battersea Dogs", amount: 10.00, cat: "Charity" },
+      { date: "May 2026", desc: "NSPCC", amount: 100.00, cat: "Charity" },
+      { date: "May 2026", desc: "Run For Charity", amount: 19.76, cat: "Charity" },
   ]},
   { name: "Flats", opening: 8293, drawdowns: [
     { date: "Jan 2026", desc: "Flat - Bearsted", amount: 4791.77, cat: "Flats" },
@@ -1429,10 +1847,19 @@ const PROVISIONS_DATA = [
     { date: "May 2026", desc: "Spain Holiday", amount: 52.48, cat: "Holidays" },
     { date: "May 2026", desc: "Spain Holiday", amount: 7349.36, cat: "Holidays" },
     { date: "May 2026", desc: "Cambridge Trip", amount: 328.20, cat: "Holidays" },
+      { date: "May 2026", desc: "Cambridge Trip", amount: 79.50, cat: "Holidays" },
+      { date: "May 2026", desc: "Cambridge Trip", amount: 115.00, cat: "Holidays" },
+      { date: "May 2026", desc: "Cambridge Trip", amount: 169.13, cat: "Holidays" },
+      { date: "May 2026", desc: "Center Parcs", amount: -1084.00, cat: "Holidays" },
+      { date: "May 2026", desc: "Center Parcs", amount: -92.00, cat: "Holidays" },
+      { date: "May 2026", desc: "Center Parcs", amount: -11.50, cat: "Holidays" },
+      { date: "May 2026", desc: "Disney World", amount: -2080.00, cat: "Holidays" },
   ]},
   { name: "School Holidays", opening: 5000, drawdowns: [
-    { date: "May 2026", desc: "Eventbrite", amount: 349.00, cat: "Entertainment" },
-    { date: "May 2026", desc: "SP The Hive", amount: 139.00, cat: "Entertainment" },
+    { date: "May 2026", desc: "Pointers", amount: 349.00, cat: "Entertainment" },
+      { date: "May 2026", desc: "The Hive", amount: 70.00, cat: "Entertainment" },
+      { date: "May 2026", desc: "The Hive", amount: 118.15, cat: "Entertainment" },
+    { date: "May 2026", desc: "The Hive", amount: 139.00, cat: "Entertainment" },
   ]},
   { name: "Home & Family", opening: 132171, drawdowns: [
     // Master Bedroom
@@ -1476,6 +1903,7 @@ const PROVISIONS_DATA = [
     { date: "Jan 2026", desc: "Master Bedroom", amount: -134, cat: "Home & Family" },
     // Other
     { date: "Apr 2026", desc: "No1Roofing", amount: 45, cat: "Home & Family" },
+      { date: "May 2026", desc: "Utility Room", amount: 1696.72, cat: "Home & Family" },
   ]},
   { name: "Range Rover", opening: 22811.47, drawdowns: [
     { date: "Nov 2025", desc: "Lex Autolease", amount: 1276.00, cat: "Transport" },
@@ -1484,6 +1912,7 @@ const PROVISIONS_DATA = [
     { date: "Feb 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Mar 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
     { date: "Apr 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
+      { date: "May 2026", desc: "Lex Autolease", amount: 1437.16, cat: "Range Rover" },
   ]},
   { name: "School Fees", opening: 13178.40, isIncome: true, drawdowns: [
     { date: "Jan 2026", desc: "School fees refund", amount: -108, cat: "School Fees" },
@@ -1662,17 +2091,22 @@ const STYLE = {
   blue: "#90a8c8", purple: "#a090c8", gold: "#7a8a6a",
 };
 
-const MONTHS = ["Apr-26", "Mar-26", "Feb-26"];
-const MONTH_KEYS = ["2026-04", "2026-03", "2026-02"];
+const MONTHS = ["May-26", "Apr-26", "Mar-26"];
+const MONTH_KEYS = ["2026-05", "2026-04", "2026-03"];
 const INCOME_CATS = new Set(["Salary"]);
 const EXCLUDE_CATS = new Set(["Internal Transfers", "Finances", "Savings Deposits", "Cash", "Work Expenses", "Shopping", "Travel"]);
 const NON_OP_CATS = new Set(["Interest", "Income"]);
-const DAY_TO_DAY_CATS = ["Coco","Eating Out","Entertainment","General","Groceries","Health & Beauty","Household Bills","Household Maintenance","School Costs","Subscriptions","Transport"];
+const DAY_TO_DAY_CATS = ["Coco","Eating Out","Entertainment","General","Groceries","Health & Beauty","Household Bills","School Costs","Subscriptions","Transport"];
 const PROVISION_DISPLAY_CATS = ["1k - James","1k - Jemma","Annual Costs","Cash Provision","Charity","Clothing & Shoes","Flats","Holidays","Home & Family","Range Rover","School Fees","School Holidays"];
 
 function getMonthKey(d) { return d.substring(0, 7); }
 
 // Rule: transactions named "Interest" or "Interest earned" are always Interest category
+// Returns display merchant name — override blank/wrong Snoop names per transaction
+function resolveMerchant(t) {
+  return t.merchant || "";
+}
+
 function resolveCategory(t) {
   var merchant = (t.merchant || "").toLowerCase().trim();
   if (merchant === "interest" || merchant === "interest earned") return "Interest";
@@ -1746,7 +2180,6 @@ const BUDGET_DATA = {
     "Clothing & Shoes":      -450,
     "Entertainment":         -150,
     "General":               -200,
-    "Household Maintenance":  0,
     "School Costs":          -200,
   },
 };
@@ -1836,7 +2269,7 @@ function BudgetTab({ monthlyData, isAllocated }) {
                 return (
                   <tr key={i} style={{ borderBottom: "1px solid #0f1520" }}>
                     <td style={{ padding: "5px 10px", color: STYLE.textMuted }}>{t.date.substring(8)}/{t.date.substring(5,7)}</td>
-                    <td style={{ padding: "5px 10px", color: STYLE.textSub }}>{t.merchant}</td>
+                    <td style={{ padding: "5px 10px", color: STYLE.textSub }}>{t.merchant || ""}</td>
                     <td style={{ textAlign: "right", padding: "5px 10px", color: STYLE.red }}>{fmtN(t.amount)}</td>
                   </tr>
                 );
@@ -1952,9 +2385,10 @@ function PnLTab({ monthlyData }) {
   // Build unified column list: historical (blank) + live transaction months
   // Columns run right-to-left visually: Apr-26, Mar-26, Feb-26, Jan-26, Dec-25, Nov-25, Oct-25
   var ALL_MONTHS = [
+    { mk: "2026-05", label: "May-26", live: true },
     { mk: "2026-04", label: "Apr-26", live: true },
     { mk: "2026-03", label: "Mar-26", live: true },
-    { mk: "2026-02", label: "Feb-26", live: true },
+    { mk: "2026-02", label: "Feb-26", live: false },
     { mk: "2026-01", label: "Jan-26", live: false },
     { mk: "2025-12", label: "Dec-25", live: false },
     { mk: "2025-11", label: "Nov-25", live: false },
@@ -2146,6 +2580,7 @@ function ProvisionsTab() {
   var setExpandedNote = openNotes[1];
 
   var ALL_PROV_MONTHS = [
+    { mk: "2026-05", prefix: "May 2026", label: "May-26" },
     { mk: "2026-04", prefix: "Apr 2026", label: "Apr-26" },
     { mk: "2026-03", prefix: "Mar 2026", label: "Mar-26" },
     { mk: "2026-02", prefix: "Feb 2026", label: "Feb-26" },
@@ -2172,7 +2607,7 @@ function ProvisionsTab() {
 
   var detailProvisions = PROVISIONS_DATA.filter(function(p) {
     return (p.drawdowns||[]).some(function(d){
-      return d.date === "Apr 2026" || d.date === "Mar 2026" || d.date === "Feb 2026";
+      return d.date === "May 2026" || d.date === "Apr 2026" || d.date === "Mar 2026" || d.date === "Feb 2026";
     });
   });
 
@@ -2220,75 +2655,70 @@ function ProvisionsTab() {
       {detailProvisions.length > 0 && (
         <div style={{ marginTop: "32px" }}>
           <div style={{ fontSize: "11px", color: STYLE.gold, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "16px" }}>Drawdown Detail</div>
-          {detailProvisions.map(function(p) {
-            var windowMonths = ["Feb 2026", "Mar 2026", "Apr 2026"];
-            var allMonths = ["Sep 2025","Oct 2025","Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026","Apr 2026"];
-            var drawdownRows = (p.drawdowns||[]).filter(function(d){
-              return allMonths.indexOf(d.date) !== -1;
-            });
-            if (!drawdownRows.length) return null;
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+            <thead>
+              <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
+                <th style={{ textAlign: "left", padding: "7px 12px", color: STYLE.textMuted, fontWeight: "normal", width: "220px" }}>Sub-category</th>
+                {ALL_PROV_MONTHS.map(function(m) {
+                  return <th key={m.mk} style={{ textAlign: "right", padding: "7px 12px", color: STYLE.blue, fontWeight: "bold" }}>{m.label}</th>;
+                })}
+                <th style={{ textAlign: "right", padding: "7px 12px", color: STYLE.text, fontWeight: "bold" }}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {detailProvisions.map(function(p) {
+                var allMonths = ALL_PROV_MONTHS.map(function(m){ return m.prefix; });
+                var drawdownRows = (p.drawdowns||[]).filter(function(d){
+                  return allMonths.indexOf(d.date) !== -1;
+                });
+                if (!drawdownRows.length) return null;
 
-            // Get distinct months that actually have entries, in order
-            var monthsPresent = allMonths.filter(function(m){
-              return drawdownRows.some(function(d){ return d.date === m; });
-            });
+                var subCats = {};
+                drawdownRows.forEach(function(d) {
+                  if (!subCats[d.desc]) subCats[d.desc] = {};
+                  subCats[d.desc][d.date] = (subCats[d.desc][d.date] || 0) + d.amount;
+                });
+                var grandTotal = drawdownRows.reduce(function(s,d){ return s+d.amount; }, 0);
 
-            // Group by desc (sub-category), summing per month
-            var subCats = {};
-            drawdownRows.forEach(function(d) {
-              if (!subCats[d.desc]) subCats[d.desc] = {};
-              subCats[d.desc][d.date] = (subCats[d.desc][d.date] || 0) + d.amount;
-            });
-
-            var grandTotal = drawdownRows.reduce(function(s,d){ return s + d.amount; }, 0);
-
-            return (
-              <div key={p.name} style={{ marginBottom: "28px" }}>
-                <div style={{ fontSize: "12px", color: STYLE.text, fontWeight: "bold", marginBottom: "8px", paddingLeft: "4px" }}>{p.name}</div>
-                <table style={{ width: "auto", minWidth: "60%", borderCollapse: "collapse", fontSize: "12px" }}>
-                  <thead>
-                    <tr style={{ background: "#1a2030", borderBottom: "2px solid " + STYLE.border }}>
-                      <th style={{ textAlign: "left", padding: "7px 14px", color: STYLE.textMuted, fontWeight: "normal", minWidth: "180px" }}>Sub-category</th>
-                      {monthsPresent.map(function(m) {
-                        return <th key={m} style={{ textAlign: "right", padding: "7px 14px", color: STYLE.blue, fontWeight: "bold", minWidth: "100px" }}>{m.replace(" 20", " '")}</th>;
-                      })}
-                      <th style={{ textAlign: "right", padding: "7px 14px", color: STYLE.text, fontWeight: "bold", minWidth: "100px" }}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.keys(subCats).map(function(desc, i) {
-                      var monthAmts = subCats[desc];
-                      var rowTotal = Object.values(monthAmts).reduce(function(s,v){ return s+v; }, 0);
-                      return (
-                        <tr key={desc} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
-                          <td style={{ padding: "7px 14px", color: STYLE.textSub }}>{desc}</td>
-                          {monthsPresent.map(function(m) {
-                            var v = monthAmts[m] || 0;
-                            return (
-                              <td key={m} style={{ textAlign: "right", padding: "7px 14px", color: v ? (v < 0 ? STYLE.green : STYLE.amber) : "#3a4a5a" }}>
-                                {v ? fmtN(-v) : "—"}
-                              </td>
-                            );
-                          })}
-                          <td style={{ textAlign: "right", padding: "7px 14px", color: rowTotal < 0 ? STYLE.green : STYLE.amber, fontWeight: "bold" }}>
-                            {fmtN(-rowTotal)}
-                          </td>
-                        </tr>
-                      );
+                return [
+                  // Provision name as section header row
+                  <tr key={p.name + "-hdr"} style={{ background: "#181e28", borderTop: "2px solid #1a2030" }}>
+                    <td colSpan={ALL_PROV_MONTHS.length + 2} style={{ padding: "6px 12px", color: STYLE.text, fontWeight: "bold", fontSize: "12px" }}>{p.name}</td>
+                  </tr>,
+                  // Sub-category rows
+                  Object.keys(subCats).map(function(desc) {
+                    var monthAmts = subCats[desc];
+                    var rowTotal = Object.values(monthAmts).reduce(function(s,v){ return s+v; }, 0);
+                    return (
+                      <tr key={p.name + desc} style={{ borderBottom: "1px solid #1a1e28", background: "transparent" }}>
+                        <td style={{ padding: "6px 12px 6px 20px", color: STYLE.textSub }}>{desc}</td>
+                        {ALL_PROV_MONTHS.map(function(m) {
+                          var v = monthAmts[m.prefix] || 0;
+                          return (
+                            <td key={m.mk} style={{ textAlign: "right", padding: "6px 12px", color: v ? (v < 0 ? STYLE.green : STYLE.amber) : "#3a4a5a" }}>
+                              {v ? fmtN(-v) : "—"}
+                            </td>
+                          );
+                        })}
+                        <td style={{ textAlign: "right", padding: "6px 12px", color: rowTotal < 0 ? STYLE.green : STYLE.amber, fontWeight: "bold" }}>
+                          {fmtN(-rowTotal)}
+                        </td>
+                      </tr>
+                    );
+                  }),
+                  // Provision total row
+                  <tr key={p.name + "-total"} style={{ borderBottom: "2px solid #1a2030", background: "#1a2030" }}>
+                    <td style={{ padding: "6px 12px 6px 20px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
+                    {ALL_PROV_MONTHS.map(function(m) {
+                      var mTotal = drawdownRows.filter(function(d){ return d.date === m.prefix; }).reduce(function(s,d){ return s+d.amount; }, 0);
+                      return <td key={m.mk} style={{ textAlign: "right", padding: "6px 12px", color: mTotal ? STYLE.amber : "#3a4a5a", fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "—"}</td>;
                     })}
-                    <tr style={{ borderTop: "2px solid " + STYLE.border, background: "#1e2838" }}>
-                      <td style={{ padding: "7px 14px", color: STYLE.blue, fontWeight: "bold" }}>Total</td>
-                      {monthsPresent.map(function(m) {
-                        var mTotal = drawdownRows.filter(function(d){ return d.date === m; }).reduce(function(s,d){ return s+d.amount; }, 0);
-                        return <td key={m} style={{ textAlign: "right", padding: "7px 14px", color: mTotal ? STYLE.amber : "#3a4a5a", fontWeight: "bold" }}>{mTotal ? fmtN(-mTotal) : "—"}</td>;
-                      })}
-                      <td style={{ textAlign: "right", padding: "7px 14px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(-grandTotal)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            );
-          })}
+                    <td style={{ textAlign: "right", padding: "6px 12px", color: STYLE.blue, fontWeight: "bold" }}>{fmtN(-grandTotal)}</td>
+                  </tr>,
+                ];
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -3126,7 +3556,6 @@ function OurMoneyTab({ monthlyData }) {
     "Subscriptions":         "Subscriptions",
     "Presents":              "Presents",
     "School Costs":          "School Costs",
-    "Household Maintenance": "Household Maintenance",
   };
 
   // Build pot data including drawdown detail
@@ -3864,7 +4293,7 @@ function CandidatesTab({ candidates }) {
       )}
 
       <p style={{ color: STYLE.textMuted, fontSize: "13px", marginBottom: "24px", fontStyle: "italic" }}>
-        No unreconciled provision transactions — all Feb–Apr 2026 transactions have been attributed. New candidates will appear here after the next Snoop upload.
+        No unreconciled provision transactions — all Mar–May 2026 transactions have been attributed. New candidates will appear here after the next Snoop upload.
       </p>
       {MONTH_KEYS.map(function(mk) {
         var items = byMonth[mk];
@@ -4007,7 +4436,7 @@ function Dashboard() {
     // Provisions: read from PROVISIONS_DATA.drawdowns — single source of truth
     // shared with the Annual Provisions tab. Drawdowns stored as positive costs /
     // negative refunds. monthlyData.provisions uses negative = cost (raw txn convention).
-    var mkPrefix = { "2026-04": "Apr", "2026-03": "Mar", "2026-02": "Feb" };
+    var mkPrefix = { "2026-05": "May", "2026-04": "Apr", "2026-03": "Mar" };
     PROVISIONS_DATA.forEach(function(p) {
       if (!PROVISION_DISPLAY_CATS.includes(p.name)) return;
       (p.drawdowns || []).forEach(function(d) {
@@ -4064,7 +4493,7 @@ function Dashboard() {
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: "11px", color: STYLE.textMuted }}>James {'&'} Jemma</div>
-            <div style={{ fontSize: "11px", color: STYLE.gold }}>Feb 2026 — Apr 2026</div>
+            <div style={{ fontSize: "11px", color: STYLE.gold }}>Mar 2026 — May 2026</div>
           </div>
         </div>
       </div>
